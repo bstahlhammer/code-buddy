@@ -5,6 +5,7 @@ import ProgressBar from '../components/ProgressBar.jsx'
 import PillGroup from '../components/PillGroup.jsx'
 import SliderStep from '../components/SliderStep.jsx'
 import WineSearchStep from '../components/WineSearchStep.jsx'
+import WineRatingStep from '../components/WineRatingStep.jsx'
 import TopBar from '../components/TopBar.jsx'
 
 function isStepComplete(step, answers) {
@@ -40,6 +41,8 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
   }
 
   const isWineSearch = step.type === 'wine_search'
+  const isWineRatings = step.type === 'wine_ratings'
+  const isOptionalSearch = isWineSearch || isWineRatings
   const isHate = step.mode === 'hate'
 
   return (
@@ -93,6 +96,13 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
             onChange={val => onAnswerChange(step.id, val)}
           />
         )}
+
+        {isWineRatings && (
+          <WineRatingStep
+            value={quizAnswers[step.id] ?? {}}
+            onChange={val => onAnswerChange(step.id, val)}
+          />
+        )}
       </div>
 
       {/* Footer */}
@@ -114,10 +124,10 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
             transition: 'background-color 0.15s ease',
           }}
         >
-          {isLast ? 'See my taste profile' : isWineSearch ? 'Done' : 'Continue'}
+          {isLast ? 'See my taste profile' : isOptionalSearch ? 'Done' : 'Continue'}
         </button>
 
-        {isWineSearch && (
+        {isOptionalSearch && (
           <button
             onClick={handleContinue}
             style={{
