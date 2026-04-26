@@ -1,5 +1,10 @@
 import { useState, useCallback } from 'react'
-import { getTasteProfiles, inferPalateFromRatings, nearestTasteProfile, groupRatingsByBucket } from '@/core/api'
+import {
+  inferPalateFromRatings,
+  nearestTasteProfile,
+  groupRatingsByBucket,
+  computePalateFromGuidedAnswers,
+} from '@/core/api'
 import DeviceFrame from './ui/components/DeviceFrame.jsx'
 import ScreenTransition from './ui/components/ScreenTransition.jsx'
 import Toast from './ui/components/Toast.jsx'
@@ -10,34 +15,50 @@ import ScanningScreen from './ui/screens/ScanningScreen.jsx'
 import AnonResultsScreen from './ui/screens/AnonResultsScreen.jsx'
 import QuizIntroScreen from './ui/screens/QuizIntroScreen.jsx'
 import QuizScreen from './ui/screens/QuizScreen.jsx'
+import GuidedQuizScreen from './ui/screens/GuidedQuizScreen.jsx'
+import RateBottlesScreen from './ui/screens/RateBottlesScreen.jsx'
 import ProfileRevealScreen from './ui/screens/ProfileRevealScreen.jsx'
 import PersonalizedResultsScreen from './ui/screens/PersonalizedResultsScreen.jsx'
 import WineDetailScreen from './ui/screens/WineDetailScreen.jsx'
 
 const INITIAL_QUIZ_ANSWERS = {
+  // Free-form quiz (legacy QuizScreen) — still supported
   flavorPreferences: [],
   goToDrink: null,
   mealAppeal: null,
   boldness: 50,
   sweetness: null,
-  wineRatings: {},      // { [wineId]: bucketId }
+  // Wine-rating path
+  wineRatings: {},          // { [wineId]: bucketId }
+  // Guided sommelier-style quiz path
+  guidedAnswers: {},        // { [nodeId]: { optionId? , optionIds?, notSure? } }
   // legacy fields kept for backwards compatibility
   lovedWineIds: [],
   hatedWineIds: [],
 }
 
 const SWEETNESS_MAP = {
-  'I love sweet':             80,
+  'I love sweet':              80,
   'Slightly sweet is perfect': 55,
-  'Dry is fine':              30,
-  'Bone dry always':          10,
+  'Dry is fine':               30,
+  'Bone dry always':           10,
 }
 
+/**
+ * Blend up to three signal sources by confidence:
+ *   1. Wine ratings        — from inferPalateFromRatings
+ *   2. Guided sommelier quiz — from computePalateFromGuidedAnswers
+ *   3. Slider/sweetness fallback (legacy quiz) — confidence 0.3 if any answered
+ */
 function deriveProfile(quizAnswers) {
   const ratings = quizAnswers.wineRatings ?? {}
-  const inferred = inferPalateFromRatings(ratings)
+  const inferredR = inferPalateFromRatings(ratings)
 
-  // Slider/sweetness fallback palate (used when no wines have been rated)
+  const guided  = quizAnswers.guidedAnswers ?? {}
+  const inferredG = computePalateFromGuidedAnswers(guided)
+
+  // Legacy slider/sweetness signal
+  const hasSlider = quizAnswers.boldness !== undefined || quizAnswers.sweetness
   const boldness     = quizAnswers.boldness ?? 50
   const sweetnessVal = SWEETNESS_MAP[quizAnswers.sweetness] ?? 30
   const sliderPalate = {
@@ -46,16 +67,32 @@ function deriveProfile(quizAnswers) {
     tannin:    boldness * 0.9,
     acidity:   Math.max(0, 100 - boldness * 0.5),
   }
+  const sliderConfidence = hasSlider && quizAnswers.sweetness ? 0.3 : 0
 
-  // Blend: ratings-driven palate dominates as confidence rises; otherwise
-  // fall back to slider answers so users who skip ratings still get a
-  // meaningful profile.
-  const c = inferred.confidence
-  const palate = {
-    body:      Math.round(inferred.palate.body      * c + sliderPalate.body      * (1 - c)),
-    sweetness: Math.round(inferred.palate.sweetness * c + sliderPalate.sweetness * (1 - c)),
-    tannin:    Math.round(inferred.palate.tannin    * c + sliderPalate.tannin    * (1 - c)),
-    acidity:   Math.round(inferred.palate.acidity   * c + sliderPalate.acidity   * (1 - c)),
+  // Weighted blend across all three sources. If nothing is answered we
+  // fall back fully to the slider's neutral defaults.
+  const sources = [
+    { palate: inferredR.palate,  weight: inferredR.confidence },
+    { palate: inferredG.palate,  weight: inferredG.confidence },
+    { palate: sliderPalate,      weight: sliderConfidence },
+  ]
+  const totalWeight = sources.reduce((s, x) => s + x.weight, 0)
+
+  let palate
+  if (totalWeight === 0) {
+    palate = { ...sliderPalate }
+  } else {
+    palate = { body: 0, sweetness: 0, tannin: 0, acidity: 0 }
+    for (const { palate: p, weight: w } of sources) {
+      palate.body      += p.body      * w
+      palate.sweetness += p.sweetness * w
+      palate.tannin    += p.tannin    * w
+      palate.acidity   += p.acidity   * w
+    }
+    palate.body      = Math.round(palate.body      / totalWeight)
+    palate.sweetness = Math.round(palate.sweetness / totalWeight)
+    palate.tannin    = Math.round(palate.tannin    / totalWeight)
+    palate.acidity   = Math.round(palate.acidity   / totalWeight)
   }
 
   const archetype = nearestTasteProfile(palate)
@@ -65,7 +102,8 @@ function deriveProfile(quizAnswers) {
     ...archetype,
     palate,
     ratingsByBucket,
-    inferenceConfidence: c,
+    inferenceConfidence: Math.min(1, totalWeight),
+    flavorCharacter: inferredG.flavorCharacter,
     lovedWineIds: ratingsByBucket.loved ?? [],
     hatedWineIds: ratingsByBucket.hated ?? [],
   }
@@ -103,12 +141,24 @@ export default function App() {
   }, [])
 
   const handleQuizComplete = useCallback((answers) => {
-    const profile = deriveProfile(answers)
+    const merged = { ...quizAnswers, ...answers }
+    setQuizAnswers(merged)
+    const profile = deriveProfile(merged)
     setTasteProfile(profile)
     setDirection('forward')
     setHistory(h => [...h, screen])
     setScreen('profileReveal')
-  }, [screen])
+  }, [screen, quizAnswers])
+
+  const handleGuidedComplete = useCallback((guidedAnswers) => {
+    const merged = { ...quizAnswers, guidedAnswers }
+    setQuizAnswers(merged)
+    const profile = deriveProfile(merged)
+    setTasteProfile(profile)
+    setDirection('forward')
+    setHistory(h => [...h, screen])
+    setScreen('profileReveal')
+  }, [screen, quizAnswers])
 
   const showToast = useCallback((msg) => {
     setToast(msg)
@@ -158,6 +208,21 @@ export default function App() {
         )
       case 'quizIntro':
         return <QuizIntroScreen {...nav} />
+      case 'guidedQuiz':
+        return (
+          <GuidedQuizScreen
+            {...nav}
+            onComplete={handleGuidedComplete}
+          />
+        )
+      case 'rateBottles':
+        return (
+          <RateBottlesScreen
+            {...nav}
+            initialRatings={quizAnswers.wineRatings}
+            onComplete={handleQuizComplete}
+          />
+        )
       case 'quiz':
         return (
           <QuizScreen
