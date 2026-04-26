@@ -13,47 +13,55 @@
  * it lives in src/ui/.
  */
 
-import { wines, tasteProfiles, quizSteps, wineSearchDb } from './data/mockData.js'
+import {
+  wines,
+  tasteProfiles,
+  quizSteps,
+  wineSearchDb,
+  RATING_BUCKETS,
+} from './data/mockData.js'
 import { sortWines as _sortWines } from './engine/sortEngine.js'
 import { computeApproachability as _computeApproachability } from './engine/approachabilityEngine.js'
+import {
+  inferPalateFromRatings as _inferPalateFromRatings,
+  nearestTasteProfile as _nearestTasteProfile,
+  groupRatingsByBucket as _groupRatingsByBucket,
+} from './engine/palateInferenceEngine.js'
 
 // ---------- Data ----------
 
-/** Return the catalog of wines available for results screens. */
-export function getWines() {
-  return wines
-}
+export function getWines() { return wines }
+export function getTasteProfiles() { return tasteProfiles }
+export function getQuizSteps() { return quizSteps }
+export function getWineSearchIndex() { return wineSearchDb }
 
-/** Return the list of available taste profile archetypes. */
-export function getTasteProfiles() {
-  return tasteProfiles
-}
-
-/** Return the ordered list of quiz steps used by the onboarding flow. */
-export function getQuizSteps() {
-  return quizSteps
-}
-
-/** Return the local wine search index used by the quiz "wine search" step. */
-export function getWineSearchIndex() {
-  return wineSearchDb
-}
+/** Five rating buckets used by the wine-rating quiz step. */
+export function getRatingBuckets() { return RATING_BUCKETS }
 
 // ---------- Engines ----------
 
-/**
- * Sort a list of wines using one of the supported sort modes.
- * @param {Array} wineList
- * @param {string} mode  e.g. 'match' | 'price' | 'rating' | 'approachability'
- */
-export function sortWines(wineList, mode) {
-  return _sortWines(wineList, mode)
+export function sortWines(wineList, mode, tasteProfile = null) {
+  return _sortWines(wineList, mode, tasteProfile)
+}
+
+export function computeApproachability(wine) {
+  return _computeApproachability(wine)
 }
 
 /**
- * Compute the 1–5 approachability score for a wine.
- * @param {object} wine
+ * Infer a palate from { wineId: bucketId } ratings.
+ * Returns { palate, confidence, ratedCount, bucketCounts }.
  */
-export function computeApproachability(wine) {
-  return _computeApproachability(wine)
+export function inferPalateFromRatings(ratings) {
+  return _inferPalateFromRatings(ratings)
+}
+
+/** Find the closest archetype for a palate. */
+export function nearestTasteProfile(palate) {
+  return _nearestTasteProfile(palate)
+}
+
+/** Convert { wineId: bucketId } into { bucketId: wineId[] }. */
+export function groupRatingsByBucket(ratings) {
+  return _groupRatingsByBucket(ratings)
 }
