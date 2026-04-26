@@ -10,7 +10,7 @@ import TopBar from '../components/TopBar.jsx'
 const SORT_OPTIONS = [
   { value: 'crowd',  label: 'Crowd Pleasers' },
   { value: 'rating', label: 'Highest Rated' },
-  { value: 'value',  label: 'Value' },
+  { value: 'value',  label: 'Value for Money' },
 ]
 
 export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tasteProfile }) {
