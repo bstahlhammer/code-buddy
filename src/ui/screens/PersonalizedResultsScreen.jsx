@@ -37,7 +37,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
               Your matches
             </h1>
             <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
-              {getWines().length} getWines() · Tap any to explore
+              {getWines().length} wines · Tap any to explore
             </p>
           </div>
           {/* Identity chip */}

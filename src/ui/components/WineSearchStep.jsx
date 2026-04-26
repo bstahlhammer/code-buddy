@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { getWineSearchIndex() } from '@/core/api'
+import { getWineSearchIndex } from '@/core/api'
 
 export default function WineSearchStep({ mode, value = [], onChange }) {
   const [query, setQuery] = useState('')
