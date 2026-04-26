@@ -89,7 +89,7 @@ export default function HomeScreen({ navigate }) {
             fontStyle: 'italic',
           }}
         >
-          Uncork
+          MySom
         </h1>
 
         <div style={{ marginTop: theme.spacing.md }}>
