@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { getTasteProfiles } from '@/core/api'
+import { getTasteProfiles, inferPalateFromRatings, nearestTasteProfile, groupRatingsByBucket } from '@/core/api'
 import DeviceFrame from './ui/components/DeviceFrame.jsx'
 import ScreenTransition from './ui/components/ScreenTransition.jsx'
 import Toast from './ui/components/Toast.jsx'
