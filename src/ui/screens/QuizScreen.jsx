@@ -96,6 +96,13 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
             onChange={val => onAnswerChange(step.id, val)}
           />
         )}
+
+        {isWineRatings && (
+          <WineRatingStep
+            value={quizAnswers[step.id] ?? {}}
+            onChange={val => onAnswerChange(step.id, val)}
+          />
+        )}
       </div>
 
       {/* Footer */}
