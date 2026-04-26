@@ -56,7 +56,94 @@ export const wines = [
   { id:48, name:'Cloudy Bay Sauvignon Blanc', vintage:'2023', region:'Marlborough, NZ', grape:'Sauvignon Blanc', price:'$30', priceNum:30, rating:92, ratingLabel:'Highly rated', body:40, sweetness:8, tannin:3, acidity:84, isValue:false, isCrowd:true, tasting:'Explosive passionfruit, grapefruit, and fresh herbs — the wine that made Marlborough SB famous.', pairings:['Oysters','Grilled fish','Sushi','Goat cheese'], retailers:['whole_foods','grocery','restaurant','wine_shop'] },
   // ── Crowd-pleasing Values ────────────────────────────────────────
   { id:49, name:'Barefoot Bubbly Brut Rosé', vintage:'NV', region:'California', grape:'Sparkling rosé blend', price:'$10', priceNum:10, rating:85, ratingLabel:'Popular pick', body:28, sweetness:35, tannin:5, acidity:62, isValue:true, isCrowd:true, tasting:'Strawberry, light citrus, and toasty bubbles — fun, festive, and affordable.', pairings:['Brunch','Fresh fruit','Light desserts','Charcuterie'], retailers:['costco','trader_joes','whole_foods','grocery'] },
-  { id:50, name:'Tito\'s Handmade Vodka — just kidding, try Layer Cake Malbec', vintage:'2022', region:'Mendoza, Argentina', grape:'Malbec', price:'$13', priceNum:13, rating:87, ratingLabel:'Widely praised', body:76, sweetness:18, tannin:60, acidity:54, isValue:true, isCrowd:true, tasting:'Ripe plum, blueberry, and cocoa with a smooth, crowd-pleasing finish at a great everyday price.', pairings:['Burgers','BBQ','Grilled chicken','Pizza'], retailers:['costco','trader_joes','whole_foods','grocery'] },
+  { id:50, name:'Layer Cake Malbec', vintage:'2022', region:'Mendoza, Argentina', grape:'Malbec', price:'$13', priceNum:13, rating:87, ratingLabel:'Widely praised', body:76, sweetness:18, tannin:60, acidity:54, isValue:true, isCrowd:true, tasting:'Ripe plum, blueberry, and cocoa with a smooth, crowd-pleasing finish at a great everyday price.', pairings:['Burgers','BBQ','Grilled chicken','Pizza'], retailers:['costco','trader_joes','whole_foods','grocery'] },
+]
+
+// Search-only entries: well-known bottles users may have tried but that aren't
+// in the recommendation catalog. UI uses these for the palate-rating step;
+// they have palate axes (body/sweetness/tannin/acidity) so the inference
+// engine can learn from them, but no pricing/retailer/pairing fields.
+export const extraSearchWines = [
+  // ── More California Reds ───────────────────────────────────────────
+  { id:101, name:'Opus One', vintage:'2019', region:'Napa Valley, CA', grape:'Cabernet blend', body:88, sweetness:12, tannin:82, acidity:60 },
+  { id:102, name:'Screaming Eagle Cabernet', vintage:'2018', region:'Napa Valley, CA', grape:'Cabernet Sauvignon', body:90, sweetness:10, tannin:85, acidity:60 },
+  { id:103, name:'Dominus Estate', vintage:'2019', region:'Napa Valley, CA', grape:'Cabernet blend', body:86, sweetness:10, tannin:80, acidity:62 },
+  { id:104, name:'Heitz Cellar Martha\'s Vineyard Cabernet', vintage:'2017', region:'Napa Valley, CA', grape:'Cabernet Sauvignon', body:84, sweetness:12, tannin:78, acidity:58 },
+  { id:105, name:'Ridge Monte Bello', vintage:'2019', region:'Santa Cruz Mountains, CA', grape:'Cabernet blend', body:82, sweetness:10, tannin:78, acidity:64 },
+  { id:106, name:'Kosta Browne Russian River Pinot Noir', vintage:'2021', region:'Russian River Valley, CA', grape:'Pinot Noir', body:55, sweetness:14, tannin:42, acidity:74 },
+  { id:107, name:'Williams Selyem Pinot Noir', vintage:'2021', region:'Russian River Valley, CA', grape:'Pinot Noir', body:52, sweetness:12, tannin:40, acidity:75 },
+  { id:108, name:'Sea Smoke Southing Pinot Noir', vintage:'2021', region:'Sta. Rita Hills, CA', grape:'Pinot Noir', body:58, sweetness:14, tannin:44, acidity:72 },
+  { id:109, name:'Au Bon Climat Pinot Noir', vintage:'2021', region:'Santa Barbara, CA', grape:'Pinot Noir', body:50, sweetness:12, tannin:38, acidity:74 },
+  { id:110, name:'Frog\'s Leap Zinfandel', vintage:'2021', region:'Napa Valley, CA', grape:'Zinfandel', body:74, sweetness:18, tannin:55, acidity:60 },
+  { id:111, name:'Turley Old Vines Zinfandel', vintage:'2021', region:'California', grape:'Zinfandel', body:82, sweetness:20, tannin:62, acidity:58 },
+  { id:112, name:'Justin Isosceles', vintage:'2020', region:'Paso Robles, CA', grape:'Cabernet blend', body:84, sweetness:14, tannin:74, acidity:58 },
+  { id:113, name:'Orin Swift Abstract', vintage:'2021', region:'California', grape:'Red blend', body:80, sweetness:22, tannin:60, acidity:54 },
+  { id:114, name:'Orin Swift Papillon', vintage:'2021', region:'Napa Valley, CA', grape:'Bordeaux blend', body:84, sweetness:14, tannin:76, acidity:58 },
+
+  // ── More California Whites ─────────────────────────────────────────
+  { id:120, name:'Chateau Montelena Chardonnay', vintage:'2021', region:'Napa Valley, CA', grape:'Chardonnay', body:62, sweetness:12, tannin:6, acidity:64 },
+  { id:121, name:'Far Niente Chardonnay', vintage:'2022', region:'Napa Valley, CA', grape:'Chardonnay', body:68, sweetness:18, tannin:7, acidity:58 },
+  { id:122, name:'Stag\'s Leap Karia Chardonnay', vintage:'2022', region:'Napa Valley, CA', grape:'Chardonnay', body:60, sweetness:14, tannin:6, acidity:62 },
+  { id:123, name:'Honig Sauvignon Blanc', vintage:'2023', region:'Napa Valley, CA', grape:'Sauvignon Blanc', body:42, sweetness:10, tannin:4, acidity:78 },
+  { id:124, name:'Chateau St. Jean Fumé Blanc', vintage:'2022', region:'Sonoma, CA', grape:'Sauvignon Blanc', body:44, sweetness:10, tannin:4, acidity:74 },
+
+  // ── Bordeaux ───────────────────────────────────────────────────────
+  { id:130, name:'Château Margaux', vintage:'2018', region:'Margaux, Bordeaux', grape:'Bordeaux blend', body:80, sweetness:8, tannin:80, acidity:68 },
+  { id:131, name:'Château Lafite Rothschild', vintage:'2018', region:'Pauillac, Bordeaux', grape:'Bordeaux blend', body:80, sweetness:8, tannin:82, acidity:68 },
+  { id:132, name:'Château Mouton Rothschild', vintage:'2018', region:'Pauillac, Bordeaux', grape:'Bordeaux blend', body:84, sweetness:10, tannin:82, acidity:66 },
+  { id:133, name:'Château Latour', vintage:'2017', region:'Pauillac, Bordeaux', grape:'Bordeaux blend', body:84, sweetness:8, tannin:84, acidity:66 },
+  { id:134, name:'Château Haut-Brion', vintage:'2018', region:'Pessac-Léognan, Bordeaux', grape:'Bordeaux blend', body:80, sweetness:8, tannin:78, acidity:68 },
+  { id:135, name:'Château Pichon Baron', vintage:'2019', region:'Pauillac, Bordeaux', grape:'Bordeaux blend', body:80, sweetness:10, tannin:78, acidity:66 },
+  { id:136, name:'Château d\'Yquem', vintage:'2017', region:'Sauternes, Bordeaux', grape:'Sémillon blend', body:60, sweetness:92, tannin:5, acidity:72 },
+
+  // ── Burgundy ───────────────────────────────────────────────────────
+  { id:140, name:'Domaine de la Romanée-Conti La Tâche', vintage:'2019', region:'Vosne-Romanée, Burgundy', grape:'Pinot Noir', body:60, sweetness:10, tannin:55, acidity:80 },
+  { id:141, name:'Louis Jadot Gevrey-Chambertin', vintage:'2020', region:'Côte de Nuits, Burgundy', grape:'Pinot Noir', body:55, sweetness:10, tannin:50, acidity:74 },
+  { id:142, name:'Joseph Drouhin Chablis', vintage:'2022', region:'Chablis, Burgundy', grape:'Chardonnay', body:48, sweetness:8, tannin:4, acidity:78 },
+  { id:143, name:'Olivier Leflaive Puligny-Montrachet', vintage:'2021', region:'Côte de Beaune, Burgundy', grape:'Chardonnay', body:62, sweetness:10, tannin:5, acidity:70 },
+  { id:144, name:'Bouchard Meursault', vintage:'2021', region:'Côte de Beaune, Burgundy', grape:'Chardonnay', body:64, sweetness:12, tannin:5, acidity:68 },
+
+  // ── Champagne & Sparkling ──────────────────────────────────────────
+  { id:150, name:'Dom Pérignon', vintage:'2013', region:'Champagne, France', grape:'Champagne blend', body:48, sweetness:14, tannin:5, acidity:78 },
+  { id:151, name:'Krug Grande Cuvée', vintage:'NV', region:'Champagne, France', grape:'Champagne blend', body:54, sweetness:12, tannin:5, acidity:76 },
+  { id:152, name:'Veuve Clicquot Yellow Label Brut', vintage:'NV', region:'Champagne, France', grape:'Champagne blend', body:46, sweetness:14, tannin:4, acidity:74 },
+  { id:153, name:'Moët & Chandon Impérial Brut', vintage:'NV', region:'Champagne, France', grape:'Champagne blend', body:44, sweetness:16, tannin:4, acidity:72 },
+  { id:154, name:'Ruinart Blanc de Blancs', vintage:'NV', region:'Champagne, France', grape:'Chardonnay', body:42, sweetness:10, tannin:3, acidity:80 },
+  { id:155, name:'La Marca Prosecco', vintage:'NV', region:'Veneto, Italy', grape:'Glera', body:34, sweetness:24, tannin:3, acidity:64 },
+  { id:156, name:'Mionetto Prosecco', vintage:'NV', region:'Veneto, Italy', grape:'Glera', body:32, sweetness:22, tannin:3, acidity:62 },
+  { id:157, name:'Freixenet Cordon Negro Cava', vintage:'NV', region:'Catalunya, Spain', grape:'Cava blend', body:36, sweetness:14, tannin:3, acidity:68 },
+  { id:158, name:'Schramsberg Blanc de Blancs', vintage:'2019', region:'North Coast, CA', grape:'Chardonnay', body:42, sweetness:10, tannin:4, acidity:76 },
+
+  // ── Italian ────────────────────────────────────────────────────────
+  { id:160, name:'Sassicaia (Tenuta San Guido)', vintage:'2020', region:'Bolgheri, Tuscany', grape:'Cabernet blend', body:84, sweetness:10, tannin:80, acidity:66 },
+  { id:161, name:'Ornellaia', vintage:'2020', region:'Bolgheri, Tuscany', grape:'Bordeaux blend', body:84, sweetness:10, tannin:78, acidity:66 },
+  { id:162, name:'Masseto', vintage:'2019', region:'Bolgheri, Tuscany', grape:'Merlot', body:86, sweetness:12, tannin:78, acidity:62 },
+  { id:163, name:'Gaja Barbaresco', vintage:'2019', region:'Piedmont, Italy', grape:'Nebbiolo', body:78, sweetness:8, tannin:84, acidity:74 },
+  { id:164, name:'Bruno Giacosa Barolo', vintage:'2018', region:'Piedmont, Italy', grape:'Nebbiolo', body:80, sweetness:8, tannin:88, acidity:72 },
+  { id:165, name:'Vietti Barolo Castiglione', vintage:'2019', region:'Piedmont, Italy', grape:'Nebbiolo', body:78, sweetness:8, tannin:84, acidity:72 },
+  { id:166, name:'Allegrini Amarone della Valpolicella', vintage:'2018', region:'Veneto, Italy', grape:'Corvina blend', body:88, sweetness:22, tannin:72, acidity:62 },
+  { id:167, name:'Masi Costasera Amarone', vintage:'2018', region:'Veneto, Italy', grape:'Corvina blend', body:86, sweetness:24, tannin:70, acidity:62 },
+
+  // ── Rhône & Other French ───────────────────────────────────────────
+  { id:170, name:'Château de Beaucastel Châteauneuf-du-Pape', vintage:'2020', region:'Rhône, France', grape:'Grenache blend', body:82, sweetness:12, tannin:70, acidity:62 },
+  { id:171, name:'E. Guigal Côtes du Rhône', vintage:'2021', region:'Rhône, France', grape:'Grenache blend', body:72, sweetness:12, tannin:58, acidity:62 },
+  { id:172, name:'M. Chapoutier Crozes-Hermitage', vintage:'2021', region:'Rhône, France', grape:'Syrah', body:78, sweetness:12, tannin:68, acidity:64 },
+  { id:173, name:'Sancerre (Henri Bourgeois)', vintage:'2022', region:'Loire, France', grape:'Sauvignon Blanc', body:42, sweetness:8, tannin:3, acidity:82 },
+  { id:174, name:'Pouilly-Fumé (de Ladoucette)', vintage:'2022', region:'Loire, France', grape:'Sauvignon Blanc', body:44, sweetness:8, tannin:3, acidity:80 },
+
+  // ── Spanish ────────────────────────────────────────────────────────
+  { id:180, name:'Vega Sicilia Único', vintage:'2012', region:'Ribera del Duero, Spain', grape:'Tempranillo blend', body:84, sweetness:10, tannin:80, acidity:66 },
+  { id:181, name:'Pingus', vintage:'2019', region:'Ribera del Duero, Spain', grape:'Tempranillo', body:88, sweetness:12, tannin:82, acidity:62 },
+  { id:182, name:'Marqués de Cáceres Rioja Reserva', vintage:'2018', region:'Rioja, Spain', grape:'Tempranillo blend', body:74, sweetness:12, tannin:66, acidity:62 },
+  { id:183, name:'La Rioja Alta Viña Ardanza Reserva', vintage:'2016', region:'Rioja, Spain', grape:'Tempranillo blend', body:74, sweetness:12, tannin:65, acidity:64 },
+
+  // ── Portuguese & Other ─────────────────────────────────────────────
+  { id:190, name:'Quinta do Noval Vintage Port', vintage:'2017', region:'Douro, Portugal', grape:'Port blend', body:90, sweetness:88, tannin:70, acidity:50 },
+  { id:191, name:'Taylor Fladgate 20 Year Tawny Port', vintage:'NV', region:'Douro, Portugal', grape:'Port blend', body:78, sweetness:80, tannin:50, acidity:54 },
+  { id:192, name:'Dr. Loosen Riesling Kabinett', vintage:'2022', region:'Mosel, Germany', grape:'Riesling', body:34, sweetness:55, tannin:3, acidity:82 },
+  { id:193, name:'Egon Müller Scharzhofberger Riesling', vintage:'2021', region:'Mosel, Germany', grape:'Riesling', body:38, sweetness:50, tannin:3, acidity:84 },
+  { id:194, name:'Yalumba The Signature Cabernet-Shiraz', vintage:'2018', region:'Barossa, Australia', grape:'Cabernet-Shiraz', body:84, sweetness:14, tannin:74, acidity:58 },
+  { id:195, name:'Henschke Hill of Grace Shiraz', vintage:'2018', region:'Eden Valley, Australia', grape:'Shiraz', body:90, sweetness:12, tannin:84, acidity:60 },
 ]
 
 export const wineSearchDb = wines.map(w => ({
