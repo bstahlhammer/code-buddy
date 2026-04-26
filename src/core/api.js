@@ -27,6 +27,12 @@ import {
   nearestTasteProfile as _nearestTasteProfile,
   groupRatingsByBucket as _groupRatingsByBucket,
 } from './engine/palateInferenceEngine.js'
+import {
+  getInitialNode as _getGuidedInitialNode,
+  getNode as _getGuidedNode,
+  getNextNode as _getGuidedNextNode,
+  computePalateFromGuidedAnswers as _computePalateFromGuidedAnswers,
+} from './engine/guidedQuizEngine.js'
 
 // ---------- Data ----------
 
@@ -64,4 +70,15 @@ export function nearestTasteProfile(palate) {
 /** Convert { wineId: bucketId } into { bucketId: wineId[] }. */
 export function groupRatingsByBucket(ratings) {
   return _groupRatingsByBucket(ratings)
+}
+
+// ---------- Guided quiz ----------
+
+export function getGuidedInitialNode() { return _getGuidedInitialNode() }
+export function getGuidedNode(id)      { return _getGuidedNode(id) }
+export function getGuidedNextNode(id, answer, all) {
+  return _getGuidedNextNode(id, answer, all)
+}
+export function computePalateFromGuidedAnswers(answers) {
+  return _computePalateFromGuidedAnswers(answers)
 }
