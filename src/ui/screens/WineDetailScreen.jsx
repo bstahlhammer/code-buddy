@@ -6,7 +6,7 @@ import MatchScore from '../components/MatchScore.jsx'
 import ScoreBar from '../components/ScoreBar.jsx'
 import FoodPairingChip from '../components/FoodPairingChip.jsx'
 import TopBar from '../components/TopBar.jsx'
-import { computeApproachability } from '../engine/approachabilityEngine.js'
+import { computeApproachability } from '@/core/api'
 
 const RATINGS = [
   { emoji: '❤️', label: 'Love it' },

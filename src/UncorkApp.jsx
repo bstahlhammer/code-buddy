@@ -1,18 +1,18 @@
 import { useState, useCallback } from 'react'
-import { tasteProfiles } from './data/mockData.js'
-import DeviceFrame from './components/DeviceFrame.jsx'
-import ScreenTransition from './components/ScreenTransition.jsx'
-import Toast from './components/Toast.jsx'
+import { getTasteProfiles } from '@/core/api'
+import DeviceFrame from './ui/components/DeviceFrame.jsx'
+import ScreenTransition from './ui/components/ScreenTransition.jsx'
+import Toast from './ui/components/Toast.jsx'
 
-import HomeScreen from './screens/HomeScreen.jsx'
-import ScanPromptScreen from './screens/ScanPromptScreen.jsx'
-import ScanningScreen from './screens/ScanningScreen.jsx'
-import AnonResultsScreen from './screens/AnonResultsScreen.jsx'
-import QuizIntroScreen from './screens/QuizIntroScreen.jsx'
-import QuizScreen from './screens/QuizScreen.jsx'
-import ProfileRevealScreen from './screens/ProfileRevealScreen.jsx'
-import PersonalizedResultsScreen from './screens/PersonalizedResultsScreen.jsx'
-import WineDetailScreen from './screens/WineDetailScreen.jsx'
+import HomeScreen from './ui/screens/HomeScreen.jsx'
+import ScanPromptScreen from './ui/screens/ScanPromptScreen.jsx'
+import ScanningScreen from './ui/screens/ScanningScreen.jsx'
+import AnonResultsScreen from './ui/screens/AnonResultsScreen.jsx'
+import QuizIntroScreen from './ui/screens/QuizIntroScreen.jsx'
+import QuizScreen from './ui/screens/QuizScreen.jsx'
+import ProfileRevealScreen from './ui/screens/ProfileRevealScreen.jsx'
+import PersonalizedResultsScreen from './ui/screens/PersonalizedResultsScreen.jsx'
+import WineDetailScreen from './ui/screens/WineDetailScreen.jsx'
 
 const INITIAL_QUIZ_ANSWERS = {
   flavorPreferences: [],
@@ -42,10 +42,10 @@ function deriveProfile(quizAnswers) {
     acidity:   Math.max(0, 100 - boldness * 0.5),
   }
 
-  let best = tasteProfiles[0]
+  let best = getTasteProfiles()[0]
   let bestDist = Infinity
 
-  for (const profile of tasteProfiles) {
+  for (const profile of getTasteProfiles()) {
     const p = profile.palate
     const dist = Math.sqrt(
       (palate.body      - p.body)      ** 2 +

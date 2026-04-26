@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { wineSearchDb } from '../data/mockData.js'
+import { getWineSearchIndex() } from '@/core/api'
 
 export default function WineSearchStep({ mode, value = [], onChange }) {
   const [query, setQuery] = useState('')
@@ -9,7 +9,7 @@ export default function WineSearchStep({ mode, value = [], onChange }) {
   const accentColor = isHate ? '#A32D2D' : theme.colors.brand
 
   const results = query.length >= 1
-    ? wineSearchDb.filter(w => {
+    ? getWineSearchIndex().filter(w => {
         const q = query.toLowerCase()
         return (
           w.name.toLowerCase().includes(q) ||
@@ -30,7 +30,7 @@ export default function WineSearchStep({ mode, value = [], onChange }) {
     onChange(value.filter(v => v !== id))
   }
 
-  const addedWines = wineSearchDb.filter(w => value.includes(w.id))
+  const addedWines = getWineSearchIndex().filter(w => value.includes(w.id))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
