@@ -8,7 +8,7 @@ import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
 
 const SORT_OPTIONS = [
-  { value: 'crowd',  label: 'Crowd' },
+  { value: 'crowd',  label: 'Crowd Pleasers' },
   { value: 'rating', label: 'Rating' },
   { value: 'value',  label: 'Value' },
 ]
