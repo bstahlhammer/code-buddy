@@ -124,10 +124,10 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
             transition: 'background-color 0.15s ease',
           }}
         >
-          {isLast ? 'See my taste profile' : isWineSearch ? 'Done' : 'Continue'}
+          {isLast ? 'See my taste profile' : isOptionalSearch ? 'Done' : 'Continue'}
         </button>
 
-        {isWineSearch && (
+        {isOptionalSearch && (
           <button
             onClick={handleContinue}
             style={{
