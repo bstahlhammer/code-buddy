@@ -146,14 +146,17 @@ export const extraSearchWines = [
   { id:195, name:'Henschke Hill of Grace Shiraz', vintage:'2018', region:'Eden Valley, Australia', grape:'Shiraz', body:90, sweetness:12, tannin:84, acidity:60 },
 ]
 
-export const wineSearchDb = wines.map(w => ({
-  id: w.id,
-  name: w.name,
-  vintage: w.vintage,
-  region: w.region,
-  grape: w.grape,
-  price: w.price,
-}))
+// Combined search index: catalog wines + search-only well-known bottles.
+// All entries carry palate axes so the inference engine can derive a profile
+// from any rated wine, regardless of whether it's a recommendation candidate.
+export const wineSearchDb = [
+  ...wines.map(w => ({
+    id: w.id, name: w.name, vintage: w.vintage, region: w.region,
+    grape: w.grape, price: w.price,
+    body: w.body, sweetness: w.sweetness, tannin: w.tannin, acidity: w.acidity,
+  })),
+  ...extraSearchWines,
+]
 
 export const tasteProfiles = [
   {
