@@ -8,7 +8,7 @@ import TopBar from '../components/TopBar.jsx'
 
 const SORT_OPTIONS = [
   { value: 'match',          label: 'My Match' },
-  { value: 'crowd',          label: 'Crowd' },
+  { value: 'crowd',          label: 'Crowd Pleasers' },
   { value: 'value',          label: 'Value' },
   { value: 'approachability', label: 'For group' },
 ]
