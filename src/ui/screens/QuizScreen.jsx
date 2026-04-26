@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { quizSteps } from '../data/mockData.js'
+import { getQuizSteps } from '@/core/api'
 import ProgressBar from '../components/ProgressBar.jsx'
 import PillGroup from '../components/PillGroup.jsx'
 import SliderStep from '../components/SliderStep.jsx'
@@ -18,8 +18,8 @@ function isStepComplete(step, answers) {
 export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChange, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0)
 
-  const step = quizSteps[currentStep]
-  const isLast = currentStep === quizSteps.length - 1
+  const step = getQuizSteps()[currentStep]
+  const isLast = currentStep === getQuizSteps().length - 1
   const canContinue = isStepComplete(step, quizAnswers)
 
   // Slider: ensure we always have a number
@@ -49,7 +49,7 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
       <div style={{ flexShrink: 0 }}>
         <ProgressBar
           current={currentStep}
-          total={quizSteps.length}
+          total={getQuizSteps().length}
           onStepClick={handleStepClick}
         />
       </div>
@@ -57,7 +57,7 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
       {/* Step header */}
       <div style={{ flexShrink: 0, padding: `${theme.spacing.xl} ${theme.spacing.lg} ${theme.spacing.md}` }}>
         <div style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.gold, fontFamily: theme.typography.fontSans, fontWeight: theme.typography.weights.medium, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: theme.spacing.xs }}>
-          Step {currentStep + 1} of {quizSteps.length}
+          Step {currentStep + 1} of {getQuizSteps().length}
         </div>
         <h2 style={{ fontFamily: theme.typography.fontSerif, fontSize: theme.typography.sizes.xl, fontWeight: theme.typography.weights.normal, color: isHate ? '#A32D2D' : theme.colors.text, lineHeight: 1.3, marginBottom: theme.spacing.xs }}>
           {step.title}

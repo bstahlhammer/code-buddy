@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { wines } from '../data/mockData.js'
-import { sortWines } from '../engine/sortEngine.js'
+import { getWines, sortWines } from '@/core/api'
 import WineCard from '../components/WineCard.jsx'
 import SortToggle from '../components/SortToggle.jsx'
 import BottomNav from '../components/BottomNav.jsx'
@@ -19,7 +18,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   const [sortKey, setSortKey] = useState(defaultSort)
 
   const sortedWines = useMemo(
-    () => sortWines(wines, sortKey, tasteProfile),
+    () => sortWines(getWines(), sortKey, tasteProfile),
     [sortKey, tasteProfile]
   )
 
@@ -38,7 +37,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
               Your matches
             </h1>
             <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
-              {wines.length} wines · Tap any to explore
+              {getWines().length} wines · Tap any to explore
             </p>
           </div>
           {/* Identity chip */}
