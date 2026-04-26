@@ -14,36 +14,40 @@ export default function WineCard({ wine, personalized, isBestMatch, onTap }) {
       style={{
         width: '100%',
         backgroundColor: theme.colors.surface,
+        backgroundImage: isBestMatch
+          ? `linear-gradient(180deg, ${theme.colors.surface} 0%, ${theme.colors.surfaceAlt} 100%)`
+          : 'none',
         border: isBestMatch
-          ? `1.5px solid ${theme.colors.brand}`
-          : `0.5px solid ${theme.colors.border}`,
+          ? `1px solid ${theme.colors.gold}`
+          : `1px solid ${theme.colors.border}`,
         borderRadius: theme.radius.md,
-        padding: theme.spacing.md,
+        padding: theme.spacing.lg,
         cursor: 'pointer',
         textAlign: 'left',
-        boxShadow: theme.shadows.card,
+        boxShadow: isBestMatch ? theme.shadows.brass : theme.shadows.card,
         display: 'flex',
         flexDirection: 'column',
-        gap: theme.spacing.xs,
-        transition: 'box-shadow 0.15s ease',
+        gap: theme.spacing.sm,
+        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+        position: 'relative',
       }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = theme.shadows.elevated }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = theme.shadows.card }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = isBestMatch ? theme.shadows.brass : theme.shadows.card }}
     >
       {/* Best match overline */}
       {isBestMatch && (
-        <div style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.brand, fontFamily: theme.typography.fontSans, fontWeight: theme.typography.weights.medium, letterSpacing: '0.08em', marginBottom: 2 }}>
-          ★ YOUR BEST MATCH
+        <div style={{ fontSize: '10px', color: theme.colors.gold, fontFamily: theme.typography.fontSans, fontWeight: 600, letterSpacing: '0.24em', textTransform: 'uppercase', marginBottom: 2 }}>
+          ✦ Your Best Match ✦
         </div>
       )}
 
       {/* Row 1: Name + match score */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: theme.spacing.sm }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: theme.typography.sizes.md, fontWeight: theme.typography.weights.medium, color: theme.colors.text, fontFamily: theme.typography.fontSans, lineHeight: 1.3 }}>
+          <div style={{ fontSize: '20px', fontWeight: 500, color: theme.colors.text, fontFamily: theme.typography.fontDisplay, lineHeight: 1.2, letterSpacing: '0.005em' }}>
             {wine.name}
           </div>
-          <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 2 }}>
+          <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 4, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
             {wine.vintage} · {wine.region} · {wine.price}
           </div>
         </div>

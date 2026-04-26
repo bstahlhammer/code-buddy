@@ -16,13 +16,15 @@ export default function Badge({ variant, label }) {
         alignItems: 'center',
         backgroundColor: v.bg,
         color: v.color,
-        fontSize: theme.typography.sizes.xs,
-        fontWeight: theme.typography.weights.medium,
+        fontSize: '10px',
+        fontWeight: 600,
         fontFamily: theme.typography.fontSans,
-        borderRadius: theme.radius.pill,
-        padding: '2px 8px',
+        borderRadius: theme.radius.sm,
+        padding: '3px 8px',
         whiteSpace: 'nowrap',
-        letterSpacing: '0.01em',
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        border: `1px solid ${v.color}25`,
       }}
     >
       {label}

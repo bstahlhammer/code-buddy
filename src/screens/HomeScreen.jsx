@@ -1,12 +1,43 @@
 import { theme } from '../theme/theme.js'
 
-function WineGlassIcon() {
+function Monogram() {
+  // Brass-line wine glass monogram inside a thin brass ring
   return (
-    <svg width="48" height="64" viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 4 L40 4 L32 28 Q24 36 24 44 L24 56" stroke="#C9922A" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-      <path d="M32 28 Q24 36 16 28 L8 4" stroke="#C9922A" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.4"/>
-      <line x1="16" y1="56" x2="32" y2="56" stroke="#C9922A" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
+    <div
+      style={{
+        width: 88,
+        height: 88,
+        borderRadius: '50%',
+        border: `1px solid ${theme.colors.gold}`,
+        boxShadow: `0 0 0 6px ${theme.colors.brandDark}, 0 0 0 7px ${theme.colors.gold}40`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto',
+      }}
+    >
+      <svg width="40" height="52" viewBox="0 0 40 52" fill="none">
+        <path
+          d="M8 4 H32 L28 22 Q20 30 12 22 Z"
+          stroke={theme.colors.goldBright}
+          strokeWidth="1.2"
+          fill="none"
+          strokeLinejoin="round"
+        />
+        <line x1="20" y1="30" x2="20" y2="44" stroke={theme.colors.goldBright} strokeWidth="1.2" />
+        <line x1="12" y1="44" x2="28" y2="44" stroke={theme.colors.goldBright} strokeWidth="1.2" strokeLinecap="round" />
+      </svg>
+    </div>
+  )
+}
+
+function BrassDivider({ width = 48 }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '0 auto' }}>
+      <span style={{ width, height: 1, background: `linear-gradient(to right, transparent, ${theme.colors.gold}, transparent)` }} />
+      <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: theme.colors.gold }} />
+      <span style={{ width, height: 1, background: `linear-gradient(to right, transparent, ${theme.colors.gold}, transparent)` }} />
+    </div>
   )
 }
 
@@ -17,100 +48,128 @@ export default function HomeScreen({ navigate }) {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: theme.colors.brandDark,
+        background: `radial-gradient(ellipse at top, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 70%)`,
         padding: `${theme.spacing.xxl} ${theme.spacing.xl}`,
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: theme.spacing.xl,
+        justifyContent: 'space-between',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      {/* Wordmark */}
-      <div style={{ textAlign: 'center' }}>
-        <WineGlassIcon />
+      {/* Subtle parchment texture overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.04,
+        backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px), radial-gradient(circle at 70% 80%, #fff 1px, transparent 1px)',
+        backgroundSize: '40px 40px, 60px 60px',
+      }} />
+
+      <div style={{ position: 'relative', textAlign: 'center', marginTop: theme.spacing.xxl }}>
+        <Monogram />
+
+        <div style={{
+          fontFamily: theme.typography.fontSans,
+          fontSize: '10px',
+          letterSpacing: '0.32em',
+          color: theme.colors.gold,
+          marginTop: theme.spacing.lg,
+          textTransform: 'uppercase',
+          fontWeight: 500,
+        }}>
+          Est. Cellar
+        </div>
+
         <h1
           style={{
-            fontFamily: theme.typography.fontSerif,
-            fontSize: '52px',
-            fontWeight: theme.typography.weights.normal,
+            fontFamily: theme.typography.fontDisplay,
+            fontSize: '64px',
+            fontWeight: 500,
             color: theme.colors.cream,
-            letterSpacing: '0.06em',
-            marginTop: theme.spacing.md,
+            letterSpacing: '0.04em',
+            marginTop: theme.spacing.sm,
             lineHeight: 1,
+            fontStyle: 'italic',
           }}
         >
           Uncork
         </h1>
+
+        <div style={{ marginTop: theme.spacing.md }}>
+          <BrassDivider />
+        </div>
+
         <p
           style={{
-            fontFamily: theme.typography.fontSerif,
-            fontSize: theme.typography.sizes.lg,
-            color: theme.colors.gold,
+            fontFamily: theme.typography.fontDisplay,
+            fontSize: '18px',
+            color: theme.colors.parchment,
             fontStyle: 'italic',
-            marginTop: theme.spacing.sm,
-            letterSpacing: '0.02em',
+            marginTop: theme.spacing.md,
+            letterSpacing: '0.04em',
+            opacity: 0.9,
           }}
         >
           Wine, understood.
         </p>
       </div>
 
-      {/* Primary CTAs */}
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginTop: theme.spacing.lg }}>
+      {/* CTAs */}
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
         <button
           onClick={() => navigate('scanPrompt')}
           style={{
             width: '100%',
-            padding: '16px',
-            backgroundColor: theme.colors.brand,
-            color: theme.colors.cream,
+            padding: '18px',
+            background: `linear-gradient(180deg, ${theme.colors.goldBright} 0%, ${theme.colors.gold} 100%)`,
+            color: theme.colors.brandDark,
             border: 'none',
-            borderRadius: theme.radius.md,
-            fontSize: theme.typography.sizes.lg,
-            fontWeight: theme.typography.weights.medium,
+            borderRadius: theme.radius.sm,
+            fontSize: '15px',
+            fontWeight: 600,
             fontFamily: theme.typography.fontSans,
             cursor: 'pointer',
-            lineHeight: 1.3,
-            textAlign: 'center',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            boxShadow: theme.shadows.brass,
           }}
         >
-          I need to choose a wine right now
+          Choose a wine now
         </button>
 
         <button
           onClick={() => navigate('quizIntro')}
           style={{
             width: '100%',
-            padding: '16px',
+            padding: '17px',
             backgroundColor: 'transparent',
             color: theme.colors.cream,
-            border: `1.5px solid ${theme.colors.cream}50`,
-            borderRadius: theme.radius.md,
-            fontSize: theme.typography.sizes.lg,
-            fontWeight: theme.typography.weights.medium,
+            border: `1px solid ${theme.colors.gold}80`,
+            borderRadius: theme.radius.sm,
+            fontSize: '15px',
+            fontWeight: 500,
             fontFamily: theme.typography.fontSans,
             cursor: 'pointer',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
           }}
         >
           Build my taste profile
         </button>
-      </div>
 
-      {/* Ghost link */}
-      <button
-        onClick={() => navigate('scanPrompt')}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: `${theme.colors.cream}70`,
-          fontSize: theme.typography.sizes.md,
-          fontFamily: theme.typography.fontSans,
-          cursor: 'pointer',
-          textDecoration: 'underline',
-          textUnderlineOffset: '3px',
-        }}
-      >
-        Just let me explore
-      </button>
+        <button
+          onClick={() => navigate('scanPrompt')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: `${theme.colors.parchment}99`,
+            fontSize: theme.typography.sizes.md,
+            fontFamily: theme.typography.fontDisplay,
+            fontStyle: 'italic',
+            cursor: 'pointer',
+            marginTop: theme.spacing.xs,
+          }}
+        >
+          — just let me explore —
+        </button>
+      </div>
     </div>
   )
 }
