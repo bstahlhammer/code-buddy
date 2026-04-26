@@ -107,7 +107,7 @@ export default function HomeScreen({ navigate }) {
             opacity: 0.9,
           }}
         >
-          Wine, understood.
+          Uncork the world of wine
         </p>
       </div>
 
