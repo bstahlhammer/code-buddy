@@ -41,6 +41,8 @@ export default function QuizScreen({ navigate, goBack, quizAnswers, onAnswerChan
   }
 
   const isWineSearch = step.type === 'wine_search'
+  const isWineRatings = step.type === 'wine_ratings'
+  const isOptionalSearch = isWineSearch || isWineRatings
   const isHate = step.mode === 'hate'
 
   return (
