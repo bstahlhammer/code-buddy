@@ -20,6 +20,8 @@ const INITIAL_QUIZ_ANSWERS = {
   mealAppeal: null,
   boldness: 50,
   sweetness: null,
+  wineRatings: {},      // { [wineId]: bucketId }
+  // legacy fields kept for backwards compatibility
   lovedWineIds: [],
   hatedWineIds: [],
 }
@@ -32,34 +34,40 @@ const SWEETNESS_MAP = {
 }
 
 function deriveProfile(quizAnswers) {
-  const boldness    = quizAnswers.boldness ?? 50
-  const sweetnessVal = SWEETNESS_MAP[quizAnswers.sweetness] ?? 30
+  const ratings = quizAnswers.wineRatings ?? {}
+  const inferred = inferPalateFromRatings(ratings)
 
-  const palate = {
+  // Slider/sweetness fallback palate (used when no wines have been rated)
+  const boldness     = quizAnswers.boldness ?? 50
+  const sweetnessVal = SWEETNESS_MAP[quizAnswers.sweetness] ?? 30
+  const sliderPalate = {
     body:      boldness,
     sweetness: sweetnessVal,
     tannin:    boldness * 0.9,
     acidity:   Math.max(0, 100 - boldness * 0.5),
   }
 
-  let best = getTasteProfiles()[0]
-  let bestDist = Infinity
-
-  for (const profile of getTasteProfiles()) {
-    const p = profile.palate
-    const dist = Math.sqrt(
-      (palate.body      - p.body)      ** 2 +
-      (palate.sweetness - p.sweetness) ** 2 +
-      (palate.tannin    - p.tannin)    ** 2 +
-      (palate.acidity   - p.acidity)   ** 2
-    )
-    if (dist < bestDist) { bestDist = dist; best = profile }
+  // Blend: ratings-driven palate dominates as confidence rises; otherwise
+  // fall back to slider answers so users who skip ratings still get a
+  // meaningful profile.
+  const c = inferred.confidence
+  const palate = {
+    body:      Math.round(inferred.palate.body      * c + sliderPalate.body      * (1 - c)),
+    sweetness: Math.round(inferred.palate.sweetness * c + sliderPalate.sweetness * (1 - c)),
+    tannin:    Math.round(inferred.palate.tannin    * c + sliderPalate.tannin    * (1 - c)),
+    acidity:   Math.round(inferred.palate.acidity   * c + sliderPalate.acidity   * (1 - c)),
   }
 
+  const archetype = nearestTasteProfile(palate)
+  const ratingsByBucket = groupRatingsByBucket(ratings)
+
   return {
-    ...best,
-    lovedWineIds: quizAnswers.lovedWineIds ?? [],
-    hatedWineIds: quizAnswers.hatedWineIds ?? [],
+    ...archetype,
+    palate,
+    ratingsByBucket,
+    inferenceConfidence: c,
+    lovedWineIds: ratingsByBucket.loved ?? [],
+    hatedWineIds: ratingsByBucket.hated ?? [],
   }
 }
 
