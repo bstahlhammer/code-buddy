@@ -255,4 +255,23 @@ export const quizSteps = [
     subtitle: 'Pick one',
     options: ['Grilled steak or lamb', 'Salmon or seafood', 'Pasta or pizza', 'Cheese and charcuterie', 'Just sipping solo'],
   },
+  {
+    id: 'wineRatings',
+    type: 'wine_ratings',
+    required: false,
+    title: "Rate wines you've had",
+    subtitle: 'Search any bottles you remember and tell us how you felt — your palate updates live.',
+  },
+]
+
+// Five rating buckets, ordered from most-positive to most-negative signal.
+// `weight` drives how strongly the wine pulls the inferred palate toward
+// (positive) or away from (negative) its axes. `matchDelta` is applied to
+// the match score for that specific wine in the match engine.
+export const RATING_BUCKETS = [
+  { id: 'loved',    label: 'Loved it',  emoji: '❤️', weight:  2.0, matchDelta:  35 },
+  { id: 'liked',    label: 'Liked it',  emoji: '👍', weight:  1.0, matchDelta:  15 },
+  { id: 'ok',       label: 'It was OK', emoji: '🤷', weight:  0.0, matchDelta:   0 },
+  { id: 'disliked', label: 'Disliked',  emoji: '👎', weight: -1.0, matchDelta: -15 },
+  { id: 'hated',    label: 'Hated it',  emoji: '🚫', weight: -2.0, matchDelta: -35 },
 ]
