@@ -5,6 +5,7 @@ import ProgressBar from '../components/ProgressBar.jsx'
 import PillGroup from '../components/PillGroup.jsx'
 import SliderStep from '../components/SliderStep.jsx'
 import WineSearchStep from '../components/WineSearchStep.jsx'
+import WineRatingStep from '../components/WineRatingStep.jsx'
 import TopBar from '../components/TopBar.jsx'
 
 function isStepComplete(step, answers) {
