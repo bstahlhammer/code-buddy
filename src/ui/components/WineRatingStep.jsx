@@ -71,6 +71,8 @@ export default function WineRatingStep({ value = {}, onChange, aiPalate = null, 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg, paddingBottom: theme.spacing.lg }}>
+      <DescribeStep aiPalate={aiPalate} onAiPalateChange={onAiPalateChange} />
+
       {/* Search input */}
       <div style={{ position: 'relative' }}>
         <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: theme.colors.textMuted, fontSize: 16 }}>
