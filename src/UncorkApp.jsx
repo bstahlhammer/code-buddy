@@ -57,6 +57,12 @@ function deriveProfile(quizAnswers) {
   const guided  = quizAnswers.guidedAnswers ?? {}
   const inferredG = computePalateFromGuidedAnswers(guided)
 
+  // AI free-text describe palate — strong signal when the user confirms it.
+  // Weight ~1.5 (same as a couple of rated bottles): meaningful but not
+  // overwhelming if the user also rates specific wines.
+  const aiPalate = quizAnswers.aiPalate ?? null
+  const aiConfidence = aiPalate ? 1.5 : 0
+
   // Legacy slider/sweetness signal
   const hasSlider = quizAnswers.boldness !== undefined || quizAnswers.sweetness
   const boldness     = quizAnswers.boldness ?? 50
@@ -69,13 +75,13 @@ function deriveProfile(quizAnswers) {
   }
   const sliderConfidence = hasSlider && quizAnswers.sweetness ? 0.3 : 0
 
-  // Weighted blend across all three sources. If nothing is answered we
-  // fall back fully to the slider's neutral defaults.
+  // Weighted blend across all sources.
   const sources = [
     { palate: inferredR.palate,  weight: inferredR.confidence },
     { palate: inferredG.palate,  weight: inferredG.confidence },
+    { palate: aiPalate,          weight: aiConfidence },
     { palate: sliderPalate,      weight: sliderConfidence },
-  ]
+  ].filter(s => s.palate)
   const totalWeight = sources.reduce((s, x) => s + x.weight, 0)
 
   let palate
@@ -106,6 +112,7 @@ function deriveProfile(quizAnswers) {
     flavorCharacter: inferredG.flavorCharacter,
     lovedWineIds: ratingsByBucket.loved ?? [],
     hatedWineIds: ratingsByBucket.hated ?? [],
+    hasAiSignal: !!aiPalate,
   }
 }
 
