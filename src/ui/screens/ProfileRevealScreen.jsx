@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { theme } from '../theme/theme.js'
 import ScoreBar from '../components/ScoreBar.jsx'
 import TopBar from '../components/TopBar.jsx'
+import { getWines, sortWines } from '@/core/api'
 
 function palateDescriptor(axis, value) {
   if (axis === 'body') {
