@@ -7,9 +7,11 @@ import WineRatingStep from '../components/WineRatingStep.jsx'
  * Standalone "rate the bottles I know" path. Wraps WineRatingStep with a
  * header and Continue/Skip footer. Calls `onComplete({ wineRatings })`.
  */
-export default function RateBottlesScreen({ navigate, goBack, initialRatings = {}, onComplete }) {
+export default function RateBottlesScreen({ navigate, goBack, initialRatings = {}, initialAiPalate = null, onComplete }) {
   const [ratings, setRatings] = useState(initialRatings)
+  const [aiPalate, setAiPalate] = useState(initialAiPalate)
   const ratedCount = Object.keys(ratings).length
+  const hasSignal = ratedCount > 0 || !!aiPalate
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
