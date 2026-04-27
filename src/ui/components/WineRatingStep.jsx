@@ -298,7 +298,7 @@ function PalatePreview({ inference, archetype, hasAiSignal }) {
         marginBottom: theme.spacing.md,
         color: theme.colors.cream,
       }}>
-        {hasSignal ? archetype.name : 'Awaiting your first rating'}
+        {hasSignal ? archetype.name : 'Awaiting your first signal'}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
