@@ -396,8 +396,17 @@ function bucketButtonStyle(bucket, selected) {
 function DescribeStep({ aiPalate, onAiPalateChange }) {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  // `staged` holds the AI's last response BEFORE the user confirms it.
+  // Once confirmed we propagate the palate up via onAiPalateChange and
+  // collapse the editor into a compact summary card. Re-opening lets the
+  // user refine — taste evolves over time.
+  const [staged, setStaged] = useState(null)   // { palate, coachingNote, vocabulary, confidence }
+  const [confirmed, setConfirmed] = useState(null) // same shape, locked-in
+  const [editing, setEditing] = useState(false)
   const [error, setError] = useState(null)
+
+  // If parent clears aiPalate externally, reset confirmed state.
+  // (Intentional simple guard, not a full sync.)
 
   async function submit() {
     if (text.trim().length < 3 || loading) return
@@ -407,15 +416,14 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
       const res = await describePalateFromText(text.trim())
       if (res.error) {
         setError(res.coachingNote || 'Something went wrong.')
-        setResult(null)
-        onAiPalateChange?.(null)
+        setStaged(null)
       } else {
-        setResult({
+        setStaged({
+          palate: res.palate,
           coachingNote: res.coachingNote,
           vocabulary: res.vocabulary,
           confidence: res.confidence,
         })
-        onAiPalateChange?.(res.palate)
       }
     } catch (e) {
       setError('Could not reach the AI. Try again in a moment.')
@@ -424,14 +432,94 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
     }
   }
 
-  function clear() {
+  function confirm() {
+    if (!staged) return
+    setConfirmed(staged)
+    onAiPalateChange?.(staged.palate)
+    setEditing(false)
+    setStaged(null)
+  }
+
+  function refine() {
+    // Keep staged result visible; user edits the textarea and re-submits.
+    // Do not clear text — they may want to tweak it.
+    setStaged(null)
+  }
+
+  function reopen() {
+    setEditing(true)
     setText('')
-    setResult(null)
+    setStaged(null)
+  }
+
+  function clearAll() {
+    setText('')
+    setStaged(null)
+    setConfirmed(null)
+    setEditing(false)
     setError(null)
     onAiPalateChange?.(null)
   }
 
   const canSubmit = text.trim().length >= 3 && !loading
+
+  // ── Compact confirmed summary (collapsed state) ──────────────────
+  if (confirmed && !editing) {
+    return (
+      <div style={{
+        border: `1px solid ${theme.colors.gold}60`,
+        borderRadius: theme.radius.md,
+        padding: theme.spacing.md,
+        backgroundColor: `${theme.colors.gold}10`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: theme.spacing.xs,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: theme.spacing.sm }}>
+          <div style={{
+            fontSize: theme.typography.sizes.xs,
+            color: theme.colors.gold,
+            fontFamily: theme.typography.fontSans,
+            fontWeight: theme.typography.weights.medium,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+          }}>
+            ✨ Your description · locked in
+          </div>
+          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+            <button onClick={reopen} style={textLinkStyle()}>Refine</button>
+            <button onClick={clearAll} style={textLinkStyle()}>Clear</button>
+          </div>
+        </div>
+        <div style={{
+          fontFamily: theme.typography.fontSerif,
+          fontStyle: 'italic',
+          fontSize: theme.typography.sizes.md,
+          color: theme.colors.text,
+          lineHeight: 1.4,
+        }}>
+          “{confirmed.coachingNote}”
+        </div>
+        {confirmed.vocabulary?.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+            {confirmed.vocabulary.map((v, i) => (
+              <span key={i} style={vocabChipStyle()}>{v}</span>
+            ))}
+          </div>
+        )}
+        <p style={{
+          margin: 0,
+          marginTop: theme.spacing.xs,
+          fontSize: theme.typography.sizes.xs,
+          color: theme.colors.textMuted,
+          fontFamily: theme.typography.fontSans,
+          fontStyle: 'italic',
+        }}>
+          Rate any specific bottles below to sharpen your profile further — your taste can evolve over time.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div style={{
