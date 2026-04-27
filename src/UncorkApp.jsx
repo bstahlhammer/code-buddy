@@ -244,7 +244,14 @@ export default function App() {
           />
         )
       case 'profileReveal':
-        return <ProfileRevealScreen {...nav} tasteProfile={tasteProfile} />
+        return (
+          <ProfileRevealScreen
+            {...nav}
+            tasteProfile={tasteProfile}
+            hasScanned={hasScanned}
+            onWineSelect={w => handleWineSelect(w, 'profileReveal')}
+          />
+        )
       case 'personalizedResults':
         return (
           <PersonalizedResultsScreen
