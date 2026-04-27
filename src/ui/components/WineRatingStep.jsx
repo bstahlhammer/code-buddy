@@ -136,7 +136,7 @@ export default function WineRatingStep({ value = {}, onChange, aiPalate = null, 
       )}
 
       {/* Live profile preview */}
-      <PalatePreview inference={inference} archetype={archetype} />
+      <PalatePreview inference={inference} archetype={archetype} hasAiSignal={!!aiPalate} />
 
       {ratedEntries.length === 0 && query.length === 0 && (
         <p style={{
