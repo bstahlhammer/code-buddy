@@ -423,7 +423,4 @@ function RecRow({ wine, onTap }) {
     </button>
   )
 }
-      </div>
-    </div>
-  )
-}
+
