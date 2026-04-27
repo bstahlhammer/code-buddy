@@ -390,3 +390,217 @@ function bucketButtonStyle(bucket, selected) {
     transition: 'all 0.15s ease',
   }
 }
+
+// ─── AI describe step ─────────────────────────────────────────────────────
+
+function DescribeStep({ aiPalate, onAiPalateChange }) {
+  const [text, setText] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
+
+  async function submit() {
+    if (text.trim().length < 3 || loading) return
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await describePalateFromText(text.trim())
+      if (res.error) {
+        setError(res.coachingNote || 'Something went wrong.')
+        setResult(null)
+        onAiPalateChange?.(null)
+      } else {
+        setResult({
+          coachingNote: res.coachingNote,
+          vocabulary: res.vocabulary,
+          confidence: res.confidence,
+        })
+        onAiPalateChange?.(res.palate)
+      }
+    } catch (e) {
+      setError('Could not reach the AI. Try again in a moment.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function clear() {
+    setText('')
+    setResult(null)
+    setError(null)
+    onAiPalateChange?.(null)
+  }
+
+  const canSubmit = text.trim().length >= 3 && !loading
+
+  return (
+    <div style={{
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius: theme.radius.md,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: theme.spacing.sm,
+    }}>
+      <div style={{
+        fontSize: theme.typography.sizes.xs,
+        color: theme.colors.gold,
+        fontFamily: theme.typography.fontSans,
+        fontWeight: theme.typography.weights.medium,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+      }}>
+        ✨ Describe wines you love
+      </div>
+      <p style={{
+        margin: 0,
+        fontSize: theme.typography.sizes.sm,
+        color: theme.colors.textMuted,
+        fontFamily: theme.typography.fontSans,
+        fontStyle: 'italic',
+        lineHeight: 1.4,
+      }}>
+        Don't know the names? Describe what you like in your own words — "smooth reds, nothing too dry" — and we'll translate it into your taste profile.
+      </p>
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value.slice(0, 500))}
+        placeholder="e.g. I love jammy reds that aren't too tannic, and crisp dry whites with citrus…"
+        rows={3}
+        disabled={loading}
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          border: `1px solid ${theme.colors.border}`,
+          borderRadius: theme.radius.sm,
+          fontSize: theme.typography.sizes.md,
+          fontFamily: theme.typography.fontSans,
+          color: theme.colors.text,
+          outline: 'none',
+          resize: 'vertical',
+          backgroundColor: theme.colors.surface,
+          opacity: loading ? 0.6 : 1,
+        }}
+      />
+      <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center' }}>
+        <button
+          onClick={submit}
+          disabled={!canSubmit}
+          style={{
+            padding: '8px 14px',
+            border: 'none',
+            borderRadius: theme.radius.sm,
+            background: canSubmit
+              ? `linear-gradient(180deg, ${theme.colors.goldBright} 0%, ${theme.colors.gold} 100%)`
+              : theme.colors.border,
+            color: canSubmit ? theme.colors.brandDark : theme.colors.textMuted,
+            fontSize: theme.typography.sizes.sm,
+            fontFamily: theme.typography.fontSans,
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            cursor: canSubmit ? 'pointer' : 'not-allowed',
+            boxShadow: canSubmit ? theme.shadows.brass : 'none',
+          }}
+        >
+          {loading ? 'Reading…' : aiPalate ? 'Re-analyze' : 'Translate to palate'}
+        </button>
+        {(aiPalate || result) && (
+          <button
+            onClick={clear}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: theme.colors.textMuted,
+              fontSize: theme.typography.sizes.sm,
+              fontFamily: theme.typography.fontSans,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px',
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {error && (
+        <div style={{
+          fontSize: theme.typography.sizes.sm,
+          color: '#A32D2D',
+          fontFamily: theme.typography.fontSans,
+        }}>
+          {error}
+        </div>
+      )}
+
+      {result && !error && (
+        <div style={{
+          marginTop: theme.spacing.xs,
+          padding: theme.spacing.sm,
+          backgroundColor: `${theme.colors.gold}12`,
+          border: `1px solid ${theme.colors.gold}40`,
+          borderRadius: theme.radius.sm,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}>
+          <div style={{
+            fontFamily: theme.typography.fontSerif,
+            fontStyle: 'italic',
+            fontSize: theme.typography.sizes.md,
+            color: theme.colors.text,
+            lineHeight: 1.4,
+          }}>
+            “{result.coachingNote}”
+          </div>
+          {result.vocabulary?.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+              {result.vocabulary.map((v, i) => (
+                <span key={i} style={{
+                  fontSize: theme.typography.sizes.xs,
+                  padding: '3px 8px',
+                  borderRadius: theme.radius.pill,
+                  backgroundColor: theme.colors.brand,
+                  color: theme.colors.cream,
+                  fontFamily: theme.typography.fontSans,
+                  letterSpacing: '0.04em',
+                }}>
+                  {v}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Inference blending ───────────────────────────────────────────────────
+
+/**
+ * Blend rating-derived inference with an optional AI-derived palate.
+ * AI counts as one strong signal: it nudges the centroid and boosts
+ * confidence, but rated bottles still dominate when present.
+ */
+function blendWithAi(ratingsInference, aiPalate) {
+  if (!aiPalate) return ratingsInference
+  const ratingsWeight = ratingsInference.ratedCount
+  const aiWeight = 1.5
+  const total = ratingsWeight + aiWeight
+  const palate = {
+    body:      Math.round((ratingsInference.palate.body      * ratingsWeight + aiPalate.body      * aiWeight) / total),
+    tannin:    Math.round((ratingsInference.palate.tannin    * ratingsWeight + aiPalate.tannin    * aiWeight) / total),
+    sweetness: Math.round((ratingsInference.palate.sweetness * ratingsWeight + aiPalate.sweetness * aiWeight) / total),
+    acidity:   Math.round((ratingsInference.palate.acidity   * ratingsWeight + aiPalate.acidity   * aiWeight) / total),
+  }
+  const confidence = Math.min(1, ratingsInference.confidence + 0.25)
+  return {
+    palate,
+    confidence,
+    ratedCount: ratingsInference.ratedCount,
+    bucketCounts: ratingsInference.bucketCounts,
+  }
+}
