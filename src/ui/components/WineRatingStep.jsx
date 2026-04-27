@@ -258,9 +258,9 @@ function RatedWineRow({ wine, bucketId, buckets, onChange, onRemove }) {
   )
 }
 
-function PalatePreview({ inference, archetype }) {
+function PalatePreview({ inference, archetype, hasAiSignal }) {
   const { palate, ratedCount, confidence } = inference
-  const hasSignal = ratedCount > 0
+  const hasSignal = ratedCount > 0 || hasAiSignal
 
   return (
     <div style={{
