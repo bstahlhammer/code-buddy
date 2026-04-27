@@ -396,8 +396,17 @@ function bucketButtonStyle(bucket, selected) {
 function DescribeStep({ aiPalate, onAiPalateChange }) {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  // `staged` holds the AI's last response BEFORE the user confirms it.
+  // Once confirmed we propagate the palate up via onAiPalateChange and
+  // collapse the editor into a compact summary card. Re-opening lets the
+  // user refine — taste evolves over time.
+  const [staged, setStaged] = useState(null)   // { palate, coachingNote, vocabulary, confidence }
+  const [confirmed, setConfirmed] = useState(null) // same shape, locked-in
+  const [editing, setEditing] = useState(false)
   const [error, setError] = useState(null)
+
+  // If parent clears aiPalate externally, reset confirmed state.
+  // (Intentional simple guard, not a full sync.)
 
   async function submit() {
     if (text.trim().length < 3 || loading) return
@@ -407,15 +416,14 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
       const res = await describePalateFromText(text.trim())
       if (res.error) {
         setError(res.coachingNote || 'Something went wrong.')
-        setResult(null)
-        onAiPalateChange?.(null)
+        setStaged(null)
       } else {
-        setResult({
+        setStaged({
+          palate: res.palate,
           coachingNote: res.coachingNote,
           vocabulary: res.vocabulary,
           confidence: res.confidence,
         })
-        onAiPalateChange?.(res.palate)
       }
     } catch (e) {
       setError('Could not reach the AI. Try again in a moment.')
@@ -424,15 +432,96 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
     }
   }
 
-  function clear() {
+  function confirm() {
+    if (!staged) return
+    setConfirmed(staged)
+    onAiPalateChange?.(staged.palate)
+    setEditing(false)
+    setStaged(null)
+  }
+
+  function refine() {
+    // Keep staged result visible; user edits the textarea and re-submits.
+    // Do not clear text — they may want to tweak it.
+    setStaged(null)
+  }
+
+  function reopen() {
+    setEditing(true)
     setText('')
-    setResult(null)
+    setStaged(null)
+  }
+
+  function clearAll() {
+    setText('')
+    setStaged(null)
+    setConfirmed(null)
+    setEditing(false)
     setError(null)
     onAiPalateChange?.(null)
   }
 
   const canSubmit = text.trim().length >= 3 && !loading
 
+  // ── Compact confirmed summary (collapsed state) ──────────────────
+  if (confirmed && !editing) {
+    return (
+      <div style={{
+        border: `1px solid ${theme.colors.gold}60`,
+        borderRadius: theme.radius.md,
+        padding: theme.spacing.md,
+        backgroundColor: `${theme.colors.gold}10`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: theme.spacing.xs,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: theme.spacing.sm }}>
+          <div style={{
+            fontSize: theme.typography.sizes.xs,
+            color: theme.colors.gold,
+            fontFamily: theme.typography.fontSans,
+            fontWeight: theme.typography.weights.medium,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+          }}>
+            ✨ Your description · locked in
+          </div>
+          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+            <button onClick={reopen} style={textLinkStyle()}>Refine</button>
+            <button onClick={clearAll} style={textLinkStyle()}>Clear</button>
+          </div>
+        </div>
+        <div style={{
+          fontFamily: theme.typography.fontSerif,
+          fontStyle: 'italic',
+          fontSize: theme.typography.sizes.md,
+          color: theme.colors.text,
+          lineHeight: 1.4,
+        }}>
+          “{confirmed.coachingNote}”
+        </div>
+        {confirmed.vocabulary?.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+            {confirmed.vocabulary.map((v, i) => (
+              <span key={i} style={vocabChipStyle()}>{v}</span>
+            ))}
+          </div>
+        )}
+        <p style={{
+          margin: 0,
+          marginTop: theme.spacing.xs,
+          fontSize: theme.typography.sizes.xs,
+          color: theme.colors.textMuted,
+          fontFamily: theme.typography.fontSans,
+          fontStyle: 'italic',
+        }}>
+          Rate any specific bottles below to sharpen your profile further — your taste can evolve over time.
+        </p>
+      </div>
+    )
+  }
+
+  // ── Open editor (initial or refining) ──────────────────────────────
   return (
     <div style={{
       border: `1px solid ${theme.colors.border}`,
@@ -451,7 +540,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
       }}>
-        ✨ Describe wines you love
+        ✨ {editing ? 'Refine your description' : 'Describe wines you love'}
       </div>
       <p style={{
         margin: 0,
@@ -483,7 +572,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
           opacity: loading ? 0.6 : 1,
         }}
       />
-      <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
         <button
           onClick={submit}
           disabled={!canSubmit}
@@ -504,22 +593,15 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
             boxShadow: canSubmit ? theme.shadows.brass : 'none',
           }}
         >
-          {loading ? 'Reading…' : aiPalate ? 'Re-analyze' : 'Translate to palate'}
+          {loading ? 'Reading…' : staged ? 'Re-analyze' : 'Translate to palate'}
         </button>
-        {(aiPalate || result) && (
-          <button
-            onClick={clear}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: theme.colors.textMuted,
-              fontSize: theme.typography.sizes.sm,
-              fontFamily: theme.typography.fontSans,
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              textUnderlineOffset: '3px',
-            }}
-          >
+        {editing && (
+          <button onClick={() => { setEditing(false); setStaged(null); setError(null) }} style={textLinkStyle()}>
+            Cancel
+          </button>
+        )}
+        {(staged || aiPalate) && !editing && (
+          <button onClick={clearAll} style={textLinkStyle()}>
             Clear
           </button>
         )}
@@ -535,7 +617,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
         </div>
       )}
 
-      {result && !error && (
+      {staged && !error && (
         <div style={{
           marginTop: theme.spacing.xs,
           padding: theme.spacing.sm,
@@ -544,8 +626,18 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
           borderRadius: theme.radius.sm,
           display: 'flex',
           flexDirection: 'column',
-          gap: 6,
+          gap: 8,
         }}>
+          <div style={{
+            fontSize: theme.typography.sizes.xs,
+            color: theme.colors.gold,
+            fontFamily: theme.typography.fontSans,
+            fontWeight: theme.typography.weights.medium,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+          }}>
+            Here's what we heard
+          </div>
           <div style={{
             fontFamily: theme.typography.fontSerif,
             fontStyle: 'italic',
@@ -553,29 +645,83 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
             color: theme.colors.text,
             lineHeight: 1.4,
           }}>
-            “{result.coachingNote}”
+            “{staged.coachingNote}”
           </div>
-          {result.vocabulary?.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-              {result.vocabulary.map((v, i) => (
-                <span key={i} style={{
-                  fontSize: theme.typography.sizes.xs,
-                  padding: '3px 8px',
-                  borderRadius: theme.radius.pill,
-                  backgroundColor: theme.colors.brand,
-                  color: theme.colors.cream,
-                  fontFamily: theme.typography.fontSans,
-                  letterSpacing: '0.04em',
-                }}>
-                  {v}
-                </span>
+          {staged.vocabulary?.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+              {staged.vocabulary.map((v, i) => (
+                <span key={i} style={vocabChipStyle()}>{v}</span>
               ))}
             </div>
           )}
+          <div style={{ display: 'flex', gap: theme.spacing.sm, marginTop: theme.spacing.xs, flexWrap: 'wrap' }}>
+            <button
+              onClick={confirm}
+              style={{
+                padding: '8px 14px',
+                border: 'none',
+                borderRadius: theme.radius.sm,
+                background: `linear-gradient(180deg, ${theme.colors.goldBright} 0%, ${theme.colors.gold} 100%)`,
+                color: theme.colors.brandDark,
+                fontSize: theme.typography.sizes.sm,
+                fontFamily: theme.typography.fontSans,
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                boxShadow: theme.shadows.brass,
+              }}
+            >
+              ✓ That's me
+            </button>
+            <button onClick={refine} style={refineButtonStyle()}>
+              Not quite — let me rephrase
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
+}
+
+function textLinkStyle() {
+  return {
+    background: 'none',
+    border: 'none',
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.sizes.sm,
+    fontFamily: theme.typography.fontSans,
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    textUnderlineOffset: '3px',
+    padding: 0,
+  }
+}
+
+function refineButtonStyle() {
+  return {
+    padding: '8px 14px',
+    border: `1px solid ${theme.colors.gold}80`,
+    borderRadius: theme.radius.sm,
+    background: 'transparent',
+    color: theme.colors.text,
+    fontSize: theme.typography.sizes.sm,
+    fontFamily: theme.typography.fontSans,
+    fontWeight: 500,
+    cursor: 'pointer',
+  }
+}
+
+function vocabChipStyle() {
+  return {
+    fontSize: theme.typography.sizes.xs,
+    padding: '3px 8px',
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.brand,
+    color: theme.colors.cream,
+    fontFamily: theme.typography.fontSans,
+    letterSpacing: '0.04em',
+  }
 }
 
 // ─── Inference blending ───────────────────────────────────────────────────
