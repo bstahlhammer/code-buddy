@@ -230,6 +230,7 @@ export default function App() {
           <RateBottlesScreen
             {...nav}
             initialRatings={quizAnswers.wineRatings}
+            initialAiPalate={quizAnswers.aiPalate}
             onComplete={handleQuizComplete}
           />
         )
