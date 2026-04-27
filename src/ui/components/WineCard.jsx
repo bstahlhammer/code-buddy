@@ -1,10 +1,8 @@
 import { theme } from '../theme/theme.js'
 import Badge from './Badge.jsx'
-import ApproachabilityDots from './ApproachabilityDots.jsx'
 import MatchScore from './MatchScore.jsx'
 
 export default function WineCard({ wine, personalized, isBestMatch, onTap }) {
-  const approachability = wine.computedApproachability ?? wine.approachability ?? 3
   const matchScore      = wine.computedMatch ?? wine.match ?? 50
   const isImperfect     = personalized && matchScore < 60
 
@@ -54,9 +52,8 @@ export default function WineCard({ wine, personalized, isBestMatch, onTap }) {
         {personalized && <MatchScore score={matchScore} />}
       </div>
 
-      {/* Row 2: Approachability + badges */}
+      {/* Row 2: Badges */}
       <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
-        <ApproachabilityDots score={approachability} />
         <Badge variant="critic" label={`${wine.rating} · ${wine.ratingLabel}`} />
         {wine.isCrowd && <Badge variant="crowd" label="Crowd Pleaser" />}
         {wine.isValue && <Badge variant="value" label="Best Value" />}
