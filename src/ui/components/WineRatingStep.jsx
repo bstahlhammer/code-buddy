@@ -5,6 +5,7 @@ import {
   getRatingBuckets,
   inferPalateFromRatings,
   nearestTasteProfile,
+  describePalateFromText,
 } from '@/core/api'
 
 /**
@@ -12,8 +13,11 @@ import {
  *
  * `value` is a map { [wineId]: bucketId }. As the user rates wines, the
  * palate profile is inferred live and previewed below the rating list.
+ *
+ * Optional `aiPalate` (from the free-text describe step) is blended into
+ * the live preview so the description shapes the profile too.
  */
-export default function WineRatingStep({ value = {}, onChange }) {
+export default function WineRatingStep({ value = {}, onChange, aiPalate = null, onAiPalateChange }) {
   const [query, setQuery] = useState('')
 
   const buckets = getRatingBuckets()
