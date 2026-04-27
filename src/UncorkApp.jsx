@@ -127,9 +127,12 @@ export default function App() {
   const [tasteProfile, setTasteProfile] = useState(null)
   const [toast,        setToast]        = useState(null)
 
+  const [hasScanned, setHasScanned] = useState(false)
+
   const navigate = useCallback((to) => {
     setDirection('forward')
     setHistory(h => [...h, screen])
+    if (to === 'scanning') setHasScanned(true)
     setScreen(to)
   }, [screen])
 
