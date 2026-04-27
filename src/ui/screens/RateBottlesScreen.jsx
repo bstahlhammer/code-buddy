@@ -52,7 +52,12 @@ export default function RateBottlesScreen({ navigate, goBack, initialRatings = {
       </div>
 
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: `0 ${theme.spacing.lg}` }}>
-        <WineRatingStep value={ratings} onChange={setRatings} />
+        <WineRatingStep
+          value={ratings}
+          onChange={setRatings}
+          aiPalate={aiPalate}
+          onAiPalateChange={setAiPalate}
+        />
       </div>
 
       <div style={{
@@ -64,27 +69,31 @@ export default function RateBottlesScreen({ navigate, goBack, initialRatings = {
         gap: theme.spacing.sm,
       }}>
         <button
-          onClick={() => onComplete({ wineRatings: ratings })}
-          disabled={ratedCount === 0}
+          onClick={() => onComplete({ wineRatings: ratings, aiPalate })}
+          disabled={!hasSignal}
           style={{
             width: '100%',
             padding: '16px',
-            background: ratedCount > 0
+            background: hasSignal
               ? `linear-gradient(180deg, ${theme.colors.goldBright} 0%, ${theme.colors.gold} 100%)`
               : theme.colors.border,
-            color: ratedCount > 0 ? theme.colors.brandDark : theme.colors.textMuted,
+            color: hasSignal ? theme.colors.brandDark : theme.colors.textMuted,
             border: 'none',
             borderRadius: theme.radius.sm,
             fontSize: '14px',
             fontWeight: 600,
             fontFamily: theme.typography.fontSans,
-            cursor: ratedCount > 0 ? 'pointer' : 'not-allowed',
+            cursor: hasSignal ? 'pointer' : 'not-allowed',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            boxShadow: ratedCount > 0 ? theme.shadows.brass : 'none',
+            boxShadow: hasSignal ? theme.shadows.brass : 'none',
           }}
         >
-          {ratedCount === 0 ? 'Rate at least one wine' : `See my taste profile (${ratedCount} rated)`}
+          {!hasSignal
+            ? 'Rate or describe at least one wine'
+            : ratedCount > 0
+              ? `See my taste profile (${ratedCount} rated${aiPalate ? ' + AI' : ''})`
+              : 'See my taste profile (AI describe)'}
         </button>
         <button
           onClick={() => navigate('guidedQuiz')}
