@@ -29,10 +29,20 @@ function palateDescriptor(axis, value) {
   return ''
 }
 
-export default function ProfileRevealScreen({ navigate, goBack, tasteProfile }) {
+export default function ProfileRevealScreen({ navigate, goBack, tasteProfile, hasScanned = false, onWineSelect }) {
   if (!tasteProfile) return null
 
   const { palate } = tasteProfile
+
+  // Top match(es) computed against the catalog. If the user came from a
+  // scan, we feature the single best match as the "top pick from your
+  // scan" hero. Otherwise the same wine becomes the lead recommendation.
+  const ranked = useMemo(
+    () => sortWines(getWines(), 'match', tasteProfile),
+    [tasteProfile]
+  )
+  const topPick = ranked[0]
+  const alsoGreat = ranked.slice(1, 4)
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
