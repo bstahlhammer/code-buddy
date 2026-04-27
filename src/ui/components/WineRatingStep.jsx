@@ -44,10 +44,14 @@ export default function WineRatingStep({ value = {}, onChange, aiPalate = null, 
     .map(([id, bucketId]) => ({ wine: wineById[Number(id)], bucketId }))
     .filter(e => e.wine)
 
-  const inference = useMemo(() => inferPalateFromRatings(value), [value])
+  const ratingsInference = useMemo(() => inferPalateFromRatings(value), [value])
+  const inference = useMemo(
+    () => blendWithAi(ratingsInference, aiPalate),
+    [ratingsInference, aiPalate]
+  )
   const archetype = useMemo(
-    () => (inference.ratedCount > 0 ? nearestTasteProfile(inference.palate) : null),
-    [inference]
+    () => (inference.ratedCount > 0 || aiPalate ? nearestTasteProfile(inference.palate) : null),
+    [inference, aiPalate]
   )
 
   function setRating(wineId, bucketId) {
