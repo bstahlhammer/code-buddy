@@ -1,146 +1,53 @@
 ## Goal
 
-Give users two clear ways to build a palate profile:
+Convert the Home screen into a **login wall**. Until the user is signed in, they see only the brand and two sign-in buttons. All features (scan, quiz, results, wine details, account) require auth.
 
-1. **"Rate wines I know"** — the existing search/rate flow (loved → hated buckets), great for users who can name bottles.
-2. **"Guide me with questions"** — a NEW branching, sommelier-style quiz that progressively asks about taste, flavor, body, and (optionally) advanced structure. Designed for users who don't know wine names.
+## UX Changes
 
-Both paths land at the same `profileReveal` screen, using the same palate shape `{ body, sweetness, tannin, acidity }` so all downstream sorting/matching logic is unchanged.
+### 1. New unauthenticated Home (login wall)
+When `auth.user` is null, `HomeScreen` renders:
+- Top half: existing monogram + "Est. Cellar / MySom / Uncork the world of wine" lockup (kept centered, pushed slightly up).
+- Bottom-center: stacked CTAs
+  1. **Continue with Google** — cream button with Google "G" logo (reuse SVG from `AuthScreen`)
+  2. **Sign in with email** — outlined brass button → navigates to `auth` screen (email mode, Google button hidden)
+- Below buttons: tiny links to `/privacy` and `/terms` + 21+ disclaimer (moved from AuthScreen footer).
+- Remove the top-right "Sign in" chip when logged out (the whole screen is now the sign-in surface).
 
----
+### 2. Authenticated Home (unchanged shell, features visible)
+When `auth.user` exists, `HomeScreen` keeps the current layout: account chip top-right, "Choose a wine now", "Build my taste profile", "just let me explore" CTAs.
 
-## UX flow
+### 3. Auth screen (`AuthScreen.jsx`)
+- Accept a new `mode` prop (`'email' | 'full'`, default `'full'`).
+- When `mode === 'email'` (entered from "Sign in with email" on Home), hide the Google button + "or" divider — just the email/password form with a small "Continue with Google instead" link that calls `signInWithGoogle()`.
+- Footer legal links + 21+ disclaimer stay (still useful here).
 
-### 1. Rework `QuizIntroScreen` into a path chooser
+### 4. Routing gate in `UncorkApp.jsx`
+Replace the current narrow gate (only `personalizedResults` requires auth) with a global gate:
+- Allowed screens when logged out: `home`, `auth`, `privacy`-style routes are TanStack routes (separate, unaffected).
+- Any `navigate(to)` call where `to !== 'home' && to !== 'auth'` and `!auth.user` → redirect to `auth` screen and store `pendingAfterAuth = to`.
+- After successful sign-in, `handleAuthed` resumes to `pendingAfterAuth` (already implemented; just broaden which screens set it).
+- On sign-out (from `/account`), user lands back on `/` → Home renders the login wall automatically.
 
-Replace the single "Start the quiz" CTA with two clear cards:
+### 5. Home CTA wiring
+- "Continue with Google" → call `auth.signInWithGoogle()` directly from Home (import `useAuth` or pass handler from App). On error, show inline message under the buttons. On redirect, browser leaves page.
+- "Sign in with email" → `navigate('auth')` with mode flag. Simplest: add new screen key `'authEmail'` OR pass a transient `authMode` state in App. Use App-level `authMode` state, default `'full'`, set to `'email'` before navigating, reset to `'full'` on auth success/back.
 
-- **🍷 Rate bottles I know** → navigates to a new `wineRatingsOnly` screen (or the existing quiz jumped to the `wineRatings` step).
-- **🧭 Guide me with questions** → navigates to the new `guidedQuiz` screen.
-- Keep "Skip for now" as a tertiary link.
+## Technical Details
 
-### 2. New screen: `GuidedQuizScreen`
+**Files to edit**
+- `src/ui/screens/HomeScreen.jsx` — branch on `auth.user`; add login-wall layout with bottom-anchored CTAs (Google SVG + email button), legal footer, error state.
+- `src/ui/screens/AuthScreen.jsx` — accept `mode` prop; conditionally render Google button + divider; keep email form as default content.
+- `src/UncorkApp.jsx`:
+  - Add `authMode` state (`'full' | 'email'`).
+  - Broaden `navigate` gate: if `!auth.user && to !== 'home' && to !== 'auth'`, push `auth` and set `pendingAfterAuth = to`.
+  - Pass `authMode` + `setAuthMode` to `HomeScreen` and `AuthScreen`.
+  - Pass `auth.signInWithGoogle` (and any error surface helper) to `HomeScreen`.
 
-A branching, level-based quiz separate from the existing free-form `QuizScreen`. Driven by a declarative tree in core data.
+**No backend / route / migration changes.** TanStack routes (`/account`, `/privacy`, `/terms`) untouched.
 
-**Branching rules (from your spec):**
+**Layout note**: bottom-center CTAs use the existing flex `space-between` on the Home container — simply replace the lower CTA cluster with the new two-button version when logged out.
 
-- **Level 1 — Entry:** "What kind of wine do you usually enjoy?" → Light & crisp / Smooth & fruity / Rich & bold / Not sure yet.
-  - "Not sure yet" → routes to **Flavor path first** (Level 3).
-  - Any other answer → routes to **Simple taste path** (Level 2).
-
-- **Level 2 — Simple taste:** sweetness → acidity → tannin (with a "I mainly drink white" escape hatch on the tannin question).
-
-- **Level 3 — Flavor path:** flavor families (multi-select) → fruity vs. savory.
-
-- **Level 4 — Body & structure:** body → alcohol warmth.
-
-- **Level 5 — Advanced (optional, gated):** Only shown if the user has given mostly confident answers (no "Not sure" on Level 2 OR completed Level 3 with ≥3 flavor picks). Asks the sommelier-style structure question + finish preference. Otherwise skipped.
-
-Every question includes a "Not sure" option that contributes neutral signal.
-
-### 3. Both paths converge
-
-After either path finishes (rating wines OR guided quiz), `deriveProfile()` blends signals into the same palate and routes to `profileReveal` → `personalizedResults`.
-
----
-
-## Engine work (`src/core/`)
-
-### a. New file: `src/core/data/guidedQuizTree.js`
-
-Declarative tree of questions. Each node:
-```js
-{
-  id: 'entry',
-  level: 1,
-  question: '...',
-  subtitle: '...',
-  type: 'single' | 'multi',
-  options: [
-    { id: 'light_crisp', label: 'Light and crisp', palate: { body: -25, acidity: +20 }, next: 'sweetness' },
-    { id: 'not_sure',    label: 'Not sure yet',    palate: {},                         next: 'flavors' },
-    ...
-  ],
-}
-```
-
-- Each option carries a small **palate delta** (signed nudges to body/sweetness/tannin/acidity, in the same 0–100 space already used).
-- `next` is either a node id, a function `(answers) => nextId`, or `null` for terminal.
-- "Not sure" options always have empty/zero palate deltas so they don't pollute signal.
-
-Level mapping (deltas are illustrative — final values tuned in implementation):
-
-| Question | Option | Delta |
-|---|---|---|
-| Entry | Light & crisp | body -25, acidity +20 |
-| Entry | Smooth & fruity | body 0, sweetness +10, tannin -15 |
-| Entry | Rich & bold | body +25, tannin +15 |
-| Sweetness | Dry / Slightly sweet / Sweet | sweetness -25 / +10 / +35 |
-| Acidity | Crisp / Soft / Both | acidity +20 / -15 / 0 |
-| Tannin | Yes grip / A little / Smooth / White only | tannin +25 / +5 / -20 / 0 |
-| Flavors (multi) | each pick contributes a small targeted delta (e.g. citrus → acidity +10, dark fruit → body +10 tannin +10, oaky → body +10) |
-| Fruity vs. savory | (flavor character flag, no direct palate axis) |
-| Body | Light/Med/Full | body -25 / 0 / +25 |
-| Alcohol warmth | Low/Some/Rich | body -10 / 0 / +15 |
-| Advanced structure | maps directly to all 4 axes (closer to centroid pull) |
-| Finish | minor body/tannin nudges |
-
-### b. New file: `src/core/engine/guidedQuizEngine.js`
-
-Pure functions:
-- `getInitialNode()` → `'entry'`
-- `getNextNode(currentId, answer, allAnswers)` → next node id or `null`
-- `computePalateFromGuidedAnswers(answers)` → `{ palate, confidence }`
-  - Starts from neutral baseline `{ body: 50, sweetness: 30, tannin: 50, acidity: 50 }`.
-  - Sums all option deltas, clamps each axis to 0–100.
-  - Confidence = (# non-"not sure" answers) / (# answered), with a floor so 1 strong answer still yields a usable profile.
-
-### c. Update `src/core/api.js`
-
-Add exports:
-- `getGuidedQuizTree()`
-- `getGuidedInitialNode()`, `getGuidedNextNode(id, answer, all)`
-- `computePalateFromGuidedAnswers(answers)`
-
-### d. Update `src/UncorkApp.jsx` — `deriveProfile`
-
-Extend to blend three signal sources by confidence:
-1. Wine ratings (existing `inferPalateFromRatings`)
-2. Guided quiz (`computePalateFromGuidedAnswers`)
-3. Slider/sweetness fallback (existing)
-
-Weighted average by each source's confidence, then `nearestTasteProfile` for archetype.
-
----
-
-## UI work (`src/ui/`)
-
-### New files
-
-- `src/ui/screens/GuidedQuizScreen.jsx` — driver for the branching tree. Uses existing `TopBar` + `ProgressBar` (progress = answered/estimatedTotal where estimatedTotal is computed from current branch).
-- `src/ui/components/QuizOptionCard.jsx` — large tappable answer cards (more elegant than current pill chips, fits Velvet & Brass aesthetic: parchment surface, brass border on selected, serif label + sans subtitle).
-
-### Edited files
-
-- `src/ui/screens/QuizIntroScreen.jsx` — replace single CTA with two path-chooser cards + tertiary "Skip" link. Keep existing illustration and trust bullets, restructured.
-- `src/UncorkApp.jsx` — add `guidedQuiz` screen case + state for `guidedAnswers`, route guidedQuiz completion through `deriveProfile` → `profileReveal`.
-
-### Unchanged
-
-- The existing `QuizScreen` (free-form quiz with pills/sliders/wine ratings) stays intact — accessible from "Rate bottles I know" or as an internal route. We are NOT deleting prior work.
-- `WineRatingStep`, `WineSearchStep`, all results screens, match engine, sort engine, theme — untouched.
-
----
-
-## Open items handled silently in implementation
-- Exact palate-delta numbers: I'll tune them so Level-1 alone produces a sensible directional profile, with subsequent answers refining it.
-- Branch logic for "I mainly drink white wine" on the tannin question: skip to flavors and zero out tannin signal.
-- Advanced level gating threshold.
-
----
-
-## Out of scope (for this turn)
-- Showing a live palate preview during the guided quiz (could add later — same component as `WineRatingStep` preview).
-- Persistence of answers across sessions.
-- Real wine API integration.
+## Out of scope
+- Forgot-password flow.
+- Email verification UX changes.
+- Reorganizing `/account` page.

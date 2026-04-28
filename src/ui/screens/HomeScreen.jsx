@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import { theme } from '../theme/theme.js'
 
 function Monogram() {
-  // Brass-line wine glass monogram inside a thin brass ring
   return (
     <div
       style={{
@@ -41,10 +41,30 @@ function BrassDivider({ width = 48 }) {
   )
 }
 
-export default function HomeScreen({ navigate, auth }) {
+function GoogleLogo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35.5 24 35.5c-6.3 0-11.5-5.2-11.5-11.5S17.7 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.6 6.3 29.1 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.4-.4-3.5z"/>
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.6 6.3 29.1 4.5 24 4.5 16.3 4.5 9.7 8.9 6.3 14.7z"/>
+      <path fill="#4CAF50" d="M24 43.5c5 0 9.5-1.7 13-4.6l-6-5.1c-1.9 1.3-4.3 2.2-7 2.2-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.6 39 16.3 43.5 24 43.5z"/>
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.4l6 5.1c-.4.4 6.7-4.9 6.7-14.5 0-1.2-.1-2.4-.4-3.5z"/>
+    </svg>
+  )
+}
+
+export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
   const user = auth?.user
   const profileName = auth?.profile?.display_name
   const initial = (profileName || user?.email || '?').trim()[0]?.toUpperCase() ?? '?'
+
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleGoogle() {
+    setError(null); setBusy(true)
+    const r = await auth?.signInWithGoogle?.()
+    if (r?.error) { setError(r.error.message || 'Google sign-in failed'); setBusy(false) }
+  }
 
   return (
     <div
@@ -59,9 +79,9 @@ export default function HomeScreen({ navigate, auth }) {
         overflow: 'hidden',
       }}
     >
-      {/* Auth chip — top right */}
-      <div style={{ position: 'absolute', top: theme.spacing.lg, right: theme.spacing.lg, zIndex: 2 }}>
-        {user ? (
+      {/* Auth chip — only shown when signed in */}
+      {user && (
+        <div style={{ position: 'absolute', top: theme.spacing.lg, right: theme.spacing.lg, zIndex: 2 }}>
           <a
             href="/account"
             title="Account"
@@ -86,24 +106,8 @@ export default function HomeScreen({ navigate, auth }) {
             }}>{initial}</span>
             Account
           </a>
-        ) : (
-          <button
-            onClick={() => navigate('auth')}
-            style={{
-              background: 'transparent',
-              border: `1px solid ${theme.colors.gold}80`,
-              borderRadius: theme.radius.pill,
-              padding: '6px 14px',
-              color: theme.colors.gold,
-              fontFamily: theme.typography.fontSans,
-              fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase',
-              cursor: 'pointer',
-            }}
-          >
-            Sign in
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Subtle parchment texture overlay */}
       <div style={{
@@ -161,65 +165,123 @@ export default function HomeScreen({ navigate, auth }) {
         </p>
       </div>
 
-      {/* CTAs */}
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
-        <button
-          onClick={() => navigate('scanPrompt')}
-          style={{
-            width: '100%',
-            padding: '18px',
-            background: `linear-gradient(180deg, ${theme.colors.goldBright} 0%, ${theme.colors.gold} 100%)`,
-            color: theme.colors.brandDark,
-            border: 'none',
-            borderRadius: theme.radius.sm,
-            fontSize: '15px',
-            fontWeight: 600,
-            fontFamily: theme.typography.fontSans,
-            cursor: 'pointer',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            boxShadow: theme.shadows.brass,
-          }}
-        >
-          Choose a wine now
-        </button>
+      {/* Bottom CTAs */}
+      {user ? (
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
+          <button
+            onClick={() => navigate('scanPrompt')}
+            style={{
+              width: '100%', padding: '18px',
+              background: `linear-gradient(180deg, ${theme.colors.goldBright} 0%, ${theme.colors.gold} 100%)`,
+              color: theme.colors.brandDark,
+              border: 'none', borderRadius: theme.radius.sm,
+              fontSize: '15px', fontWeight: 600,
+              fontFamily: theme.typography.fontSans,
+              cursor: 'pointer',
+              letterSpacing: '0.06em', textTransform: 'uppercase',
+              boxShadow: theme.shadows.brass,
+            }}
+          >
+            Choose a wine now
+          </button>
 
-        <button
-          onClick={() => navigate('quizIntro')}
-          style={{
-            width: '100%',
-            padding: '17px',
-            backgroundColor: 'transparent',
-            color: theme.colors.cream,
-            border: `1px solid ${theme.colors.gold}80`,
-            borderRadius: theme.radius.sm,
-            fontSize: '15px',
-            fontWeight: 500,
-            fontFamily: theme.typography.fontSans,
-            cursor: 'pointer',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Build my taste profile
-        </button>
+          <button
+            onClick={() => navigate('quizIntro')}
+            style={{
+              width: '100%', padding: '17px',
+              backgroundColor: 'transparent',
+              color: theme.colors.cream,
+              border: `1px solid ${theme.colors.gold}80`,
+              borderRadius: theme.radius.sm,
+              fontSize: '15px', fontWeight: 500,
+              fontFamily: theme.typography.fontSans,
+              cursor: 'pointer',
+              letterSpacing: '0.06em', textTransform: 'uppercase',
+            }}
+          >
+            Build my taste profile
+          </button>
 
-        <button
-          onClick={() => navigate('scanPrompt')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: `${theme.colors.parchment}99`,
-            fontSize: theme.typography.sizes.md,
-            fontFamily: theme.typography.fontDisplay,
-            fontStyle: 'italic',
-            cursor: 'pointer',
-            marginTop: theme.spacing.xs,
-          }}
-        >
-          — just let me explore —
-        </button>
-      </div>
+          <button
+            onClick={() => navigate('scanPrompt')}
+            style={{
+              background: 'none', border: 'none',
+              color: `${theme.colors.parchment}99`,
+              fontSize: theme.typography.sizes.md,
+              fontFamily: theme.typography.fontDisplay,
+              fontStyle: 'italic',
+              cursor: 'pointer',
+              marginTop: theme.spacing.xs,
+            }}
+          >
+            — just let me explore —
+          </button>
+        </div>
+      ) : (
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.sm }}>
+          <button
+            onClick={handleGoogle}
+            disabled={busy}
+            style={{
+              width: '100%', padding: '16px',
+              background: theme.colors.cream,
+              color: theme.colors.text,
+              border: 'none', borderRadius: theme.radius.sm,
+              fontFamily: theme.typography.fontSans,
+              fontSize: 14, fontWeight: 600,
+              cursor: busy ? 'wait' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              boxShadow: '0 6px 18px rgba(0,0,0,0.25)',
+            }}
+          >
+            <GoogleLogo />
+            Continue with Google
+          </button>
+
+          <button
+            onClick={() => onEmailSignIn?.()}
+            disabled={busy}
+            style={{
+              width: '100%', padding: '15px',
+              backgroundColor: 'transparent',
+              color: theme.colors.cream,
+              border: `1px solid ${theme.colors.gold}80`,
+              borderRadius: theme.radius.sm,
+              fontSize: 14, fontWeight: 500,
+              fontFamily: theme.typography.fontSans,
+              cursor: busy ? 'wait' : 'pointer',
+              letterSpacing: '0.06em', textTransform: 'uppercase',
+            }}
+          >
+            Sign in with email
+          </button>
+
+          {error && (
+            <div style={{
+              color: '#E8B4B4', fontFamily: theme.typography.fontSans,
+              fontSize: 12, textAlign: 'center', marginTop: 4,
+            }}>{error}</div>
+          )}
+
+          <div style={{
+            marginTop: theme.spacing.md,
+            display: 'flex', justifyContent: 'center', gap: 18,
+            fontFamily: theme.typography.fontSans,
+            fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+          }}>
+            <a href="/privacy" style={{ color: theme.colors.gold, textDecoration: 'none', opacity: 0.8 }}>Privacy</a>
+            <a href="/terms" style={{ color: theme.colors.gold, textDecoration: 'none', opacity: 0.8 }}>Terms</a>
+          </div>
+
+          <p style={{
+            marginTop: 4, textAlign: 'center', maxWidth: 280,
+            fontFamily: theme.typography.fontSans,
+            fontSize: 11, color: `${theme.colors.parchment}80`, lineHeight: 1.5,
+          }}>
+            By continuing you confirm you&rsquo;re of legal drinking age and agree to our Terms.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
