@@ -201,6 +201,27 @@ export default function AuthScreen({ goBack, onAuthed }) {
           ? "— don't have an account? create one —"
           : '— already have an account? sign in —'}
       </button>
+
+      <div style={{
+        marginTop: theme.spacing.xl,
+        paddingTop: theme.spacing.lg,
+        borderTop: `1px solid ${theme.colors.gold}30`,
+        display: 'flex', justifyContent: 'center', gap: 18,
+        fontFamily: theme.typography.fontSans,
+        fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+      }}>
+        <a href="/privacy" style={{ color: theme.colors.gold, textDecoration: 'none', opacity: 0.8 }}>Privacy</a>
+        <a href="/terms" style={{ color: theme.colors.gold, textDecoration: 'none', opacity: 0.8 }}>Terms</a>
+      </div>
+
+      <p style={{
+        marginTop: theme.spacing.md,
+        textAlign: 'center',
+        fontFamily: theme.typography.fontSans,
+        fontSize: 11, color: `${theme.colors.parchment}80`, lineHeight: 1.5,
+      }}>
+        By continuing you confirm you&rsquo;re of legal drinking age and agree to our Terms.
+      </p>
     </div>
   )
 }
