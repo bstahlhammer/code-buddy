@@ -303,7 +303,7 @@ export default function App() {
           />
         )
       default:
-        return <HomeScreen {...nav} auth={auth} />
+        return <HomeScreen {...nav} auth={auth} onEmailSignIn={handleEmailSignIn} />
     }
   }
 
