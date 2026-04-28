@@ -64,9 +64,16 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         if (cancelled) return
         clearInterval(progressTimer)
         console.error('scan failed', err)
-        setStatus(wines.length ? 'Pouring what we found…' : 'Scan took too long — pouring a starter list…')
-        onScanComplete?.(wines)
-        setTimeout(() => navigate('anonResults'), 900)
+        if (wines.length) {
+          setStatus('Pouring what we found…')
+          onScanComplete?.(wines)
+          setTimeout(() => navigate('anonResults'), 900)
+          return
+        }
+        const message = err?.message || 'I could not identify a specific wine. Try a closer, sharper photo where the full label or shelf tag is readable.'
+        setStatus(message)
+        onScanComplete?.({ wines: [], message })
+        setTimeout(() => navigate('anonResults'), 1400)
       })
 
     return () => {

@@ -31,6 +31,8 @@ export function useScan() {
 
       if (!res.ok) {
         const msg = await res.text().catch(() => 'Scan failed')
+        const parsed = safeJsonParse(msg)
+        if (parsed?.error) throw new Error(parsed.error)
         throw new Error(msg || 'Scan failed')
       }
 
@@ -38,6 +40,9 @@ export function useScan() {
       const data = await res.json().catch(() => null)
       if (data?.error) throw new Error(data.error)
       const wines = Array.isArray(data?.wines) ? data.wines.filter((wine) => wine?.name) : []
+      if (!wines.length) {
+        throw new Error(data?.message || 'I could not identify a specific wine. Try a closer, sharper photo where the full label or shelf tag is readable.')
+      }
       wines.forEach((wine, index) => {
         onWine?.(wine, index + 1)
         onProgress?.({ stage: 'wine', count: index + 1, message: `${index + 1} wine${index + 1 === 1 ? '' : 's'} identified` })
@@ -54,6 +59,14 @@ export function useScan() {
   }, [])
 
   return { scanning, error, scanImage }
+}
+
+function safeJsonParse(value) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
 }
 
 function fileToBase64(file) {

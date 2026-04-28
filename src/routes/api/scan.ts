@@ -38,20 +38,22 @@ async function requireAuth(request: Request): Promise<string | Response> {
   return data.claims.sub as string
 }
 
+const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
+
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
-Extract every wine you can read in the image, up to 12. Return a single JSON array of wine objects.
+Extract every specific wine you can read in the image, up to 12.
 
 GROUNDING RULES — important:
-- The "name" field MUST be a wine you can actually see in the image. Do not invent wines that aren't there.
-- If only part of a name is visible, return what you can read (e.g. "Château Margaux" without vintage is fine).
-- It is OK to be generous about including wines — partial reads are welcome — but the name must come from the image, not from memory.
+- The "name" field MUST be a specific wine actually visible in the image. Do not invent wines that aren't there.
+- NEVER return OCR fragments, store text, shelf signage, category labels, initials, or single loose words as wines.
+- A producer/brand alone is NOT enough unless a visible vintage, grape, region, cuvée, appellation, or price confirms a specific wine.
+- If you can only read fragments like "BY", "Cs", "DECO", or a lone producer name, return no wine for that fragment.
+- If no specific wine can be identified, call the tool with an empty wines array and a helpful retake message.
 - For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels, but still include the wine.
 
 OUTPUT RULES:
-- Output RAW JSON only. NO markdown. NO code fences. NO triple backticks. NO "json" labels.
-- Return exactly one JSON array, even if empty.
-- No preamble, no commentary, no trailing summary.
+- Use the extract_wines tool only.
 - Stop after 12 wines.
 
 Field rules — use what you can SEE for factual fields; use sensible defaults for the rest:
@@ -69,6 +71,44 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
 - isCrowd: boolean — false unless clearly a crowd-pleaser style.
 - tasting: string — one short sentence ONLY if you genuinely recognize the wine; otherwise "".
 - confidence: number 0-100 — how clearly you could read this wine's name on the image.`
+
+const WINE_MARKERS = [
+  'cabernet', 'chardonnay', 'pinot', 'merlot', 'sauvignon', 'syrah', 'shiraz', 'riesling', 'malbec',
+  'zinfandel', 'grenache', 'tempranillo', 'sangiovese', 'nebbiolo', 'mourvedre', 'chenin', 'viognier',
+  'rose', 'rosé', 'brut', 'prosecco', 'champagne', 'cava', 'moscato', 'chianti', 'rioja', 'bordeaux',
+  'burgundy', 'bourgogne', 'napa', 'sonoma', 'loire', 'rhone', 'rhône', 'barolo', 'barbaresco',
+  'brunello', 'beaujolais', 'sancerre', 'chablis', 'riesling', 'reserve', 'reserva', 'estate', 'vineyard',
+  'chateau', 'château', 'domaine', 'cellars', 'winery', 'cuvee', 'cuvée', 'doc', 'docg', 'ava', 'grand cru',
+]
+
+function clamp(n: unknown, fallback = 50) {
+  const v = Number(n)
+  if (!Number.isFinite(v)) return fallback
+  return Math.max(0, Math.min(100, Math.round(v)))
+}
+
+function hasWineMarker(value: string) {
+  const haystack = value.toLowerCase()
+  return WINE_MARKERS.some((marker) => haystack.includes(marker))
+}
+
+function hasEnoughSpecificity(wine: Record<string, unknown>, name: string) {
+  const words = name.split(/\s+/).filter(Boolean)
+  const compact = name.replace(/[^a-z0-9]/gi, '')
+  if (compact.length < 5 || words.every((word) => word.length <= 2)) return false
+  const support = [wine.vintage, wine.region, wine.grape, wine.tasting, wine.price, wine.ratingLabel]
+    .filter((v) => typeof v === 'string' && v.trim() && v !== '—')
+    .join(' ')
+  const combined = `${name} ${support}`
+  const vintageVisible = typeof wine.vintage === 'string' && /^(19|20)\d{2}|NV$/i.test(wine.vintage.trim())
+  const hasPrice = typeof wine.price === 'string' && /\d/.test(wine.price)
+  const hasRating = typeof wine.rating === 'number' && wine.rating > 0
+
+  if (words.length >= 3) return true
+  if (words.length >= 2 && hasWineMarker(combined)) return true
+  if (words.length >= 2 && (vintageVisible || hasPrice || hasRating)) return true
+  return false
+}
 
 function stripCodeFences(value: string) {
   return value.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
@@ -101,6 +141,7 @@ function normalizeWine(raw: unknown, index: number) {
   const wine = raw as Record<string, unknown>
   const name = typeof wine.name === 'string' ? wine.name.trim() : ''
   if (!name) return null
+  if (!hasEnoughSpecificity(wine, name)) return null
   return {
     id: typeof wine.id === 'number' ? wine.id : index + 1,
     name,
@@ -111,14 +152,14 @@ function normalizeWine(raw: unknown, index: number) {
     priceNum: typeof wine.priceNum === 'number' ? wine.priceNum : 0,
     rating: typeof wine.rating === 'number' ? wine.rating : 0,
     ratingLabel: typeof wine.ratingLabel === 'string' ? wine.ratingLabel : '',
-    body: typeof wine.body === 'number' ? wine.body : 50,
-    sweetness: typeof wine.sweetness === 'number' ? wine.sweetness : 50,
-    tannin: typeof wine.tannin === 'number' ? wine.tannin : 50,
-    acidity: typeof wine.acidity === 'number' ? wine.acidity : 50,
+    body: clamp(wine.body),
+    sweetness: clamp(wine.sweetness),
+    tannin: clamp(wine.tannin),
+    acidity: clamp(wine.acidity),
     isValue: typeof wine.isValue === 'boolean' ? wine.isValue : false,
     isCrowd: typeof wine.isCrowd === 'boolean' ? wine.isCrowd : false,
     tasting: typeof wine.tasting === 'string' ? wine.tasting : '',
-    confidence: typeof wine.confidence === 'number' ? wine.confidence : 50,
+    confidence: clamp(wine.confidence),
   }
 }
 
@@ -136,6 +177,14 @@ function parseWinesFromModel(content: string) {
     }
   }
   return []
+}
+
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
 }
 
 export const Route = createFileRoute('/api/scan')({
@@ -179,7 +228,7 @@ export const Route = createFileRoute('/api/scan')({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
+              model: 'google/gemini-3-flash-preview',
               stream: false,
               temperature: 0.1,
               messages: [
@@ -191,22 +240,81 @@ export const Route = createFileRoute('/api/scan')({
                   ],
                 },
               ],
+              tools: [
+                {
+                  type: 'function',
+                  function: {
+                    name: 'extract_wines',
+                    description: 'Return only specific wines visible in the image, or an empty result with retake guidance.',
+                    parameters: {
+                      type: 'object',
+                      properties: {
+                        wines: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              id: { type: 'number' },
+                              name: { type: 'string' },
+                              vintage: { type: 'string' },
+                              region: { type: 'string' },
+                              grape: { type: 'string' },
+                              price: { type: 'string' },
+                              priceNum: { type: 'number' },
+                              rating: { type: 'number' },
+                              ratingLabel: { type: 'string' },
+                              body: { type: 'number' },
+                              sweetness: { type: 'number' },
+                              tannin: { type: 'number' },
+                              acidity: { type: 'number' },
+                              isValue: { type: 'boolean' },
+                              isCrowd: { type: 'boolean' },
+                              tasting: { type: 'string' },
+                              confidence: { type: 'number' },
+                            },
+                            required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence'],
+                            additionalProperties: false,
+                          },
+                        },
+                        message: { type: 'string' },
+                      },
+                      required: ['wines', 'message'],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+              ],
+              tool_choice: { type: 'function', function: { name: 'extract_wines' } },
             }),
           })
 
           const raw = await upstream.text().catch(() => '')
           if (!upstream.ok) {
             console.error('AI gateway scan error', upstream.status, raw)
-            return new Response(JSON.stringify({ error: 'Vision analysis failed' }), {
-              status: 502,
+            const userError = upstream.status === 429
+              ? 'AI is busy right now — please try again in a moment.'
+              : upstream.status === 402
+                ? 'AI credits are exhausted. Add credits in Settings → Workspace → Usage.'
+                : 'Vision analysis failed'
+            return new Response(JSON.stringify({ error: userError }), {
+              status: upstream.status === 429 || upstream.status === 402 ? upstream.status : 502,
               headers: { 'Content-Type': 'application/json' },
             })
           }
 
-          const completion = JSON.parse(raw)
-          const content = completion?.choices?.[0]?.message?.content
-          const wines = typeof content === 'string' ? parseWinesFromModel(content) : []
-          return new Response(JSON.stringify({ wines }), {
+          const completion = safeJsonParse(raw)
+          const message = completion?.choices?.[0]?.message
+          const argsRaw = message?.tool_calls?.[0]?.function?.arguments
+          const parsedArgs = typeof argsRaw === 'string' ? safeJsonParse(argsRaw) : null
+          const toolWines = Array.isArray(parsedArgs?.wines)
+            ? parsedArgs.wines.map(normalizeWine).filter(Boolean).slice(0, 12)
+            : []
+          const fallbackWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
+          const wines = toolWines.length ? toolWines : fallbackWines
+          const response = wines.length
+            ? { wines }
+            : { wines: [], message: typeof parsedArgs?.message === 'string' && parsedArgs.message.trim() ? parsedArgs.message : EMPTY_SCAN_MESSAGE }
+          return new Response(JSON.stringify(response), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
           })
