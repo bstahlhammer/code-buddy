@@ -1,53 +1,70 @@
 ## Goal
 
-Convert the Home screen into a **login wall**. Until the user is signed in, they see only the brand and two sign-in buttons. All features (scan, quiz, results, wine details, account) require auth.
+Rebrand the MySom app around **Forge's flame mark and color palette**, replacing the forest-green & brass "Velvet & Brass" theme with **"Ember & Tide"** — Forge navy + ember orange/red + tide blue. Implement concept #2 (flame swirl in wine glass) as a hand-crafted SVG monogram in the brand colors.
 
-## UX Changes
+The Forge logo (extracted from your PPTX) is itself a flame — orange/red/blue intertwined ribbons rising upward. The wine app's mark will echo that flame, but contained inside an elegant wine glass: visually a clear sibling to the Forge brand.
 
-### 1. New unauthenticated Home (login wall)
-When `auth.user` is null, `HomeScreen` renders:
-- Top half: existing monogram + "Est. Cellar / MySom / Uncork the world of wine" lockup (kept centered, pushed slightly up).
-- Bottom-center: stacked CTAs
-  1. **Continue with Google** — cream button with Google "G" logo (reuse SVG from `AuthScreen`)
-  2. **Sign in with email** — outlined brass button → navigates to `auth` screen (email mode, Google button hidden)
-- Below buttons: tiny links to `/privacy` and `/terms` + 21+ disclaimer (moved from AuthScreen footer).
-- Remove the top-right "Sign in" chip when logged out (the whole screen is now the sign-in surface).
+## What changes
 
-### 2. Authenticated Home (unchanged shell, features visible)
-When `auth.user` exists, `HomeScreen` keeps the current layout: account chip top-right, "Choose a wine now", "Build my taste profile", "just let me explore" CTAs.
+### 1. New theme palette — `src/ui/theme/theme.js`
+Replace forest/brass tokens with Forge tokens (typography stays Cormorant Garamond + Inter):
 
-### 3. Auth screen (`AuthScreen.jsx`)
-- Accept a new `mode` prop (`'email' | 'full'`, default `'full'`).
-- When `mode === 'email'` (entered from "Sign in with email" on Home), hide the Google button + "or" divider — just the email/password form with a small "Continue with Google instead" link that calls `signInWithGoogle()`.
-- Footer legal links + 21+ disclaimer stay (still useful here).
+| Token | Old (Velvet & Brass) | New (Ember & Tide) |
+|---|---|---|
+| `brand` | `#1F3A2E` forest | `#162969` Forge navy |
+| `brandDark` | `#0F1F18` | `#0B142E` deep navy |
+| `brandDeep` | `#16271F` | `#1B2E73` mid navy |
+| `gold` | `#B08D3E` brass | `#FF5F0E` ember orange |
+| `goldBright` | `#D4AF6A` polished brass | `#FF8048` bright ember |
+| `crimson` (new) | — | `#B61E23` flame tip |
+| `tide` (new) | — | `#5EAAE6` mid blue |
+| `tideLight` (new) | — | `#81C3E4` pale tide |
+| `tideDeep` (new) | — | `#2250B7` royal blue |
+| Match/badge colors | sepia/aubergine | navy/orange/green |
 
-### 4. Routing gate in `UncorkApp.jsx`
-Replace the current narrow gate (only `personalizedResults` requires auth) with a global gate:
-- Allowed screens when logged out: `home`, `auth`, `privacy`-style routes are TanStack routes (separate, unaffected).
-- Any `navigate(to)` call where `to !== 'home' && to !== 'auth'` and `!auth.user` → redirect to `auth` screen and store `pendingAfterAuth = to`.
-- After successful sign-in, `handleAuthed` resumes to `pendingAfterAuth` (already implemented; just broaden which screens set it).
-- On sign-out (from `/account`), user lands back on `/` → Home renders the login wall automatically.
+The existing `gold` / `goldBright` keys are **kept as aliases** for ember so all 30+ files that reference them keep working without edits.
 
-### 5. Home CTA wiring
-- "Continue with Google" → call `auth.signInWithGoogle()` directly from Home (import `useAuth` or pass handler from App). On error, show inline message under the buttons. On redirect, browser leaves page.
-- "Sign in with email" → `navigate('auth')` with mode flag. Simplest: add new screen key `'authEmail'` OR pass a transient `authMode` state in App. Use App-level `authMode` state, default `'full'`, set to `'email'` before navigating, reset to `'full'` on auth success/back.
+### 2. New monogram — replace inline SVG in `HomeScreen.jsx`
+Build the new mark as a hand-drawn SVG inline component:
+- **Wine glass silhouette**: thin navy (`#162969`) outline, ~1.4px stroke
+- **Flame swirl rising from the bowl**: three intertwined ribbon strokes echoing Forge's logo
+  - Outer ribbon: ember orange (`#FF5F0E`)
+  - Inner curl tip: crimson (`#B61E23`)
+  - Single tide-blue (`#5EAAE6`) ribbon at the base for contrast/motion
+- Containing brass ring → **navy ring** with subtle orange glow
+- Sized 88×88 in the home hero (same as today)
 
-## Technical Details
+### 3. New favicon + og-image
+Generate from the new SVG monogram (no AI image gen needed — render the SVG to PNG at multiple sizes via a small node script):
+- `public/favicon.png` (256×256) — monogram on transparent background
+- `public/og-image.jpg` (1200×630) — monogram + "MySom" wordmark + "Uncork the world of wine" tagline on Forge navy gradient
 
-**Files to edit**
-- `src/ui/screens/HomeScreen.jsx` — branch on `auth.user`; add login-wall layout with bottom-anchored CTAs (Google SVG + email button), legal footer, error state.
-- `src/ui/screens/AuthScreen.jsx` — accept `mode` prop; conditionally render Google button + divider; keep email form as default content.
-- `src/UncorkApp.jsx`:
-  - Add `authMode` state (`'full' | 'email'`).
-  - Broaden `navigate` gate: if `!auth.user && to !== 'home' && to !== 'auth'`, push `auth` and set `pendingAfterAuth = to`.
-  - Pass `authMode` + `setAuthMode` to `HomeScreen` and `AuthScreen`.
-  - Pass `auth.signInWithGoogle` (and any error surface helper) to `HomeScreen`.
+### 4. Update Velvet & Brass references
+- Update `mem://index.md` Core memory: aesthetic name → "Ember & Tide", swap color hexes, drop the brass-divider language (or rename to "ember divider").
+- The thin gold dividers, brass-ringed icon chips, gradient brass buttons all keep the same shapes — they just become ember-orange instead of brass-gold (no per-file edits needed because they all reference `theme.colors.gold` / `goldBright`).
 
-**No backend / route / migration changes.** TanStack routes (`/account`, `/privacy`, `/terms`) untouched.
+### 5. Tagline kept
+"Uncork the world of wine" stays. "Est. Cellar" already removed.
 
-**Layout note**: bottom-center CTAs use the existing flex `space-between` on the Home container — simply replace the lower CTA cluster with the new two-button version when logged out.
+## What does NOT change
+
+- Typography (Cormorant Garamond italic display + Inter UI)
+- Layout / component structure / radii / shadows
+- All other screens (they auto-recolor via theme tokens)
+- Auth, routing, backend
+- Per-file imports — `theme.colors.gold` keeps working as an alias for ember
+
+## Files touched
+
+- `src/ui/theme/theme.js` — new palette
+- `src/ui/screens/HomeScreen.jsx` — new SVG monogram (replaces current wine-glass-line monogram)
+- `public/favicon.png` — regenerated
+- `public/og-image.jpg` — regenerated
+- `mem://index.md` — updated brand memory (aesthetic name, hexes)
+- (one helper script in `/tmp/` to render favicon/og from SVG; not committed)
 
 ## Out of scope
-- Forgot-password flow.
-- Email verification UX changes.
-- Reorganizing `/account` page.
+
+- Wholesale visual redesign of other screens (they'll just look different colors)
+- Wordmark / logotype refinement (still Cormorant italic "MySom")
+- Co-branded "Powered by Forge" mark (can do later if you want)
