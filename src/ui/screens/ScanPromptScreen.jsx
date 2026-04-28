@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { theme } from '../theme/theme.js'
 import ScanModeCard from '../components/ScanModeCard.jsx'
 import TopBar from '../components/TopBar.jsx'
@@ -14,7 +15,19 @@ const BUYING_FOR = [
   { id: 'gift',  label: 'A gift' },
 ]
 
-export default function ScanPromptScreen({ navigate, goBack, buyingFor, onBuyingForChange }) {
+export default function ScanPromptScreen({ navigate, goBack, buyingFor, onBuyingForChange, onScan }) {
+  const fileRef = useRef(null)
+
+  const pick = () => fileRef.current?.click()
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    onScan?.(file)
+    navigate('scanning')
+    e.target.value = ''
+  }
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
       {/* Header */}
@@ -30,20 +43,28 @@ export default function ScanPromptScreen({ navigate, goBack, buyingFor, onBuying
         </div>
       </div>
 
+      {/* Hidden file input — capture=environment opens camera on mobile, gallery on desktop */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFile}
+        style={{ display: 'none' }}
+      />
+
       {/* Scrollable body */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: theme.spacing.lg, display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
-        {/* Scan mode cards */}
         {SCAN_MODES.map(mode => (
           <ScanModeCard
             key={mode.title}
             icon={mode.icon}
             title={mode.title}
             description={mode.description}
-            onTap={() => navigate('scanning')}
+            onTap={pick}
           />
         ))}
 
-        {/* Who are you buying for? */}
         <div style={{ marginTop: theme.spacing.sm }}>
           <p style={{ fontSize: theme.typography.sizes.sm, fontWeight: theme.typography.weights.medium, color: theme.colors.text, fontFamily: theme.typography.fontSans, marginBottom: theme.spacing.sm }}>
             Who are you buying for?
@@ -75,7 +96,6 @@ export default function ScanPromptScreen({ navigate, goBack, buyingFor, onBuying
           </div>
         </div>
 
-        {/* Ghost link */}
         <div style={{ textAlign: 'center', marginTop: theme.spacing.sm }}>
           <button
             onClick={() => navigate('quizIntro')}

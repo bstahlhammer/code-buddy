@@ -128,6 +128,8 @@ export default function App() {
   const [toast,        setToast]        = useState(null)
 
   const [hasScanned, setHasScanned] = useState(false)
+  const [scanFile, setScanFile] = useState(null)
+  const [scannedWines, setScannedWines] = useState(null)
 
   const navigate = useCallback((to) => {
     setDirection('forward')
@@ -204,15 +206,23 @@ export default function App() {
             {...nav}
             buyingFor={buyingFor}
             onBuyingForChange={setBuyingFor}
+            onScan={(file) => { setScanFile(file); setScannedWines(null) }}
           />
         )
       case 'scanning':
-        return <ScanningScreen {...nav} />
+        return (
+          <ScanningScreen
+            {...nav}
+            file={scanFile}
+            onScanComplete={(wines) => setScannedWines(wines)}
+          />
+        )
       case 'anonResults':
         return (
           <AnonResultsScreen
             {...nav}
             tasteProfile={tasteProfile}
+            scannedWines={scannedWines}
             onWineSelect={w => handleWineSelect(w, 'anonResults')}
           />
         )
