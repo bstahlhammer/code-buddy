@@ -41,7 +41,11 @@ function BrassDivider({ width = 48 }) {
   )
 }
 
-export default function HomeScreen({ navigate }) {
+export default function HomeScreen({ navigate, auth }) {
+  const user = auth?.user
+  const profileName = auth?.profile?.display_name
+  const initial = (profileName || user?.email || '?').trim()[0]?.toUpperCase() ?? '?'
+
   return (
     <div
       style={{
@@ -55,6 +59,52 @@ export default function HomeScreen({ navigate }) {
         overflow: 'hidden',
       }}
     >
+      {/* Auth chip — top right */}
+      <div style={{ position: 'absolute', top: theme.spacing.lg, right: theme.spacing.lg, zIndex: 2 }}>
+        {user ? (
+          <button
+            onClick={() => auth.signOut()}
+            title="Sign out"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,0.06)',
+              border: `1px solid ${theme.colors.gold}55`,
+              borderRadius: theme.radius.pill,
+              padding: '4px 12px 4px 4px',
+              color: theme.colors.cream,
+              fontFamily: theme.typography.fontSans,
+              fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{
+              width: 24, height: 24, borderRadius: '50%',
+              background: `linear-gradient(180deg, ${theme.colors.goldBright}, ${theme.colors.gold})`,
+              color: theme.colors.brandDark,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 12,
+            }}>{initial}</span>
+            Sign out
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('auth')}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${theme.colors.gold}80`,
+              borderRadius: theme.radius.pill,
+              padding: '6px 14px',
+              color: theme.colors.gold,
+              fontFamily: theme.typography.fontSans,
+              fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            Sign in
+          </button>
+        )}
+      </div>
+
       {/* Subtle parchment texture overlay */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.04,

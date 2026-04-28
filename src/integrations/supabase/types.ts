@@ -14,7 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      guided_answers: {
+        Row: {
+          answer: Json
+          created_at: string
+          id: string
+          node_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: Json
+          created_at?: string
+          id?: string
+          node_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: Json
+          created_at?: string
+          id?: string
+          node_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      taste_profiles: {
+        Row: {
+          ai_palate: Json | null
+          archetype: Json | null
+          created_at: string
+          flavor_character: Json | null
+          has_ai_signal: boolean | null
+          id: string
+          inference_confidence: number | null
+          palate: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_palate?: Json | null
+          archetype?: Json | null
+          created_at?: string
+          flavor_character?: Json | null
+          has_ai_signal?: boolean | null
+          id?: string
+          inference_confidence?: number | null
+          palate?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_palate?: Json | null
+          archetype?: Json | null
+          created_at?: string
+          flavor_character?: Json | null
+          has_ai_signal?: boolean | null
+          id?: string
+          inference_confidence?: number | null
+          palate?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wine_ratings: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          wine_id: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          wine_id: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          wine_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

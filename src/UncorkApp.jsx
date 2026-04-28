@@ -8,6 +8,7 @@ import {
 import DeviceFrame from './ui/components/DeviceFrame.jsx'
 import ScreenTransition from './ui/components/ScreenTransition.jsx'
 import Toast from './ui/components/Toast.jsx'
+import { useAuth } from './ui/hooks/useAuth.js'
 
 import HomeScreen from './ui/screens/HomeScreen.jsx'
 import ScanPromptScreen from './ui/screens/ScanPromptScreen.jsx'
@@ -20,19 +21,16 @@ import RateBottlesScreen from './ui/screens/RateBottlesScreen.jsx'
 import ProfileRevealScreen from './ui/screens/ProfileRevealScreen.jsx'
 import PersonalizedResultsScreen from './ui/screens/PersonalizedResultsScreen.jsx'
 import WineDetailScreen from './ui/screens/WineDetailScreen.jsx'
+import AuthScreen from './ui/screens/AuthScreen.jsx'
 
 const INITIAL_QUIZ_ANSWERS = {
-  // Free-form quiz (legacy QuizScreen) — still supported
   flavorPreferences: [],
   goToDrink: null,
   mealAppeal: null,
   boldness: 50,
   sweetness: null,
-  // Wine-rating path
-  wineRatings: {},          // { [wineId]: bucketId }
-  // Guided sommelier-style quiz path
-  guidedAnswers: {},        // { [nodeId]: { optionId? , optionIds?, notSure? } }
-  // legacy fields kept for backwards compatibility
+  wineRatings: {},
+  guidedAnswers: {},
   lovedWineIds: [],
   hatedWineIds: [],
 }
@@ -44,12 +42,6 @@ const SWEETNESS_MAP = {
   'Bone dry always':           10,
 }
 
-/**
- * Blend up to three signal sources by confidence:
- *   1. Wine ratings        — from inferPalateFromRatings
- *   2. Guided sommelier quiz — from computePalateFromGuidedAnswers
- *   3. Slider/sweetness fallback (legacy quiz) — confidence 0.3 if any answered
- */
 function deriveProfile(quizAnswers) {
   const ratings = quizAnswers.wineRatings ?? {}
   const inferredR = inferPalateFromRatings(ratings)
@@ -57,13 +49,9 @@ function deriveProfile(quizAnswers) {
   const guided  = quizAnswers.guidedAnswers ?? {}
   const inferredG = computePalateFromGuidedAnswers(guided)
 
-  // AI free-text describe palate — strong signal when the user confirms it.
-  // Weight ~1.5 (same as a couple of rated bottles): meaningful but not
-  // overwhelming if the user also rates specific wines.
   const aiPalate = quizAnswers.aiPalate ?? null
   const aiConfidence = aiPalate ? 1.5 : 0
 
-  // Legacy slider/sweetness signal
   const hasSlider = quizAnswers.boldness !== undefined || quizAnswers.sweetness
   const boldness     = quizAnswers.boldness ?? 50
   const sweetnessVal = SWEETNESS_MAP[quizAnswers.sweetness] ?? 30
@@ -75,7 +63,6 @@ function deriveProfile(quizAnswers) {
   }
   const sliderConfidence = hasSlider && quizAnswers.sweetness ? 0.3 : 0
 
-  // Weighted blend across all sources.
   const sources = [
     { palate: inferredR.palate,  weight: inferredR.confidence },
     { palate: inferredG.palate,  weight: inferredG.confidence },
@@ -117,6 +104,7 @@ function deriveProfile(quizAnswers) {
 }
 
 export default function App() {
+  const auth = useAuth()
   const [screen,       setScreen]       = useState('home')
   const [history,      setHistory]      = useState([])
   const [direction,    setDirection]    = useState('forward')
@@ -126,17 +114,26 @@ export default function App() {
   const [quizAnswers,  setQuizAnswers]  = useState(INITIAL_QUIZ_ANSWERS)
   const [tasteProfile, setTasteProfile] = useState(null)
   const [toast,        setToast]        = useState(null)
+  const [pendingAfterAuth, setPendingAfterAuth] = useState(null)
 
   const [hasScanned, setHasScanned] = useState(false)
   const [scanFile, setScanFile] = useState(null)
   const [scannedWines, setScannedWines] = useState(null)
 
   const navigate = useCallback((to) => {
+    // Gate personalized results behind auth
+    if (to === 'personalizedResults' && !auth.user) {
+      setPendingAfterAuth('personalizedResults')
+      setDirection('forward')
+      setHistory(h => [...h, screen])
+      setScreen('auth')
+      return
+    }
     setDirection('forward')
     setHistory(h => [...h, screen])
     if (to === 'scanning') setHasScanned(true)
     setScreen(to)
-  }, [screen])
+  }, [screen, auth.user])
 
   const goBack = useCallback(() => {
     setHistory(h => {
@@ -195,11 +192,27 @@ export default function App() {
     }, 1200)
   }, [returnScreen, showToast])
 
+  const handleAuthed = useCallback(() => {
+    if (pendingAfterAuth) {
+      const dest = pendingAfterAuth
+      setPendingAfterAuth(null)
+      setDirection('forward')
+      setScreen(dest)
+    } else {
+      setDirection('back')
+      setHistory(h => h.slice(0, -1))
+      setScreen(prev => history[history.length - 1] ?? 'home')
+    }
+    showToast('Signed in')
+  }, [pendingAfterAuth, history, showToast])
+
   function renderScreen() {
     const nav = { navigate, goBack }
     switch (screen) {
       case 'home':
-        return <HomeScreen {...nav} />
+        return <HomeScreen {...nav} auth={auth} />
+      case 'auth':
+        return <AuthScreen {...nav} onAuthed={handleAuthed} />
       case 'scanPrompt':
         return (
           <ScanPromptScreen
@@ -281,7 +294,7 @@ export default function App() {
           />
         )
       default:
-        return <HomeScreen {...nav} />
+        return <HomeScreen {...nav} auth={auth} />
     }
   }
 
