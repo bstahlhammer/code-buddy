@@ -62,19 +62,19 @@ export default function HomeScreen({ navigate, auth }) {
       {/* Auth chip — top right */}
       <div style={{ position: 'absolute', top: theme.spacing.lg, right: theme.spacing.lg, zIndex: 2 }}>
         {user ? (
-          <button
-            onClick={() => auth.signOut()}
-            title="Sign out"
+          <a
+            href="/account"
+            title="Account"
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: 'rgba(255,255,255,0.06)',
               border: `1px solid ${theme.colors.gold}55`,
               borderRadius: theme.radius.pill,
-              padding: '4px 12px 4px 4px',
+              padding: '4px 14px 4px 4px',
               color: theme.colors.cream,
               fontFamily: theme.typography.fontSans,
               fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-              cursor: 'pointer',
+              textDecoration: 'none',
             }}
           >
             <span style={{
@@ -84,8 +84,8 @@ export default function HomeScreen({ navigate, auth }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: 700, fontSize: 12,
             }}>{initial}</span>
-            Sign out
-          </button>
+            Account
+          </a>
         ) : (
           <button
             onClick={() => navigate('auth')}
