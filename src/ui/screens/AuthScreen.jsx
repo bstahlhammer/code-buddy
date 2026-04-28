@@ -31,8 +31,9 @@ const inputStyle = {
   marginBottom: theme.spacing.md,
 }
 
-export default function AuthScreen({ goBack, onAuthed }) {
+export default function AuthScreen({ goBack, onAuthed, authMode = 'full' }) {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth()
+  const showGoogle = authMode !== 'email'
   const [mode, setMode] = useState('signin') // 'signin' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
