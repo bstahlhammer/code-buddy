@@ -296,7 +296,7 @@ export const Route = createFileRoute('/api/scan')({
               : upstream.status === 402
                 ? 'AI credits are exhausted. Add credits in Settings → Workspace → Usage.'
                 : 'Vision analysis failed'
-            return new Response(JSON.stringify({ error: 'Vision analysis failed' }), {
+            return new Response(JSON.stringify({ error: userError }), {
               status: upstream.status === 429 || upstream.status === 402 ? upstream.status : 502,
               headers: { 'Content-Type': 'application/json' },
             })
