@@ -9,7 +9,13 @@ const InputSchema = z.object({
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
-Extract every wine visible. Output one JSON object per line (NDJSON) as soon as you identify each wine — do NOT wrap in an array, do NOT add commentary, just one compact JSON object per line.
+Extract every wine visible. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
+
+CRITICAL OUTPUT RULES — read carefully:
+- Output RAW JSON only. NO markdown. NO code fences. NO triple backticks. NO "json" labels.
+- Exactly one compact JSON object per line, separated by a single newline.
+- Start emitting the first wine immediately; do NOT batch them all at the end.
+- No preamble, no commentary, no trailing summary.
 
 Required fields per wine:
 - id: integer starting at 1
@@ -27,9 +33,7 @@ Required fields per wine:
 - acidity: number (0-100)
 - isValue: boolean
 - isCrowd: boolean (crowd-pleaser)
-- tasting: string (one short sentence)
-
-Output ONLY NDJSON lines. No markdown, no preamble.`
+- tasting: string (one short sentence)`
 
 export const Route = createFileRoute('/api/scan')({
   server: {

@@ -25,33 +25,68 @@ export function useScan() {
       const wines = []
       let buf = ''
 
+      const tryEmit = (raw) => {
+        // Strip code fences / language tags / stray commas the model sometimes adds
+        let s = raw.trim()
+        if (!s) return
+        if (s.startsWith('```')) s = s.replace(/^```(?:json)?/i, '').trim()
+        if (s.endsWith('```')) s = s.slice(0, -3).trim()
+        s = s.replace(/^,+/, '').replace(/,+$/, '').trim()
+        if (!s.startsWith('{')) return
+        try {
+          const wine = JSON.parse(s)
+          if (wine && typeof wine === 'object' && wine.name) {
+            wines.push(wine)
+            onWine?.(wine, wines.length)
+          }
+        } catch {
+          // skip — partial or malformed
+        }
+      }
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         buf += decoder.decode(value, { stream: true })
-        let nl
-        while ((nl = buf.indexOf('\n')) !== -1) {
-          const line = buf.slice(0, nl).trim()
-          buf = buf.slice(nl + 1)
-          if (!line) continue
-          try {
-            const wine = JSON.parse(line)
-            wines.push(wine)
-            onWine?.(wine, wines.length)
-          } catch {
-            // skip malformed line
+
+        // Extract every complete top-level {...} object from the buffer,
+        // regardless of newlines or code fences around them.
+        let i = 0
+        while (i < buf.length) {
+          const start = buf.indexOf('{', i)
+          if (start === -1) { buf = ''; break }
+          // find matching closing brace, accounting for strings
+          let depth = 0
+          let inStr = false
+          let esc = false
+          let end = -1
+          for (let j = start; j < buf.length; j++) {
+            const c = buf[j]
+            if (inStr) {
+              if (esc) esc = false
+              else if (c === '\\') esc = true
+              else if (c === '"') inStr = false
+            } else {
+              if (c === '"') inStr = true
+              else if (c === '{') depth++
+              else if (c === '}') {
+                depth--
+                if (depth === 0) { end = j; break }
+              }
+            }
           }
+          if (end === -1) {
+            // incomplete object — keep from `start` for next chunk
+            buf = buf.slice(start)
+            break
+          }
+          tryEmit(buf.slice(start, end + 1))
+          i = end + 1
         }
       }
 
-      const tail = buf.trim()
-      if (tail) {
-        try {
-          const wine = JSON.parse(tail)
-          wines.push(wine)
-          onWine?.(wine, wines.length)
-        } catch {}
-      }
+      // flush any final object hiding in the tail
+      tryEmit(buf)
 
       return wines
     } catch (e) {
