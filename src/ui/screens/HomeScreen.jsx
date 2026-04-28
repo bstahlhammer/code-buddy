@@ -119,18 +119,6 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
       <div style={{ position: 'relative', textAlign: 'center', marginTop: theme.spacing.xxl }}>
         <Monogram />
 
-        <div style={{
-          fontFamily: theme.typography.fontSans,
-          fontSize: '10px',
-          letterSpacing: '0.32em',
-          color: theme.colors.gold,
-          marginTop: theme.spacing.lg,
-          textTransform: 'uppercase',
-          fontWeight: 500,
-        }}>
-          Est. Cellar
-        </div>
-
         <h1
           style={{
             fontFamily: theme.typography.fontDisplay,
@@ -138,7 +126,7 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
             fontWeight: 500,
             color: theme.colors.cream,
             letterSpacing: '0.04em',
-            marginTop: theme.spacing.sm,
+            marginTop: theme.spacing.xl,
             lineHeight: 1,
             fontStyle: 'italic',
           }}
