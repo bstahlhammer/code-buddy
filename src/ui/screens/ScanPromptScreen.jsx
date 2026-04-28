@@ -43,12 +43,11 @@ export default function ScanPromptScreen({ navigate, goBack, buyingFor, onBuying
         </div>
       </div>
 
-      {/* Hidden file input — capture=environment opens camera on mobile, gallery on desktop */}
+      {/* Hidden file input — omitting `capture` lets mobile users choose camera OR photo library */}
       <input
         ref={fileRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleFile}
         style={{ display: 'none' }}
       />
