@@ -34,13 +34,28 @@ import {
   computePalateFromGuidedAnswers as _computePalateFromGuidedAnswers,
 } from './engine/guidedQuizEngine.js'
 import { describePalate as _describePalate } from './ai/describePalate.functions'
+import { supabase } from '@/integrations/supabase/client'
 
 /**
  * Ask the AI to translate a free-text wine description into palate axes
  * + a short coaching note. Returns { palate, confidence, coachingNote, vocabulary }.
  */
 export async function describePalateFromText(description) {
-  return _describePalate({ data: { description } })
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData?.session?.access_token
+  if (!token) {
+    return {
+      palate: { body: 50, tannin: 40, sweetness: 30, acidity: 55 },
+      confidence: 0,
+      coachingNote: 'Please sign in to use the AI palate coach.',
+      vocabulary: [],
+      error: 'auth_required',
+    }
+  }
+  return _describePalate({
+    data: { description },
+    headers: { Authorization: `Bearer ${token}` },
+  })
 }
 
 // ---------- Data ----------

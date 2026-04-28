@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
 
 const InputSchema = z.object({
   description: z.string().trim().min(3).max(2000),
@@ -36,6 +37,7 @@ The user will describe wines they love (or hate) using everyday language ("smoot
 Always call the extract_palate tool. Never reply in plain text.`
 
 export const describePalate = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }): Promise<DescribePalateResult> => {
     const apiKey = process.env.LOVABLE_API_KEY

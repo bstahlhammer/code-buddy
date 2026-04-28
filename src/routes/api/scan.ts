@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
 const InputSchema = z.object({
@@ -6,6 +7,36 @@ const InputSchema = z.object({
   mode: z.enum(['list', 'shelf', 'bottle']).optional(),
   buyingFor: z.enum(['me', 'group', 'gift']).optional(),
 })
+
+async function requireAuth(request: Request): Promise<string | Response> {
+  const SUPABASE_URL = process.env.SUPABASE_URL
+  const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    return new Response(JSON.stringify({ error: 'Auth not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  const authHeader = request.headers.get('authorization') ?? ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'Sign in required' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  })
+  const { data, error } = await supabase.auth.getClaims(token)
+  if (error || !data?.claims?.sub) {
+    return new Response(JSON.stringify({ error: 'Invalid session' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  return data.claims.sub as string
+}
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
@@ -40,6 +71,9 @@ export const Route = createFileRoute('/api/scan')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const authResult = await requireAuth(request)
+        if (authResult instanceof Response) return authResult
+
         const apiKey = process.env.LOVABLE_API_KEY
         if (!apiKey) {
           return new Response(JSON.stringify({ error: 'AI not configured' }), {

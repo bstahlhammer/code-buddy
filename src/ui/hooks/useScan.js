@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { supabase } from '@/integrations/supabase/client'
 
 export function useScan() {
   const [scanning, setScanning] = useState(false)
@@ -13,9 +14,17 @@ export function useScan() {
       onProgress?.({ stage: 'preparing', message: 'Cutting the foil…' })
       const base64 = await resizeAndEncode(file)
       onProgress?.({ stage: 'uploading', message: 'Presenting the bottle…' })
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
+      if (!token) {
+        throw new Error('Please sign in to scan a wine list.')
+      }
       const res = await fetch('/api/scan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ imageBase64: base64 }),
         signal: controller.signal,
       })
