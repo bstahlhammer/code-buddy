@@ -1,25 +1,50 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { theme } from '../theme/theme.js'
+import { useScan } from '../hooks/useScan.js'
 
-const MESSAGES = [
-  'Reading wines from list…',
-  'Identifying 8 wines…',
-  'Matching to database…',
-  'Done ✓',
-]
-
-export default function ScanningScreen({ navigate }) {
-  const [msgIdx, setMsgIdx] = useState(0)
+export default function ScanningScreen({ navigate, file, onScanComplete }) {
+  const [winesFound, setWinesFound] = useState(0)
+  const [status, setStatus] = useState(file ? 'Uploading photo…' : 'Reading wines from list…')
+  const { scanImage } = useScan()
+  const hasRun = useRef(false)
 
   useEffect(() => {
-    const intervals = [
-      setTimeout(() => setMsgIdx(1), 700),
-      setTimeout(() => setMsgIdx(2), 1500),
-      setTimeout(() => setMsgIdx(3), 2200),
-      setTimeout(() => navigate('anonResults'), 2600),
-    ]
-    return () => intervals.forEach(clearTimeout)
-  }, [navigate])
+    if (hasRun.current) return
+    hasRun.current = true
+
+    if (!file) {
+      // Demo fallback — no file picked, just show the loading sequence
+      const t1 = setTimeout(() => setStatus('Identifying wines…'), 700)
+      const t2 = setTimeout(() => setStatus('Matching to database…'), 1500)
+      const t3 = setTimeout(() => setStatus('Done ✓'), 2200)
+      const t4 = setTimeout(() => navigate('anonResults'), 2600)
+      return () => [t1, t2, t3, t4].forEach(clearTimeout)
+    }
+
+    let cancelled = false
+    const wines = []
+
+    scanImage(file, (wine, count) => {
+      if (cancelled) return
+      wines.push(wine)
+      setWinesFound(count)
+      setStatus(`Identified ${count} wine${count === 1 ? '' : 's'}…`)
+    })
+      .then((all) => {
+        if (cancelled) return
+        setStatus('Done ✓')
+        onScanComplete?.(all.length ? all : wines)
+        setTimeout(() => navigate('anonResults'), 500)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('scan failed', err)
+        setStatus('Scan failed — try again')
+        setTimeout(() => navigate('scanPrompt'), 1500)
+      })
+
+    return () => { cancelled = true }
+  }, [file, navigate, onScanComplete, scanImage])
 
   return (
     <div
@@ -46,7 +71,6 @@ export default function ScanningScreen({ navigate }) {
           backgroundColor: '#111',
         }}
       >
-        {/* Corner marks */}
         {[
           { top: -1, left: -1, borderTop: `2px solid ${theme.colors.gold}`, borderLeft: `2px solid ${theme.colors.gold}` },
           { top: -1, right: -1, borderTop: `2px solid ${theme.colors.gold}`, borderRight: `2px solid ${theme.colors.gold}` },
@@ -56,7 +80,6 @@ export default function ScanningScreen({ navigate }) {
           <div key={i} style={{ position: 'absolute', width: 16, height: 16, ...s }} />
         ))}
 
-        {/* Scan line */}
         <div
           style={{
             position: 'absolute',
@@ -70,7 +93,6 @@ export default function ScanningScreen({ navigate }) {
           }}
         />
 
-        {/* Simulated list content */}
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
@@ -89,17 +111,27 @@ export default function ScanningScreen({ navigate }) {
         ))}
       </div>
 
-      {/* Status message */}
-      <div
-        style={{
-          fontSize: theme.typography.sizes.md,
-          color: theme.colors.cream,
-          fontFamily: theme.typography.fontSans,
-          animation: 'pulse 1.5s ease infinite',
-          letterSpacing: '0.02em',
-        }}
-      >
-        {MESSAGES[msgIdx]}
+      <div style={{ textAlign: 'center' }}>
+        <div
+          style={{
+            fontSize: theme.typography.sizes.md,
+            color: theme.colors.cream,
+            fontFamily: theme.typography.fontSans,
+            letterSpacing: '0.02em',
+            marginBottom: 8,
+          }}
+        >
+          {status}
+        </div>
+        {winesFound > 0 && (
+          <div style={{
+            fontSize: theme.typography.sizes.sm,
+            color: theme.colors.gold,
+            fontFamily: theme.typography.fontSans,
+          }}>
+            {winesFound} wine{winesFound === 1 ? '' : 's'} identified
+          </div>
+        )}
       </div>
     </div>
   )
