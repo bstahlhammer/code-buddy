@@ -35,9 +35,11 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
     let cancelled = false
     const wines = []
 
+    let stepIndex = 0
     const progressTimer = setInterval(() => {
       if (cancelled || wines.length > 0) return
-      setStatus((current) => ANTICIPATION_STEPS[(ANTICIPATION_STEPS.indexOf(current) + 1) % ANTICIPATION_STEPS.length])
+      stepIndex = (stepIndex + 1) % ANTICIPATION_STEPS.length
+      setStatus(ANTICIPATION_STEPS[stepIndex])
     }, 1800)
 
     scanImage(
