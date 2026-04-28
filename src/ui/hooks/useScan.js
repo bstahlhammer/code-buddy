@@ -7,14 +7,17 @@ export function useScan() {
   const scanImage = useCallback(async function scanImage(file, onWine, onProgress) {
     setScanning(true)
     setError(null)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 70_000)
     try {
-      onProgress?.({ stage: 'preparing', message: 'Preparing photo…' })
+      onProgress?.({ stage: 'preparing', message: 'Cutting the foil…' })
       const base64 = await resizeAndEncode(file)
-      onProgress?.({ stage: 'uploading', message: 'Uploading photo…' })
+      onProgress?.({ stage: 'uploading', message: 'Presenting the bottle…' })
       const res = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64: base64 }),
+        signal: controller.signal,
       })
 
       if (!res.ok || !res.body) {
@@ -22,7 +25,7 @@ export function useScan() {
         throw new Error(msg || 'Scan failed')
       }
 
-      onProgress?.({ stage: 'reading', message: 'Reading the wine list…' })
+      onProgress?.({ stage: 'reading', message: 'Uncorking the image…' })
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       const wines = []
@@ -37,13 +40,22 @@ export function useScan() {
         s = s.replace(/^,+/, '').replace(/,+$/, '').trim()
         if (!s.startsWith('{')) return
         try {
-          const wine = JSON.parse(s)
+          const item = JSON.parse(s)
+          if (item?.type === 'progress') {
+            onProgress?.(item)
+            return
+          }
+          if (item?.type === 'error') {
+            throw new Error(item.message || 'Scan failed')
+          }
+          const wine = item
           if (wine && typeof wine === 'object' && wine.name) {
             wines.push(wine)
             onWine?.(wine, wines.length)
-            onProgress?.({ stage: 'wine', count: wines.length, message: `Found ${wines.length} wine${wines.length === 1 ? '' : 's'}…` })
+            onProgress?.({ stage: 'wine', count: wines.length, message: `${wines.length} wine${wines.length === 1 ? '' : 's'} identified` })
           }
-        } catch {
+        } catch (e) {
+          if (e.message === 'Scan failed' || e.message?.includes('too long')) throw e
           // skip — partial or malformed
         }
       }
@@ -97,6 +109,7 @@ export function useScan() {
       setError(e.message || 'Scan failed')
       throw e
     } finally {
+      clearTimeout(timeout)
       setScanning(false)
     }
   }, [])
@@ -110,7 +123,7 @@ function resizeAndEncode(file) {
     const img = new Image()
     img.onload = () => {
       URL.revokeObjectURL(url)
-      const MAX = 1280
+      const MAX = 960
       let { width, height } = img
       if (width > MAX || height > MAX) {
         if (width >= height) {
@@ -125,7 +138,7 @@ function resizeAndEncode(file) {
       canvas.width = width
       canvas.height = height
       canvas.getContext('2d').drawImage(img, 0, 0, width, height)
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.72)
       resolve(dataUrl.split(',')[1])
     }
     img.onerror = (e) => {
