@@ -1,35 +1,40 @@
 export const theme = {
   colors: {
-    // Core palette — Velvet & Brass
-    brand:      '#1F3A2E',   // deep forest green (velvet)
-    brandDark:  '#0F1F18',   // near-black forest
-    brandDeep:  '#16271F',   // mid forest for layering
-    gold:       '#B08D3E',   // brushed brass
-    goldBright: '#D4AF6A',   // polished brass highlight
-    cream:      '#F4EBD9',   // warm parchment
+    // Core palette — Forge: Ember & Tide
+    // Deep navy (velvet) + ember orange/red (flame) + tide blue (accent)
+    brand:      '#162969',   // Forge navy (deep)
+    brandDark:  '#0B142E',   // near-black navy
+    brandDeep:  '#1B2E73',   // mid navy for layering
+    gold:       '#FF5F0E',   // ember orange (alias kept for compatibility)
+    goldBright: '#FF8048',   // bright ember highlight (alias)
+    ember:      '#FF5F0E',
+    emberBright:'#FF8048',
+    crimson:    '#B61E23',   // deep crimson (flame tip)
+    crimsonSoft:'#B8555C',   // muted rose
+    tide:       '#5EAAE6',   // mid Forge blue
+    tideLight:  '#81C3E4',   // pale tide
+    tideDeep:   '#2250B7',   // royal Forge blue
+    cream:      '#F4EBD9',   // warm parchment kept for warmth
     parchment:  '#EFE4CC',   // aged parchment for cards on dark
-    text:       '#1A1815',   // ink black with warm undertone
-    textMuted:  '#6B5E4F',   // aged sepia
-    textOnDark: '#E8DEC8',   // parchment text on dark surfaces
-    surface:    '#FBF6EB',   // off-white parchment surface
-    surfaceAlt: '#F4EBD9',   // alternate card surface
-    border:     '#D9CBA8',   // soft parchment edge
-    borderDark: '#2A4034',   // forest border on dark
-    success:    '#3D6B47',
-    warning:    '#8C6B1F',
-    crowd:      '#5C3A6B',   // muted aubergine
-    matchHigh:  '#3D6B47',
-    matchMid:   '#8C6B1F',
-    matchLow:   '#8C2D2D',
-    // badge backgrounds
-    crowdBg:    '#EBE3F0',
-    valueBg:    '#F5E9C9',
-    bestMatchBg:'#E3EDDF',
-    criticBg:   '#1F3A2E',
-    // dot empty
-    dotEmpty:   '#D9CBA8',
-    // score bar track
-    barTrack:   '#E8DEC8',
+    text:       '#0F1A33',   // deep navy ink
+    textMuted:  '#5A6788',   // dusty navy
+    textOnDark: '#E8EEF8',   // pale on navy surfaces
+    surface:    '#FBF8F2',   // off-white warm surface
+    surfaceAlt: '#F1EEE5',   // alternate card surface
+    border:     '#D7DCE8',   // soft cool edge
+    borderDark: '#22356E',   // navy border on dark
+    success:    '#2F8F4E',
+    warning:    '#FF8048',
+    crowd:      '#2250B7',   // royal blue
+    matchHigh:  '#2F8F4E',
+    matchMid:   '#FF8048',
+    matchLow:   '#B61E23',
+    crowdBg:    '#E1EAF8',
+    valueBg:    '#FFE7D6',
+    bestMatchBg:'#E1F0E5',
+    criticBg:   '#162969',
+    dotEmpty:   '#D7DCE8',
+    barTrack:   '#E8EEF8',
   },
   typography: {
     // Transitional serif (display) + refined sans (body)
