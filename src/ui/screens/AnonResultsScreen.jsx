@@ -7,9 +7,10 @@ import UpsellBanner from '../components/UpsellBanner.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
 
-export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tasteProfile }) {
+export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tasteProfile, scannedWines }) {
   const hasProfile = !!tasteProfile
   const [sortKey, setSortKey] = useState('crowd')
+  const resultWines = scannedWines?.length ? scannedWines : getWines().slice(0, 12)
 
   const sortOptions = useMemo(() => [
     { value: 'crowd',  label: 'Crowd Pleasers' },
@@ -27,8 +28,8 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
   }
 
   const sortedWines = useMemo(
-    () => sortWines(getWines(), sortKey, hasProfile ? tasteProfile : null),
-    [sortKey, tasteProfile, hasProfile]
+    () => sortWines(resultWines, sortKey, hasProfile ? tasteProfile : null),
+    [resultWines, sortKey, tasteProfile, hasProfile]
   )
 
   return (
@@ -41,7 +42,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
             Wine List Results
           </h1>
           <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
-            {getWines().length} wines · Tap any to explore
+            {resultWines.length} wines identified · Tap any to explore
           </p>
           <div style={{ marginTop: theme.spacing.md }}>
             <SortToggle options={sortOptions} value={sortKey} onChange={handleSortChange} />
