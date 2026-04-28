@@ -115,15 +115,17 @@ export default function App() {
   const [tasteProfile, setTasteProfile] = useState(null)
   const [toast,        setToast]        = useState(null)
   const [pendingAfterAuth, setPendingAfterAuth] = useState(null)
+  const [authMode, setAuthMode] = useState('full')
 
   const [hasScanned, setHasScanned] = useState(false)
   const [scanFile, setScanFile] = useState(null)
   const [scannedWines, setScannedWines] = useState(null)
 
   const navigate = useCallback((to) => {
-    // Gate personalized results behind auth
-    if (to === 'personalizedResults' && !auth.user) {
-      setPendingAfterAuth('personalizedResults')
+    // Login wall: any feature screen requires auth
+    if (!auth.user && to !== 'home' && to !== 'auth') {
+      setPendingAfterAuth(to)
+      setAuthMode('full')
       setDirection('forward')
       setHistory(h => [...h, screen])
       setScreen('auth')
@@ -134,6 +136,13 @@ export default function App() {
     if (to === 'scanning') setHasScanned(true)
     setScreen(to)
   }, [screen, auth.user])
+
+  const handleEmailSignIn = useCallback(() => {
+    setAuthMode('email')
+    setDirection('forward')
+    setHistory(h => [...h, screen])
+    setScreen('auth')
+  }, [screen])
 
   const goBack = useCallback(() => {
     setHistory(h => {
