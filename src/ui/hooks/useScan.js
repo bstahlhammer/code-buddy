@@ -38,6 +38,9 @@ export function useScan() {
       const data = await res.json().catch(() => null)
       if (data?.error) throw new Error(data.error)
       const wines = Array.isArray(data?.wines) ? data.wines.filter((wine) => wine?.name) : []
+      if (!wines.length) {
+        throw new Error(data?.message || 'I could not identify a specific wine. Try a closer, sharper photo where the full label or shelf tag is readable.')
+      }
       wines.forEach((wine, index) => {
         onWine?.(wine, index + 1)
         onProgress?.({ stage: 'wine', count: index + 1, message: `${index + 1} wine${index + 1 === 1 ? '' : 's'} identified` })
