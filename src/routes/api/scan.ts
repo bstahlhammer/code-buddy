@@ -40,14 +40,13 @@ async function requireAuth(request: Request): Promise<string | Response> {
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
-Extract up to the first 12 wines that are CLEARLY AND UNAMBIGUOUSLY VISIBLE in the image. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
+Extract every wine you can read in the image, up to 12. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
 
-ANTI-HALLUCINATION RULES — these are the most important rules:
-- ONLY include a wine if you can actually read its name on the label or list. If you are not sure, OMIT it.
-- NEVER invent, guess, or "fill in" wines from your training data. If the image shows 3 wines, return 3 — not 12.
-- If text is blurry, cut off, or partially obscured, OMIT that wine rather than guessing.
-- Better to return fewer accurate wines than more invented ones. Returning 0 wines is a valid response if nothing is clearly readable.
-- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read its name and details. Use <60 only when you are still confident the wine is real.
+GROUNDING RULES — important:
+- The "name" field MUST be a wine you can actually see in the image. Do not invent wines that aren't there.
+- If only part of a name is visible, return what you can read (e.g. "Château Margaux" without vintage is fine).
+- It is OK to be generous about including wines — partial reads are welcome — but the name must come from the image, not from memory.
+- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels, but still include the wine.
 
 OUTPUT RULES:
 - Output RAW JSON only. NO markdown. NO code fences. NO triple backticks. NO "json" labels.
@@ -56,21 +55,21 @@ OUTPUT RULES:
 - No preamble, no commentary, no trailing summary.
 - Stop after 12 wines.
 
-Field rules — ONLY use what you can SEE on the label/list. For everything else, use the conservative defaults below:
+Field rules — use what you can SEE for factual fields; use sensible defaults for the rest:
 - id: integer starting at 1
-- name: string — must match what's printed (producer + cuvée). REQUIRED, must be readable.
-- vintage: string — the year printed on the label, or "NV" if "NV"/"non-vintage" is shown, or "" (empty string) if not visible. DO NOT guess.
-- region: string — only if printed or unmistakable from the label; otherwise "".
-- grape: string — only if printed; otherwise "".
+- name: string — REQUIRED. The producer + cuvée as printed on the label/list. Must be readable in the image.
+- vintage: string — the year printed on the label, "NV" if non-vintage is shown, or "" (empty) if not visible. Do NOT guess.
+- region: string — if printed on the label/list. If not printed but the wine is well-known and you are confident, you may include it; otherwise "".
+- grape: string — if printed, or if obvious from a single-varietal wine you recognize from the label; otherwise "".
 - price: string — only if a price is shown next to the wine (e.g. "$45"); otherwise "—".
 - priceNum: number — numeric price if shown; otherwise 0.
-- rating: number — 0 (unknown). DO NOT estimate quality scores.
-- ratingLabel: string — "" (empty). DO NOT estimate.
-- body, sweetness, tannin, acidity: number — 50 each (neutral default). DO NOT estimate from training knowledge.
-- isValue: false
-- isCrowd: false
-- tasting: "" (empty string). DO NOT generate tasting notes.
-- confidence: number 0-100 — how clearly you could read this wine on the image.`
+- rating: number 0-100 — leave 0 unless a rating/score is printed.
+- ratingLabel: string — "" unless a rating is shown.
+- body, sweetness, tannin, acidity: number 0-100 — typical profile for the grape/style if you recognize the wine; otherwise 50.
+- isValue: boolean — false unless clearly a value pick.
+- isCrowd: boolean — false unless clearly a crowd-pleaser style.
+- tasting: string — one short sentence ONLY if you genuinely recognize the wine; otherwise "".
+- confidence: number 0-100 — how clearly you could read this wine's name on the image.`
 
 export const Route = createFileRoute('/api/scan')({
   server: {
