@@ -4,9 +4,15 @@ import { useScan } from '../hooks/useScan.js'
 
 export default function ScanningScreen({ navigate, file, onScanComplete }) {
   const [winesFound, setWinesFound] = useState(0)
-  const [status, setStatus] = useState(file ? 'Uploading photo…' : 'Reading wines from list…')
+  const [status, setStatus] = useState(file ? 'Preparing photo…' : 'Reading wines from list…')
+  const [elapsed, setElapsed] = useState(0)
   const { scanImage } = useScan()
   const hasRun = useRef(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => setElapsed((seconds) => seconds + 1), 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     if (hasRun.current) return
@@ -24,26 +30,48 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
     let cancelled = false
     const wines = []
 
-    scanImage(file, (wine, count) => {
-      if (cancelled) return
-      wines.push(wine)
-      setWinesFound(count)
-      setStatus(`Identified ${count} wine${count === 1 ? '' : 's'}…`)
-    })
+    const progressTimer = setInterval(() => {
+      if (cancelled || wines.length > 0) return
+      setStatus((current) => {
+        if (current.includes('Preparing') || current.includes('Uploading')) return 'Photo received — reading labels…'
+        if (current.includes('reading labels')) return 'Recognizing wine names…'
+        if (current.includes('Recognizing')) return 'Extracting prices and vintages…'
+        return 'Still scanning — this wine list is dense…'
+      })
+    }, 2500)
+
+    scanImage(
+      file,
+      (wine, count) => {
+        if (cancelled) return
+        wines.push(wine)
+        setWinesFound(count)
+        setStatus(`Identified ${count} wine${count === 1 ? '' : 's'}…`)
+      },
+      (progress) => {
+        if (cancelled || !progress?.message) return
+        setStatus(progress.message)
+      }
+    )
       .then((all) => {
         if (cancelled) return
+        clearInterval(progressTimer)
         setStatus('Done ✓')
         onScanComplete?.(all.length ? all : wines)
         setTimeout(() => navigate('anonResults'), 500)
       })
       .catch((err) => {
         if (cancelled) return
+        clearInterval(progressTimer)
         console.error('scan failed', err)
         setStatus('Scan failed — try again')
         setTimeout(() => navigate('scanPrompt'), 1500)
       })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      clearInterval(progressTimer)
+    }
   }, [file, navigate, onScanComplete, scanImage])
 
   return (
@@ -122,6 +150,14 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
           }}
         >
           {status}
+        </div>
+        <div style={{
+          fontSize: theme.typography.sizes.xs,
+          color: `${theme.colors.cream}99`,
+          fontFamily: theme.typography.fontSans,
+          marginBottom: 8,
+        }}>
+          {elapsed}s elapsed
         </div>
         {winesFound > 0 && (
           <div style={{
