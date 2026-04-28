@@ -220,7 +220,7 @@ export const Route = createFileRoute('/api/scan')({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
+              model: 'google/gemini-3-flash-preview',
               stream: false,
               temperature: 0.1,
               messages: [
@@ -232,6 +232,51 @@ export const Route = createFileRoute('/api/scan')({
                   ],
                 },
               ],
+              tools: [
+                {
+                  type: 'function',
+                  function: {
+                    name: 'extract_wines',
+                    description: 'Return only specific wines visible in the image, or an empty result with retake guidance.',
+                    parameters: {
+                      type: 'object',
+                      properties: {
+                        wines: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              id: { type: 'number' },
+                              name: { type: 'string' },
+                              vintage: { type: 'string' },
+                              region: { type: 'string' },
+                              grape: { type: 'string' },
+                              price: { type: 'string' },
+                              priceNum: { type: 'number' },
+                              rating: { type: 'number' },
+                              ratingLabel: { type: 'string' },
+                              body: { type: 'number' },
+                              sweetness: { type: 'number' },
+                              tannin: { type: 'number' },
+                              acidity: { type: 'number' },
+                              isValue: { type: 'boolean' },
+                              isCrowd: { type: 'boolean' },
+                              tasting: { type: 'string' },
+                              confidence: { type: 'number' },
+                            },
+                            required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence'],
+                            additionalProperties: false,
+                          },
+                        },
+                        message: { type: 'string' },
+                      },
+                      required: ['wines', 'message'],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+              ],
+              tool_choice: { type: 'function', function: { name: 'extract_wines' } },
             }),
           })
 
@@ -245,9 +290,18 @@ export const Route = createFileRoute('/api/scan')({
           }
 
           const completion = JSON.parse(raw)
-          const content = completion?.choices?.[0]?.message?.content
-          const wines = typeof content === 'string' ? parseWinesFromModel(content) : []
-          return new Response(JSON.stringify({ wines }), {
+          const message = completion?.choices?.[0]?.message
+          const argsRaw = message?.tool_calls?.[0]?.function?.arguments
+          const parsedArgs = typeof argsRaw === 'string' ? JSON.parse(argsRaw) : null
+          const toolWines = Array.isArray(parsedArgs?.wines)
+            ? parsedArgs.wines.map(normalizeWine).filter(Boolean).slice(0, 12)
+            : []
+          const fallbackWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
+          const wines = toolWines.length ? toolWines : fallbackWines
+          const response = wines.length
+            ? { wines }
+            : { wines: [], message: typeof parsedArgs?.message === 'string' && parsedArgs.message.trim() ? parsedArgs.message : EMPTY_SCAN_MESSAGE }
+          return new Response(JSON.stringify(response), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
           })
