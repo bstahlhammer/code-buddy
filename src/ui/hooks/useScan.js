@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 export function useScan() {
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState(null)
 
-  async function scanImage(file, onWine) {
+  const scanImage = useCallback(async function scanImage(file, onWine, onProgress) {
     setScanning(true)
     setError(null)
     try {
+      onProgress?.({ stage: 'preparing', message: 'Preparing photo…' })
       const base64 = await resizeAndEncode(file)
+      onProgress?.({ stage: 'uploading', message: 'Uploading photo…' })
       const res = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -20,6 +22,7 @@ export function useScan() {
         throw new Error(msg || 'Scan failed')
       }
 
+      onProgress?.({ stage: 'reading', message: 'Reading the wine list…' })
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       const wines = []
@@ -38,6 +41,7 @@ export function useScan() {
           if (wine && typeof wine === 'object' && wine.name) {
             wines.push(wine)
             onWine?.(wine, wines.length)
+            onProgress?.({ stage: 'wine', count: wines.length, message: `Found ${wines.length} wine${wines.length === 1 ? '' : 's'}…` })
           }
         } catch {
           // skip — partial or malformed
@@ -95,7 +99,7 @@ export function useScan() {
     } finally {
       setScanning(false)
     }
-  }
+  }, [])
 
   return { scanning, error, scanImage }
 }
