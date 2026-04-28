@@ -31,6 +31,8 @@ export function useScan() {
 
       if (!res.ok) {
         const msg = await res.text().catch(() => 'Scan failed')
+        const parsed = safeJsonParse(msg)
+        if (parsed?.error) throw new Error(parsed.error)
         throw new Error(msg || 'Scan failed')
       }
 
@@ -57,6 +59,14 @@ export function useScan() {
   }, [])
 
   return { scanning, error, scanImage }
+}
+
+function safeJsonParse(value) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
 }
 
 function fileToBase64(file) {
