@@ -22,6 +22,7 @@ export default function ScreenTransition({ screenKey, direction, children }) {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        minHeight: 0,
         ...animStyle,
       }}
     >

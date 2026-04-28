@@ -97,7 +97,7 @@ export default function GuidedQuizScreen({ navigate, goBack, onComplete }) {
                   && (typeof node.next === 'function' ? !node.next(answers) : !node.next)
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
       <TopBar onBack={handleBack} onHome={() => navigate('home')} />
 
       {/* Progress strip */}

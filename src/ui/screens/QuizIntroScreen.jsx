@@ -103,7 +103,7 @@ function PathCard({ icon, title, description, meta, onClick, primary }) {
 
 export default function QuizIntroScreen({ navigate, goBack }) {
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
       <TopBar onBack={goBack} onHome={() => navigate('home')} />
       <div
         className="hide-scrollbar"
