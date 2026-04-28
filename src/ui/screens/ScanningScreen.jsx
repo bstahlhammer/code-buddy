@@ -2,17 +2,22 @@ import { useEffect, useRef, useState } from 'react'
 import { theme } from '../theme/theme.js'
 import { useScan } from '../hooks/useScan.js'
 
+const ANTICIPATION_STEPS = [
+  'Cutting the foil…',
+  'Easing out the cork…',
+  'Letting the list breathe…',
+  'Swirling the first clues…',
+  'Catching the aroma…',
+  'Tasting for vintages…',
+  'Decanting the details…',
+  'Pouring the shortlist…',
+]
+
 export default function ScanningScreen({ navigate, file, onScanComplete }) {
   const [winesFound, setWinesFound] = useState(0)
-  const [status, setStatus] = useState(file ? 'Preparing photo…' : 'Reading wines from list…')
-  const [elapsed, setElapsed] = useState(0)
+  const [status, setStatus] = useState(file ? ANTICIPATION_STEPS[0] : 'Pouring the shortlist…')
   const { scanImage } = useScan()
   const hasRun = useRef(false)
-
-  useEffect(() => {
-    const interval = setInterval(() => setElapsed((seconds) => seconds + 1), 1000)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     if (hasRun.current) return
@@ -20,8 +25,8 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
 
     if (!file) {
       // Demo fallback — no file picked, just show the loading sequence
-      const t1 = setTimeout(() => setStatus('Identifying wines…'), 700)
-      const t2 = setTimeout(() => setStatus('Matching to database…'), 1500)
+      const t1 = setTimeout(() => setStatus('Swirling the first clues…'), 700)
+      const t2 = setTimeout(() => { setWinesFound(6); setStatus('Pouring the shortlist…') }, 1500)
       const t3 = setTimeout(() => setStatus('Done ✓'), 2200)
       const t4 = setTimeout(() => navigate('anonResults'), 2600)
       return () => [t1, t2, t3, t4].forEach(clearTimeout)
@@ -32,13 +37,8 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
 
     const progressTimer = setInterval(() => {
       if (cancelled || wines.length > 0) return
-      setStatus((current) => {
-        if (current.includes('Preparing') || current.includes('Uploading')) return 'Photo received — reading labels…'
-        if (current.includes('reading labels')) return 'Recognizing wine names…'
-        if (current.includes('Recognizing')) return 'Extracting prices and vintages…'
-        return 'Still scanning — this wine list is dense…'
-      })
-    }, 2500)
+      setStatus((current) => ANTICIPATION_STEPS[(ANTICIPATION_STEPS.indexOf(current) + 1) % ANTICIPATION_STEPS.length])
+    }, 1800)
 
     scanImage(
       file,
@@ -46,7 +46,7 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         if (cancelled) return
         wines.push(wine)
         setWinesFound(count)
-        setStatus(`Identified ${count} wine${count === 1 ? '' : 's'}…`)
+        setStatus(count < 4 ? 'Filling the first glasses…' : 'Pouring the shortlist…')
       },
       (progress) => {
         if (cancelled || !progress?.message) return
@@ -64,8 +64,9 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         if (cancelled) return
         clearInterval(progressTimer)
         console.error('scan failed', err)
-        setStatus('Scan failed — try again')
-        setTimeout(() => navigate('scanPrompt'), 1500)
+        setStatus(wines.length ? 'Pouring what we found…' : 'Scan took too long — pouring a starter list…')
+        onScanComplete?.(wines)
+        setTimeout(() => navigate('anonResults'), 900)
       })
 
     return () => {
@@ -157,17 +158,8 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
           fontFamily: theme.typography.fontSans,
           marginBottom: 8,
         }}>
-          {elapsed}s elapsed
+          {winesFound} wine{winesFound === 1 ? '' : 's'} identified
         </div>
-        {winesFound > 0 && (
-          <div style={{
-            fontSize: theme.typography.sizes.sm,
-            color: theme.colors.gold,
-            fontFamily: theme.typography.fontSans,
-          }}>
-            {winesFound} wine{winesFound === 1 ? '' : 's'} identified
-          </div>
-        )}
       </div>
     </div>
   )

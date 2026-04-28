@@ -9,13 +9,14 @@ const InputSchema = z.object({
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
-Extract every wine visible. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
+Extract up to the first 12 clearly readable wines visible. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
 
 CRITICAL OUTPUT RULES — read carefully:
 - Output RAW JSON only. NO markdown. NO code fences. NO triple backticks. NO "json" labels.
 - Exactly one compact JSON object per line, separated by a single newline.
 - Start emitting the first wine immediately; do NOT batch them all at the end.
 - No preamble, no commentary, no trailing summary.
+- Stop after 12 wines; speed matters more than exhaustive extraction.
 
 Required fields per wine:
 - id: integer starting at 1
@@ -62,46 +63,52 @@ export const Route = createFileRoute('/api/scan')({
           ? payload.imageBase64
           : `data:image/jpeg;base64,${payload.imageBase64}`
 
-        const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            stream: true,
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  { type: 'text', text: PROMPT },
-                  { type: 'image_url', image_url: { url: dataUrl } },
-                ],
-              },
-            ],
-          }),
-        })
-
-        if (!upstream.ok || !upstream.body) {
-          const text = await upstream.text().catch(() => '')
-          console.error('AI gateway scan error', upstream.status, text)
-          return new Response(JSON.stringify({ error: 'Vision analysis failed' }), {
-            status: 502,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        }
-
-        // Transform OpenAI-style SSE stream → raw text → NDJSON line stream
+        // Return a stream immediately, then do vision work inside it so the UI
+        // can show real progress instead of waiting on the upstream model.
         const stream = new ReadableStream({
           async start(controller) {
-            const reader = upstream.body!.getReader()
-            const decoder = new TextDecoder()
             const encoder = new TextEncoder()
+            const decoder = new TextDecoder()
+            const emit = (event: unknown) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
             let sseBuf = ''
             let lineBuf = ''
+            let wineCount = 0
+            const abort = new AbortController()
+            const timeout = setTimeout(() => abort.abort(), 55_000)
 
             try {
+              emit({ type: 'progress', stage: 'received', message: 'Photo received — cutting the foil…' })
+              const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+                method: 'POST',
+                signal: abort.signal,
+                headers: {
+                  Authorization: `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemini-2.5-flash-lite',
+                  stream: true,
+                  messages: [
+                    {
+                      role: 'user',
+                      content: [
+                        { type: 'text', text: PROMPT },
+                        { type: 'image_url', image_url: { url: dataUrl } },
+                      ],
+                    },
+                  ],
+                }),
+              })
+
+              if (!upstream.ok || !upstream.body) {
+                const text = await upstream.text().catch(() => '')
+                console.error('AI gateway scan error', upstream.status, text)
+                emit({ type: 'error', message: 'Vision analysis failed' })
+                return
+              }
+
+              emit({ type: 'progress', stage: 'reading', message: 'Uncorking the image…' })
+              const reader = upstream.body.getReader()
               while (true) {
                 const { done, value } = await reader.read()
                 if (done) break
@@ -123,7 +130,18 @@ export const Route = createFileRoute('/api/scan')({
                       while ((nl = lineBuf.indexOf('\n')) !== -1) {
                         const out = lineBuf.slice(0, nl).trim()
                         lineBuf = lineBuf.slice(nl + 1)
-                        if (out) controller.enqueue(encoder.encode(out + '\n'))
+                        if (out) {
+                          controller.enqueue(encoder.encode(out + '\n'))
+                          try {
+                            const parsed = JSON.parse(out)
+                            if (parsed?.name) wineCount += 1
+                          } catch {}
+                          if (wineCount >= 12) {
+                            await reader.cancel().catch(() => {})
+                            emit({ type: 'done', count: wineCount, message: 'Shortlist poured.' })
+                            return
+                          }
+                        }
                       }
                     }
                   } catch {
@@ -134,9 +152,12 @@ export const Route = createFileRoute('/api/scan')({
               // flush trailing line
               const tail = lineBuf.trim()
               if (tail) controller.enqueue(encoder.encode(tail + '\n'))
+              emit({ type: 'done', count: wineCount, message: 'Shortlist poured.' })
             } catch (err) {
               console.error('scan stream error', err)
+              emit({ type: 'error', message: 'The scan took too long' })
             } finally {
+              clearTimeout(timeout)
               controller.close()
             }
           },
