@@ -40,32 +40,37 @@ async function requireAuth(request: Request): Promise<string | Response> {
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
-Extract up to the first 12 clearly readable wines visible. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
+Extract up to the first 12 wines that are CLEARLY AND UNAMBIGUOUSLY VISIBLE in the image. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
 
-CRITICAL OUTPUT RULES — read carefully:
+ANTI-HALLUCINATION RULES — these are the most important rules:
+- ONLY include a wine if you can actually read its name on the label or list. If you are not sure, OMIT it.
+- NEVER invent, guess, or "fill in" wines from your training data. If the image shows 3 wines, return 3 — not 12.
+- If text is blurry, cut off, or partially obscured, OMIT that wine rather than guessing.
+- Better to return fewer accurate wines than more invented ones. Returning 0 wines is a valid response if nothing is clearly readable.
+- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read its name and details. Use <60 only when you are still confident the wine is real.
+
+OUTPUT RULES:
 - Output RAW JSON only. NO markdown. NO code fences. NO triple backticks. NO "json" labels.
 - Exactly one compact JSON object per line, separated by a single newline.
 - Start emitting the first wine immediately; do NOT batch them all at the end.
 - No preamble, no commentary, no trailing summary.
-- Stop after 12 wines; speed matters more than exhaustive extraction.
+- Stop after 12 wines.
 
-Required fields per wine:
+Field rules — ONLY use what you can SEE on the label/list. For everything else, use the conservative defaults below:
 - id: integer starting at 1
-- name: string
-- vintage: string (estimate if not shown, e.g. "NV" or "2020")
-- region: string
-- grape: string
-- price: string (e.g. "$45" or "—" if unknown)
-- priceNum: number (numeric price, 0 if unknown)
-- rating: number (0-100 estimated quality score)
-- ratingLabel: string ("Outstanding" 90+, "Excellent" 85-89, "Very Good" 80-84, "Good" <80)
-- body: number (0-100, light to full)
-- sweetness: number (0-100, dry to sweet)
-- tannin: number (0-100)
-- acidity: number (0-100)
-- isValue: boolean
-- isCrowd: boolean (crowd-pleaser)
-- tasting: string (one short sentence)`
+- name: string — must match what's printed (producer + cuvée). REQUIRED, must be readable.
+- vintage: string — the year printed on the label, or "NV" if "NV"/"non-vintage" is shown, or "" (empty string) if not visible. DO NOT guess.
+- region: string — only if printed or unmistakable from the label; otherwise "".
+- grape: string — only if printed; otherwise "".
+- price: string — only if a price is shown next to the wine (e.g. "$45"); otherwise "—".
+- priceNum: number — numeric price if shown; otherwise 0.
+- rating: number — 0 (unknown). DO NOT estimate quality scores.
+- ratingLabel: string — "" (empty). DO NOT estimate.
+- body, sweetness, tannin, acidity: number — 50 each (neutral default). DO NOT estimate from training knowledge.
+- isValue: false
+- isCrowd: false
+- tasting: "" (empty string). DO NOT generate tasting notes.
+- confidence: number 0-100 — how clearly you could read this wine on the image.`
 
 export const Route = createFileRoute('/api/scan')({
   server: {
@@ -120,7 +125,7 @@ export const Route = createFileRoute('/api/scan')({
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  model: 'google/gemini-2.5-flash-lite',
+                  model: 'google/gemini-2.5-flash',
                   stream: true,
                   messages: [
                     {
