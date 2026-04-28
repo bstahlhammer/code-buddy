@@ -47,7 +47,7 @@ export default function WineDetailScreen({ goBack, navigate, wine, tasteProfile,
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
       {/* Top panel */}
       <div style={{ backgroundColor: theme.colors.brandDark, flexShrink: 0 }}>
         <TopBar onBack={goBack} onHome={() => navigate('home')} light />

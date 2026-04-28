@@ -26,7 +26,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   const maxMatch = Math.max(...sortedWines.map(w => w.computedMatch ?? w.match ?? 0))
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
       {/* Header */}
       <div style={{ backgroundColor: theme.colors.brandDark, flexShrink: 0 }}>
         <TopBar onBack={goBack} onHome={() => navigate('home')} light />

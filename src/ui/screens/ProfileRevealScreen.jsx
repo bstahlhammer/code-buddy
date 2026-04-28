@@ -45,7 +45,7 @@ export default function ProfileRevealScreen({ navigate, goBack, tasteProfile, ha
   const alsoGreat = ranked.slice(1, 4)
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
       {/* Top zone — dark panel */}
       <div
         style={{

@@ -14,7 +14,7 @@ export default function RateBottlesScreen({ navigate, goBack, initialRatings = {
   const hasSignal = ratedCount > 0 || !!aiPalate
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.colors.surface }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
       <TopBar onBack={goBack} onHome={() => navigate('home')} />
 
       {/* Header */}
