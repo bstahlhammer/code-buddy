@@ -179,6 +179,14 @@ function parseWinesFromModel(content: string) {
   return []
 }
 
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
 export const Route = createFileRoute('/api/scan')({
   server: {
     handlers: {
@@ -283,16 +291,21 @@ export const Route = createFileRoute('/api/scan')({
           const raw = await upstream.text().catch(() => '')
           if (!upstream.ok) {
             console.error('AI gateway scan error', upstream.status, raw)
+            const userError = upstream.status === 429
+              ? 'AI is busy right now — please try again in a moment.'
+              : upstream.status === 402
+                ? 'AI credits are exhausted. Add credits in Settings → Workspace → Usage.'
+                : 'Vision analysis failed'
             return new Response(JSON.stringify({ error: 'Vision analysis failed' }), {
-              status: 502,
+              status: upstream.status === 429 || upstream.status === 402 ? upstream.status : 502,
               headers: { 'Content-Type': 'application/json' },
             })
           }
 
-          const completion = JSON.parse(raw)
+          const completion = safeJsonParse(raw)
           const message = completion?.choices?.[0]?.message
           const argsRaw = message?.tool_calls?.[0]?.function?.arguments
-          const parsedArgs = typeof argsRaw === 'string' ? JSON.parse(argsRaw) : null
+          const parsedArgs = typeof argsRaw === 'string' ? safeJsonParse(argsRaw) : null
           const toolWines = Array.isArray(parsedArgs?.wines)
             ? parsedArgs.wines.map(normalizeWine).filter(Boolean).slice(0, 12)
             : []
