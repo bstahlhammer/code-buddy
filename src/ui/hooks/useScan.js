@@ -12,7 +12,7 @@ export function useScan() {
     const timeout = setTimeout(() => controller.abort(), 70_000)
     try {
       onProgress?.({ stage: 'preparing', message: 'Cutting the foil…' })
-      const base64 = await resizeAndEncode(file)
+      const base64 = await fileToBase64(file)
       onProgress?.({ stage: 'uploading', message: 'Presenting the bottle…' })
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData?.session?.access_token
@@ -86,70 +86,4 @@ function fileToBase64(file) {
     reader.onabort = () => { clearTimeout(timeout); reject(new Error('file_read_aborted')) }
     reader.readAsDataURL(file)
   })
-}
-
-function resizeViaImage(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    let settled = false
-    const done = (fn, arg) => { if (settled) return; settled = true; URL.revokeObjectURL(url); fn(arg) }
-    // Hard timeout — some HEIC/odd files never fire onload or onerror
-    const t = setTimeout(() => done(reject, new Error('image_decode_timeout')), 8000)
-    img.onload = () => {
-      clearTimeout(t)
-      try {
-        const MAX = 960
-        let { width, height } = img
-        if (!width || !height) return done(reject, new Error('image_no_dimensions'))
-        if (width > MAX || height > MAX) {
-          if (width >= height) { height = Math.round((height * MAX) / width); width = MAX }
-          else { width = Math.round((width * MAX) / height); height = MAX }
-        }
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.72)
-        done(resolve, dataUrl.split(',')[1])
-      } catch (err) {
-        done(reject, err)
-      }
-    }
-    img.onerror = () => { clearTimeout(t); done(reject, new Error('image_decode_failed')) }
-    img.src = url
-  })
-}
-
-async function resizeAndEncode(file) {
-  // Try createImageBitmap first (fastest, works on most mobile browsers, handles EXIF)
-  try {
-    if (typeof createImageBitmap === 'function') {
-      const bitmap = await Promise.race([
-        createImageBitmap(file),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('bitmap_timeout')), 8000)),
-      ])
-      const MAX = 960
-      let { width, height } = bitmap
-      if (width > MAX || height > MAX) {
-        if (width >= height) { height = Math.round((height * MAX) / width); width = MAX }
-        else { width = Math.round((width * MAX) / height); height = MAX }
-      }
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-      canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height)
-      bitmap.close?.()
-      return canvas.toDataURL('image/jpeg', 0.72).split(',')[1]
-    }
-  } catch (_) {
-    // fall through
-  }
-  // Fallback: <img> + canvas
-  try {
-    return await resizeViaImage(file)
-  } catch (_) {
-    // Last resort: send the original bytes (may be larger / HEIC, but at least we try)
-    return await fileToBase64(file)
-  }
 }
