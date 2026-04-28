@@ -142,3 +142,16 @@
     color: var(--color-foreground);
   }
 }
+
+@keyframes scanLine {
+  0%   { top: 4px; }
+  100% { top: calc(100% - 6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { scrollbar-width: none; }
