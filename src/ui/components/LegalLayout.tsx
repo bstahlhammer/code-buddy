@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
+// @ts-expect-error - JS theme module
 import { theme } from '@/ui/theme/theme.js'
 
 export function LegalLayout({ eyebrow, title, updated, children }: {
