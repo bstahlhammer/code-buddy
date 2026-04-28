@@ -95,7 +95,7 @@ function hasWineMarker(value: string) {
 function hasEnoughSpecificity(wine: Record<string, unknown>, name: string) {
   const words = name.split(/\s+/).filter(Boolean)
   const compact = name.replace(/[^a-z0-9]/gi, '')
-  if (compact.length < 5 || words.some((word) => word.length <= 2)) return false
+  if (compact.length < 5 || words.every((word) => word.length <= 2)) return false
   const support = [wine.vintage, wine.region, wine.grape, wine.tasting, wine.price, wine.ratingLabel]
     .filter((v) => typeof v === 'string' && v.trim() && v !== '—')
     .join(' ')
