@@ -55,7 +55,7 @@ export function useScan() {
             onProgress?.({ stage: 'wine', count: wines.length, message: `${wines.length} wine${wines.length === 1 ? '' : 's'} identified` })
           }
         } catch (e) {
-          if (e.message === 'Scan failed' || e.message?.includes('too long')) throw e
+          if (e.message && !e.message.includes('JSON')) throw e
           // skip — partial or malformed
         }
       }
