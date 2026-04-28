@@ -29,16 +29,13 @@ export function useScan() {
         signal: controller.signal,
       })
 
-      if (!res.ok || !res.body) {
+      if (!res.ok) {
         const msg = await res.text().catch(() => 'Scan failed')
         throw new Error(msg || 'Scan failed')
       }
 
       onProgress?.({ stage: 'reading', message: 'Uncorking the image…' })
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
       const wines = []
-      let buf = ''
 
       const tryEmit = (raw) => {
         // Strip code fences / language tags / stray commas the model sometimes adds
@@ -69,17 +66,14 @@ export function useScan() {
         }
       }
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buf += decoder.decode(value, { stream: true })
-
-        // Extract every complete top-level {...} object from the buffer,
-        // regardless of newlines or code fences around them.
+      const parseObjectsFromText = (text) => {
+        // Extract every complete top-level {...} object from the response,
+        // regardless of newlines, buffering, or code fences around them.
+        let buf = text || ''
         let i = 0
         while (i < buf.length) {
           const start = buf.indexOf('{', i)
-          if (start === -1) { buf = ''; break }
+          if (start === -1) break
           // find matching closing brace, accounting for strings
           let depth = 0
           let inStr = false
@@ -101,8 +95,6 @@ export function useScan() {
             }
           }
           if (end === -1) {
-            // incomplete object — keep from `start` for next chunk
-            buf = buf.slice(start)
             break
           }
           tryEmit(buf.slice(start, end + 1))
@@ -110,8 +102,9 @@ export function useScan() {
         }
       }
 
-      // flush any final object hiding in the tail
-      tryEmit(buf)
+      // Read the complete response instead of depending on streaming support;
+      // this is much more reliable on mobile browsers and still preserves all results.
+      parseObjectsFromText(await res.text())
 
       return wines
     } catch (e) {
