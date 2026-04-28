@@ -160,15 +160,6 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         }}>
           {winesFound} wine{winesFound === 1 ? '' : 's'} identified
         </div>
-        {winesFound > 0 && (
-          <div style={{
-            fontSize: theme.typography.sizes.sm,
-            color: theme.colors.gold,
-            fontFamily: theme.typography.fontSans,
-          }}>
-            {winesFound} wine{winesFound === 1 ? '' : 's'} identified
-          </div>
-        )}
       </div>
     </div>
   )
