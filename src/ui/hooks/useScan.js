@@ -59,12 +59,18 @@ export function useScan() {
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
+    const timeout = setTimeout(() => {
+      reader.abort()
+      reject(new Error('file_read_timeout'))
+    }, 8000)
     reader.onload = () => {
+      clearTimeout(timeout)
       const result = reader.result || ''
       const comma = String(result).indexOf(',')
       resolve(comma >= 0 ? String(result).slice(comma + 1) : '')
     }
-    reader.onerror = () => reject(reader.error || new Error('Could not read file'))
+    reader.onerror = () => { clearTimeout(timeout); reject(reader.error || new Error('Could not read file')) }
+    reader.onabort = () => { clearTimeout(timeout); reject(new Error('file_read_aborted')) }
     reader.readAsDataURL(file)
   })
 }
