@@ -219,9 +219,9 @@ export default function App() {
     const nav = { navigate, goBack }
     switch (screen) {
       case 'home':
-        return <HomeScreen {...nav} auth={auth} />
+        return <HomeScreen {...nav} auth={auth} onEmailSignIn={handleEmailSignIn} />
       case 'auth':
-        return <AuthScreen {...nav} onAuthed={handleAuthed} />
+        return <AuthScreen {...nav} onAuthed={handleAuthed} authMode={authMode} />
       case 'scanPrompt':
         return (
           <ScanPromptScreen
