@@ -17,18 +17,17 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
   const [winesFound, setWinesFound] = useState(0)
   const [status, setStatus] = useState(file ? ANTICIPATION_STEPS[0] : 'Pouring the shortlist…')
   const { scanImage } = useScan()
-  const hasRun = useRef(false)
+  const callbacksRef = useRef({ navigate, onScanComplete })
+
+  callbacksRef.current = { navigate, onScanComplete }
 
   useEffect(() => {
-    if (hasRun.current) return
-    hasRun.current = true
-
     if (!file) {
       // Demo fallback — no file picked, just show the loading sequence
       const t1 = setTimeout(() => setStatus('Swirling the first clues…'), 700)
       const t2 = setTimeout(() => { setWinesFound(6); setStatus('Pouring the shortlist…') }, 1500)
       const t3 = setTimeout(() => setStatus('Done ✓'), 2200)
-      const t4 = setTimeout(() => navigate('anonResults'), 2600)
+      const t4 = setTimeout(() => callbacksRef.current.navigate('anonResults'), 2600)
       return () => [t1, t2, t3, t4].forEach(clearTimeout)
     }
 
@@ -59,8 +58,8 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         if (cancelled) return
         clearInterval(progressTimer)
         setStatus('Done ✓')
-        onScanComplete?.(all.length ? all : wines)
-        setTimeout(() => navigate('anonResults'), 500)
+        callbacksRef.current.onScanComplete?.(all.length ? all : wines)
+        setTimeout(() => callbacksRef.current.navigate('anonResults'), 500)
       })
       .catch((err) => {
         if (cancelled) return
@@ -68,21 +67,21 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         console.error('scan failed', err)
         if (wines.length) {
           setStatus('Pouring what we found…')
-          onScanComplete?.(wines)
-          setTimeout(() => navigate('anonResults'), 900)
+          callbacksRef.current.onScanComplete?.(wines)
+          setTimeout(() => callbacksRef.current.navigate('anonResults'), 900)
           return
         }
         const message = err?.message || 'I could not identify a specific wine. Try a closer, sharper photo where the full label or shelf tag is readable.'
         setStatus(message)
-        onScanComplete?.({ wines: [], message })
-        setTimeout(() => navigate('anonResults'), 1400)
+        callbacksRef.current.onScanComplete?.({ wines: [], message })
+        setTimeout(() => callbacksRef.current.navigate('anonResults'), 1400)
       })
 
     return () => {
       cancelled = true
       clearInterval(progressTimer)
     }
-  }, [file, navigate, onScanComplete, scanImage])
+  }, [file, scanImage])
 
   return (
     <div
