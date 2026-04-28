@@ -40,7 +40,7 @@ async function requireAuth(request: Request): Promise<string | Response> {
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
-Extract every wine you can read in the image, up to 12. Emit one JSON object per line (NDJSON) as soon as you identify each wine.
+Extract every wine you can read in the image, up to 12. Return a single JSON array of wine objects.
 
 GROUNDING RULES — important:
 - The "name" field MUST be a wine you can actually see in the image. Do not invent wines that aren't there.
@@ -50,8 +50,7 @@ GROUNDING RULES — important:
 
 OUTPUT RULES:
 - Output RAW JSON only. NO markdown. NO code fences. NO triple backticks. NO "json" labels.
-- Exactly one compact JSON object per line, separated by a single newline.
-- Start emitting the first wine immediately; do NOT batch them all at the end.
+- Return exactly one JSON array, even if empty.
 - No preamble, no commentary, no trailing summary.
 - Stop after 12 wines.
 
@@ -70,6 +69,74 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
 - isCrowd: boolean — false unless clearly a crowd-pleaser style.
 - tasting: string — one short sentence ONLY if you genuinely recognize the wine; otherwise "".
 - confidence: number 0-100 — how clearly you could read this wine's name on the image.`
+
+function stripCodeFences(value: string) {
+  return value.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
+}
+
+function findBalancedJson(text: string, open: '[' | '{', close: ']' | '}') {
+  const start = text.indexOf(open)
+  if (start === -1) return ''
+  let depth = 0
+  let inStr = false
+  let esc = false
+  for (let i = start; i < text.length; i += 1) {
+    const c = text[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (c === '\\') esc = true
+      else if (c === '"') inStr = false
+    } else if (c === '"') inStr = true
+    else if (c === open) depth += 1
+    else if (c === close) {
+      depth -= 1
+      if (depth === 0) return text.slice(start, i + 1)
+    }
+  }
+  return ''
+}
+
+function normalizeWine(raw: unknown, index: number) {
+  if (!raw || typeof raw !== 'object') return null
+  const wine = raw as Record<string, unknown>
+  const name = typeof wine.name === 'string' ? wine.name.trim() : ''
+  if (!name) return null
+  return {
+    id: typeof wine.id === 'number' ? wine.id : index + 1,
+    name,
+    vintage: typeof wine.vintage === 'string' ? wine.vintage : '',
+    region: typeof wine.region === 'string' ? wine.region : '',
+    grape: typeof wine.grape === 'string' ? wine.grape : '',
+    price: typeof wine.price === 'string' ? wine.price : '—',
+    priceNum: typeof wine.priceNum === 'number' ? wine.priceNum : 0,
+    rating: typeof wine.rating === 'number' ? wine.rating : 0,
+    ratingLabel: typeof wine.ratingLabel === 'string' ? wine.ratingLabel : '',
+    body: typeof wine.body === 'number' ? wine.body : 50,
+    sweetness: typeof wine.sweetness === 'number' ? wine.sweetness : 50,
+    tannin: typeof wine.tannin === 'number' ? wine.tannin : 50,
+    acidity: typeof wine.acidity === 'number' ? wine.acidity : 50,
+    isValue: typeof wine.isValue === 'boolean' ? wine.isValue : false,
+    isCrowd: typeof wine.isCrowd === 'boolean' ? wine.isCrowd : false,
+    tasting: typeof wine.tasting === 'string' ? wine.tasting : '',
+    confidence: typeof wine.confidence === 'number' ? wine.confidence : 50,
+  }
+}
+
+function parseWinesFromModel(content: string) {
+  const text = stripCodeFences(content)
+  const candidates = [text, findBalancedJson(text, '[', ']'), findBalancedJson(text, '{', '}')].filter(Boolean)
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate)
+      const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.wines) ? parsed.wines : parsed?.name ? [parsed] : []
+      const wines = list.map(normalizeWine).filter(Boolean)
+      if (wines.length) return wines.slice(0, 12)
+    } catch {
+      // Try the next extraction strategy.
+    }
+  }
+  return []
+}
 
 export const Route = createFileRoute('/api/scan')({
   server: {
@@ -101,113 +168,57 @@ export const Route = createFileRoute('/api/scan')({
           ? payload.imageBase64
           : `data:image/jpeg;base64,${payload.imageBase64}`
 
-        // Return a stream immediately, then do vision work inside it so the UI
-        // can show real progress instead of waiting on the upstream model.
-        const stream = new ReadableStream({
-          async start(controller) {
-            const encoder = new TextEncoder()
-            const decoder = new TextDecoder()
-            const emit = (event: unknown) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
-            let sseBuf = ''
-            let lineBuf = ''
-            let wineCount = 0
-            const abort = new AbortController()
-            const timeout = setTimeout(() => abort.abort(), 55_000)
-
-            try {
-              emit({ type: 'progress', stage: 'received', message: 'Photo received — cutting the foil…' })
-              const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-                method: 'POST',
-                signal: abort.signal,
-                headers: {
-                  Authorization: `Bearer ${apiKey}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: 'google/gemini-2.5-flash',
-                  stream: true,
-                  messages: [
-                    {
-                      role: 'user',
-                      content: [
-                        { type: 'text', text: PROMPT },
-                        { type: 'image_url', image_url: { url: dataUrl } },
-                      ],
-                    },
+        const abort = new AbortController()
+        const timeout = setTimeout(() => abort.abort(), 38_000)
+        try {
+          const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            signal: abort.signal,
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              stream: false,
+              temperature: 0.1,
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: PROMPT },
+                    { type: 'image_url', image_url: { url: dataUrl } },
                   ],
-                }),
-              })
+                },
+              ],
+            }),
+          })
 
-              if (!upstream.ok || !upstream.body) {
-                const text = await upstream.text().catch(() => '')
-                console.error('AI gateway scan error', upstream.status, text)
-                emit({ type: 'error', message: 'Vision analysis failed' })
-                return
-              }
+          const raw = await upstream.text().catch(() => '')
+          if (!upstream.ok) {
+            console.error('AI gateway scan error', upstream.status, raw)
+            return new Response(JSON.stringify({ error: 'Vision analysis failed' }), {
+              status: 502,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          }
 
-              emit({ type: 'progress', stage: 'reading', message: 'Uncorking the image…' })
-              const reader = upstream.body.getReader()
-              while (true) {
-                const { done, value } = await reader.read()
-                if (done) break
-                sseBuf += decoder.decode(value, { stream: true })
-                const events = sseBuf.split('\n')
-                sseBuf = events.pop() ?? ''
-                for (const ev of events) {
-                  const line = ev.trim()
-                  if (!line.startsWith('data:')) continue
-                  const data = line.slice(5).trim()
-                  if (data === '[DONE]') continue
-                  try {
-                    const j = JSON.parse(data)
-                    const delta = j.choices?.[0]?.delta?.content
-                    if (typeof delta === 'string' && delta.length) {
-                      lineBuf += delta
-                      // flush complete lines as soon as we have them
-                      let nl
-                      while ((nl = lineBuf.indexOf('\n')) !== -1) {
-                        const out = lineBuf.slice(0, nl).trim()
-                        lineBuf = lineBuf.slice(nl + 1)
-                        if (out) {
-                          controller.enqueue(encoder.encode(out + '\n'))
-                          try {
-                            const parsed = JSON.parse(out)
-                            if (parsed?.name) wineCount += 1
-                          } catch {}
-                          if (wineCount >= 12) {
-                            await reader.cancel().catch(() => {})
-                            emit({ type: 'done', count: wineCount, message: 'Shortlist poured.' })
-                            return
-                          }
-                        }
-                      }
-                    }
-                  } catch {
-                    // ignore malformed SSE chunk
-                  }
-                }
-              }
-              // flush trailing line
-              const tail = lineBuf.trim()
-              if (tail) controller.enqueue(encoder.encode(tail + '\n'))
-              emit({ type: 'done', count: wineCount, message: 'Shortlist poured.' })
-            } catch (err) {
-              console.error('scan stream error', err)
-              emit({ type: 'error', message: 'The scan took too long' })
-            } finally {
-              clearTimeout(timeout)
-              controller.close()
-            }
-          },
-        })
-
-        return new Response(stream, {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/x-ndjson; charset=utf-8',
-            'Cache-Control': 'no-cache, no-transform',
-          },
-        })
+          const completion = JSON.parse(raw)
+          const content = completion?.choices?.[0]?.message?.content
+          const wines = typeof content === 'string' ? parseWinesFromModel(content) : []
+          return new Response(JSON.stringify({ wines }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        } catch (err) {
+          console.error('scan request error', err)
+          return new Response(JSON.stringify({ error: 'The scan took too long' }), {
+            status: 504,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        } finally {
+          clearTimeout(timeout)
+        }
       },
     },
   },
