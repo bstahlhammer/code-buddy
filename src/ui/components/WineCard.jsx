@@ -60,7 +60,7 @@ export default function WineCard({ wine, personalized, isBestMatch, tasteProfile
             ) : null
           })()}
         </div>
-        {personalized && <MatchScore score={matchScore} />}
+        {personalized && <MatchScore score={matchScore} explanation={matchExplanation} />}
       </div>
 
       {/* Row 2: Badges */}
