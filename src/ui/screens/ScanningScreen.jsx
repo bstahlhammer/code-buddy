@@ -54,11 +54,14 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         setStatus(progress.message)
       }
     )
-      .then((all) => {
+      .then((result) => {
         if (cancelled) return
         clearInterval(progressTimer)
         setStatus('Done ✓')
-        callbacksRef.current.onScanComplete?.(all.length ? all : wines)
+        const payload = result && typeof result === 'object' && Array.isArray(result.wines)
+          ? result
+          : { wines: wines, readability: wines.length ? 'good' : 'unreadable', retakeReasons: [], message: '' }
+        callbacksRef.current.onScanComplete?.(payload)
         setTimeout(() => callbacksRef.current.navigate('anonResults'), 500)
       })
       .catch((err) => {
@@ -67,13 +70,13 @@ export default function ScanningScreen({ navigate, file, onScanComplete }) {
         console.error('scan failed', err)
         if (wines.length) {
           setStatus('Pouring what we found…')
-          callbacksRef.current.onScanComplete?.(wines)
+          callbacksRef.current.onScanComplete?.({ wines, readability: 'partial', retakeReasons: err?.retakeReasons || [], message: err?.message || '' })
           setTimeout(() => callbacksRef.current.navigate('anonResults'), 900)
           return
         }
         const message = err?.message || 'I could not identify a specific wine. Try a closer, sharper photo where the full label or shelf tag is readable.'
         setStatus(message)
-        callbacksRef.current.onScanComplete?.({ wines: [], message })
+        callbacksRef.current.onScanComplete?.({ wines: [], readability: err?.readability || 'unreadable', retakeReasons: err?.retakeReasons || [], message })
         setTimeout(() => callbacksRef.current.navigate('anonResults'), 1400)
       })
 
