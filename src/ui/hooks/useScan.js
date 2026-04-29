@@ -40,15 +40,21 @@ export function useScan() {
       const data = await res.json().catch(() => null)
       if (data?.error) throw new Error(data.error)
       const wines = Array.isArray(data?.wines) ? data.wines.filter((wine) => wine?.name) : []
+      const readability = data?.readability || (wines.length ? 'good' : 'unreadable')
+      const retakeReasons = Array.isArray(data?.retakeReasons) ? data.retakeReasons : []
+      const message = typeof data?.message === 'string' ? data.message : ''
       if (!wines.length) {
-        throw new Error(data?.message || 'I could not identify a specific wine. Try a closer, sharper photo where the full label or shelf tag is readable.')
+        const err = new Error(message || 'I could not identify a specific wine. Try a closer, sharper photo where the full label or shelf tag is readable.')
+        err.readability = readability
+        err.retakeReasons = retakeReasons
+        throw err
       }
       wines.forEach((wine, index) => {
         onWine?.(wine, index + 1)
         onProgress?.({ stage: 'wine', count: index + 1, message: `${index + 1} wine${index + 1 === 1 ? '' : 's'} identified` })
       })
 
-      return wines
+      return { wines, readability, retakeReasons, message }
     } catch (e) {
       setError(e.message || 'Scan failed')
       throw e
