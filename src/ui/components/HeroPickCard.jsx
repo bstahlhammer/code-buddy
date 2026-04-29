@@ -1,4 +1,5 @@
 import { theme } from '../theme/theme.js'
+import MatchScore from './MatchScore.jsx'
 
 const ROLE_META = {
   topPick: {
@@ -18,7 +19,7 @@ const ROLE_META = {
   },
 }
 
-export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap }) {
+export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap, matchScore, matchExplanation }) {
   const meta = ROLE_META[role] || ROLE_META.topPick
   const priceStr = wine.price && wine.price !== '—' && String(wine.price).trim() !== ''
     ? (String(wine.price).startsWith('$') ? wine.price : `$${wine.price}`)
@@ -47,16 +48,21 @@ export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, o
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = theme.shadows.elevated }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = meta.glow }}
     >
-      {/* Role overline */}
-      <div style={{
-        fontSize: '10px',
-        color: meta.accent,
-        fontFamily: theme.typography.fontSans,
-        fontWeight: 600,
-        letterSpacing: '0.24em',
-        textTransform: 'uppercase',
-      }}>
-        {meta.label}
+      {/* Role overline + match chip */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.sm }}>
+        <div style={{
+          fontSize: '10px',
+          color: meta.accent,
+          fontFamily: theme.typography.fontSans,
+          fontWeight: 600,
+          letterSpacing: '0.24em',
+          textTransform: 'uppercase',
+        }}>
+          {meta.label}
+        </div>
+        {typeof matchScore === 'number' && (
+          <MatchScore score={matchScore} explanation={matchExplanation} compact />
+        )}
       </div>
 
       {/* Wine name */}

@@ -23,6 +23,7 @@ import {
 import { sortWines as _sortWines } from './engine/sortEngine.js'
 import { chooseHeroPicks as _chooseHeroPicks } from './engine/heroPicksEngine.js'
 import { computeApproachability as _computeApproachability } from './engine/approachabilityEngine.js'
+import { computeMatch as _computeMatch, explainMatch as _explainMatch } from './engine/matchEngine.js'
 import {
   inferPalateFromRatings as _inferPalateFromRatings,
   nearestTasteProfile as _nearestTasteProfile,
@@ -82,6 +83,16 @@ export function chooseHeroPicks(wineList, tasteProfile = null) {
 
 export function computeApproachability(wine) {
   return _computeApproachability(wine)
+}
+
+/** Compute 0–100 match score for a wine vs a taste profile. */
+export function computeMatch(wine, tasteProfile) {
+  return _computeMatch(wine, tasteProfile)
+}
+
+/** Plain-language explanation of why a wine got its match score. */
+export function explainMatch(wine, tasteProfile) {
+  return _explainMatch(wine, tasteProfile)
 }
 
 /**

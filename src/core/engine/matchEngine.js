@@ -53,3 +53,59 @@ export function computeMatch(wine, tasteProfile) {
 
   return Math.max(0, Math.min(100, score))
 }
+
+/**
+ * Plain-language explanation of WHY a wine has a given match score.
+ * Compares the wine's palate axes to the user's profile and surfaces the
+ * 1-2 axes that drive the score most.
+ *
+ * Returns { headline, axes, archetype } where:
+ *   headline  — short sentence (e.g. "Closest to your Bold-and-Brooding palate.")
+ *   axes      — string list of axis-level alignment notes
+ *   archetype — clean profile name without "The "
+ */
+export function explainMatch(wine, tasteProfile) {
+  if (!tasteProfile?.palate || !wine) {
+    return { headline: 'Take a quick taste profile to see your match.', axes: [], archetype: null }
+  }
+  const archetype = tasteProfile.name?.replace(/^The\s+/i, '') || 'palate'
+  const p = tasteProfile.palate
+
+  const axisInfo = [
+    { key: 'body',      label: 'body',       w: wine.body,      u: p.body,      lo: 'lighter',     hi: 'fuller'  },
+    { key: 'tannin',    label: 'tannins',    w: wine.tannin,    u: p.tannin,    lo: 'softer',      hi: 'firmer'  },
+    { key: 'acidity',   label: 'acidity',    w: wine.acidity,   u: p.acidity,   lo: 'rounder',     hi: 'crisper' },
+    { key: 'sweetness', label: 'sweetness',  w: wine.sweetness, u: p.sweetness, lo: 'drier',       hi: 'sweeter' },
+  ]
+
+  const aligned = []
+  const off = []
+  for (const a of axisInfo) {
+    if (typeof a.w !== 'number' || typeof a.u !== 'number') continue
+    const delta = Math.abs(a.w - a.u)
+    if (delta <= 12) aligned.push(a)
+    else if (delta >= 28) off.push({ ...a, delta, direction: a.w > a.u ? a.hi : a.lo })
+  }
+
+  const axes = []
+  if (aligned.length) {
+    axes.push(`Aligns on ${aligned.slice(0, 2).map(a => a.label).join(' & ')}.`)
+  }
+  if (off.length) {
+    const top = off.sort((a, b) => b.delta - a.delta)[0]
+    axes.push(`A touch ${top.direction} on ${top.label} than your usual.`)
+  }
+
+  let headline
+  if (aligned.length >= 2 && off.length === 0) {
+    headline = `A close fit for your ${archetype} palate.`
+  } else if (aligned.length >= 1 && off.length <= 1) {
+    headline = `Close to your ${archetype} palate, with one tweak.`
+  } else if (off.length >= 2) {
+    headline = `Different from your ${archetype} palate — try if you're exploring.`
+  } else {
+    headline = `Compared to your ${archetype} palate.`
+  }
+
+  return { headline, axes, archetype }
+}
