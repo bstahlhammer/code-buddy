@@ -329,14 +329,41 @@ export const Route = createFileRoute('/api/scan')({
           const message = completion?.choices?.[0]?.message
           const argsRaw = message?.tool_calls?.[0]?.function?.arguments
           const parsedArgs = typeof argsRaw === 'string' ? safeJsonParse(argsRaw) : null
-          const toolWines = Array.isArray(parsedArgs?.wines)
-            ? parsedArgs.wines.map(normalizeWine).filter(Boolean).slice(0, 12)
+          const rawToolWines = Array.isArray(parsedArgs?.wines)
+            ? parsedArgs.wines.map(normalizeWine).filter(Boolean)
             : []
           const fallbackWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
-          const wines = toolWines.length ? toolWines : fallbackWines
+          const allCandidates = (rawToolWines.length ? rawToolWines : fallbackWines) as Array<ReturnType<typeof normalizeWine> & {}>
+          const seenCount = allCandidates.length
+          // Drop low-confidence wines (post-OCR recognition gate)
+          const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE).slice(0, 12)
+          const recognitionRate = seenCount > 0 ? wines.length / seenCount : 0
+
+          const reportedReadability = typeof parsedArgs?.readability === 'string' ? parsedArgs.readability : ''
+          const reportedReasons = Array.isArray(parsedArgs?.retakeReasons)
+            ? parsedArgs.retakeReasons.filter((r: unknown) => typeof r === 'string')
+            : []
+
+          // Derive a final readability verdict combining the model's self-report with our gate.
+          let readability: 'good' | 'partial' | 'unreadable'
+          if (!wines.length) {
+            readability = reportedReadability === 'unreadable' ? 'unreadable' : 'unreadable'
+          } else if (reportedReadability === 'unreadable') {
+            readability = 'partial'
+          } else if (reportedReadability === 'partial' || recognitionRate < MIN_RECOGNITION_RATE || wines.length === 1) {
+            readability = 'partial'
+          } else {
+            readability = 'good'
+          }
+
+          const retakeReasons = readability === 'good' ? [] : reportedReasons
+          const userMessage = typeof parsedArgs?.message === 'string' && parsedArgs.message.trim()
+            ? parsedArgs.message
+            : EMPTY_SCAN_MESSAGE
+
           const response = wines.length
-            ? { wines }
-            : { wines: [], message: typeof parsedArgs?.message === 'string' && parsedArgs.message.trim() ? parsedArgs.message : EMPTY_SCAN_MESSAGE }
+            ? { wines, readability, retakeReasons, message: readability === 'good' ? '' : userMessage }
+            : { wines: [], readability, retakeReasons, message: userMessage }
           return new Response(JSON.stringify(response), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
