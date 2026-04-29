@@ -149,7 +149,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
                   color: theme.colors.brandDark,
                   padding: `${theme.spacing.sm} ${theme.spacing.md}`,
                   fontFamily: theme.typography.fontSans,
-                  fontWeight: theme.typography.weights.bold,
+                  fontWeight: 700,
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
