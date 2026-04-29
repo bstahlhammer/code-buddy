@@ -290,6 +290,7 @@ export default function App() {
             {...nav}
             tasteProfile={tasteProfile}
             buyingFor={buyingFor}
+            scannedWines={scannedWines}
             onWineSelect={w => handleWineSelect(w, 'personalizedResults')}
           />
         )
