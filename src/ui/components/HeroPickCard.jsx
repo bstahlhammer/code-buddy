@@ -119,7 +119,7 @@ export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, o
           style={{
             marginTop: theme.spacing.xs,
             padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-            background: theme.gradients.gold,
+            background: `linear-gradient(135deg, ${theme.colors.gold} 0%, ${theme.colors.goldBright} 100%)`,
             color: theme.colors.brandDark,
             borderRadius: theme.radius.sm,
             fontFamily: theme.typography.fontSans,
