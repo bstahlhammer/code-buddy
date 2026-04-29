@@ -235,6 +235,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
                     key={wine.id ?? wine.name}
                     wine={wine}
                     personalized
+                    tasteProfile={tasteProfile}
                     onTap={onWineSelect}
                   />
                 ))}
