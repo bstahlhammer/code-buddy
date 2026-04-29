@@ -18,7 +18,7 @@ const ROLE_META = {
   },
 }
 
-export default function HeroPickCard({ role, wine, reasoning, onTap }) {
+export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap }) {
   const meta = ROLE_META[role] || ROLE_META.topPick
   const priceStr = wine.price && wine.price !== '—' && String(wine.price).trim() !== ''
     ? (String(wine.price).startsWith('$') ? wine.price : `$${wine.price}`)
@@ -84,35 +84,53 @@ export default function HeroPickCard({ role, wine, reasoning, onTap }) {
         </div>
       )}
 
-      {/* What to say to the server */}
+      {/* Why this wine — rational note */}
       {reasoning && (
-        <div style={{
-          marginTop: theme.spacing.xs,
-          padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-          backgroundColor: `${meta.accent}10`,
-          border: `1px solid ${meta.accent}30`,
-          borderRadius: theme.radius.sm,
-        }}>
+        <div style={{ marginTop: theme.spacing.xs }}>
           <div style={{
             fontSize: '10px',
             color: meta.accent,
             fontFamily: theme.typography.fontSans,
             fontWeight: 600,
-            letterSpacing: '0.18em',
+            letterSpacing: '0.24em',
             textTransform: 'uppercase',
             marginBottom: 4,
           }}>
-            What to say
+            Why this wine
           </div>
           <div style={{
             fontSize: theme.typography.sizes.sm,
             color: theme.colors.text,
-            fontFamily: theme.typography.fontDisplay,
-            fontStyle: 'italic',
-            lineHeight: 1.45,
+            fontFamily: theme.typography.fontSans,
+            lineHeight: 1.5,
           }}>
-            “{reasoning}”
+            {reasoning}
           </div>
+        </div>
+      )}
+
+      {/* Joyful CTA — only on Top Pick when no profile yet */}
+      {ctaLabel && onCta && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); onCta() }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onCta() } }}
+          style={{
+            marginTop: theme.spacing.xs,
+            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+            background: theme.gradients.gold,
+            color: theme.colors.brandDark,
+            borderRadius: theme.radius.sm,
+            fontFamily: theme.typography.fontSans,
+            fontSize: theme.typography.sizes.sm,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textAlign: 'center',
+            cursor: 'pointer',
+          }}
+        >
+          {ctaLabel} →
         </div>
       )}
 
@@ -130,3 +148,4 @@ export default function HeroPickCard({ role, wine, reasoning, onTap }) {
     </button>
   )
 }
+
