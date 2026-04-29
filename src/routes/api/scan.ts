@@ -292,8 +292,16 @@ export const Route = createFileRoute('/api/scan')({
                           },
                         },
                         message: { type: 'string' },
+                        readability: { type: 'string', enum: ['good', 'partial', 'unreadable'] },
+                        retakeReasons: {
+                          type: 'array',
+                          items: {
+                            type: 'string',
+                            enum: ['too_blurry', 'too_dark', 'too_far', 'glare', 'angle_skewed', 'label_cut_off', 'not_a_wine_image', 'list_too_dense'],
+                          },
+                        },
                       },
-                      required: ['wines', 'message'],
+                      required: ['wines', 'message', 'readability', 'retakeReasons'],
                       additionalProperties: false,
                     },
                   },
