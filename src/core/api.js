@@ -21,6 +21,7 @@ import {
   RATING_BUCKETS,
 } from './data/mockData.js'
 import { sortWines as _sortWines } from './engine/sortEngine.js'
+import { chooseHeroPicks as _chooseHeroPicks } from './engine/heroPicksEngine.js'
 import { computeApproachability as _computeApproachability } from './engine/approachabilityEngine.js'
 import {
   inferPalateFromRatings as _inferPalateFromRatings,
