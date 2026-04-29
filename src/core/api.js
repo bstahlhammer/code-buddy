@@ -75,6 +75,11 @@ export function sortWines(wineList, mode, tasteProfile = null) {
   return _sortWines(wineList, mode, tasteProfile)
 }
 
+/** Choose 3 hero picks (Top Pick / Best Value / Crowd Pleaser) from a wine list. */
+export function chooseHeroPicks(wineList, tasteProfile = null) {
+  return _chooseHeroPicks(wineList, tasteProfile)
+}
+
 export function computeApproachability(wine) {
   return _computeApproachability(wine)
 }
