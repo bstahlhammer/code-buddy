@@ -1,10 +1,12 @@
 import { theme } from '../theme/theme.js'
 import Badge from './Badge.jsx'
 import MatchScore from './MatchScore.jsx'
+import { explainMatch } from '@/core/api'
 
-export default function WineCard({ wine, personalized, isBestMatch, onTap }) {
+export default function WineCard({ wine, personalized, isBestMatch, tasteProfile, onTap }) {
   const matchScore      = wine.computedMatch ?? wine.match ?? 50
   const isImperfect     = personalized && matchScore < 60
+  const matchExplanation = personalized && tasteProfile ? explainMatch(wine, tasteProfile) : null
 
   return (
     <button
