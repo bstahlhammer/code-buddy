@@ -41,26 +41,38 @@ function scoreCrowd(wine) {
   return rating * 0.5 + crowdBoost + balance * 0.4
 }
 
+function describeStyle(wine) {
+  const body = typeof wine.body === 'number' ? wine.body : 50
+  const tannin = typeof wine.tannin === 'number' ? wine.tannin : 50
+  const sweetness = typeof wine.sweetness === 'number' ? wine.sweetness : 30
+  const bodyWord = body >= 70 ? 'full-bodied' : body <= 35 ? 'light-bodied' : 'medium-bodied'
+  const tanninWord = tannin >= 70 ? 'firm' : tannin <= 30 ? 'soft' : 'balanced'
+  const sweetWord = sweetness >= 60 ? 'off-dry' : sweetness <= 20 ? 'dry' : ''
+  return [sweetWord, bodyWord, tanninWord && `${tanninWord} tannins`].filter(Boolean).join(', ')
+}
+
 function reasoningForTopPick(wine, profile) {
   if (profile) {
-    return `This is the closest match to my ${profile.name?.replace(/^The\s+/i, '').toLowerCase() || 'palate'} — could I try the ${wine.name}?`
+    const archetype = profile.name?.replace(/^The\s+/i, '') || 'palate'
+    return `Closest match to your ${archetype} palate — ${describeStyle(wine)}.`
   }
   if (wine.rating && wine.ratingLabel) {
-    return `What's the ${wine.name} like? I see it's rated ${wine.rating} — ${wine.ratingLabel}.`
+    return `Highly regarded (${wine.rating} · ${wine.ratingLabel}) and a confident, refined pick on this list.`
   }
-  return `Could you tell me more about the ${wine.name}?`
+  return `A standout on this list — ${describeStyle(wine)}.`
 }
 
 function reasoningForValue(wine) {
-  const price = wine.price && wine.price !== '—' ? wine.price : null
+  const price = wine.price && wine.price !== '—' ? (String(wine.price).startsWith('$') ? wine.price : `$${wine.price}`) : null
+  const rating = wine.rating ? ` rated ${wine.rating}` : ''
   if (price) {
-    return `Looking for something well-priced — how is the ${wine.name} at ${price.startsWith('$') ? price : '$' + price}?`
+    return `Strong quality for the price${rating ? ',' + rating : ''} at ${price} — ${describeStyle(wine)}.`
   }
-  return `What's a solid pick that won't break the bank? Is the ${wine.name} a good call?`
+  return `Punches above its price point${rating ? ',' + rating : ''} — ${describeStyle(wine)}.`
 }
 
 function reasoningForCrowd(wine) {
-  return `We're a mixed group — would the ${wine.name} please most palates at the table?`
+  return `Broadly approachable — ${describeStyle(wine)}, the kind most people enjoy.`
 }
 
 /**
