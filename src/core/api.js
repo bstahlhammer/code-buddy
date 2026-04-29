@@ -21,6 +21,7 @@ import {
   RATING_BUCKETS,
 } from './data/mockData.js'
 import { sortWines as _sortWines } from './engine/sortEngine.js'
+import { chooseHeroPicks as _chooseHeroPicks } from './engine/heroPicksEngine.js'
 import { computeApproachability as _computeApproachability } from './engine/approachabilityEngine.js'
 import {
   inferPalateFromRatings as _inferPalateFromRatings,
@@ -72,6 +73,11 @@ export function getRatingBuckets() { return RATING_BUCKETS }
 
 export function sortWines(wineList, mode, tasteProfile = null) {
   return _sortWines(wineList, mode, tasteProfile)
+}
+
+/** Choose 3 hero picks (Top Pick / Best Value / Crowd Pleaser) from a wine list. */
+export function chooseHeroPicks(wineList, tasteProfile = null) {
+  return _chooseHeroPicks(wineList, tasteProfile)
 }
 
 export function computeApproachability(wine) {

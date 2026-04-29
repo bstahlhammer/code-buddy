@@ -40,8 +40,23 @@ async function requireAuth(request: Request): Promise<string | Response> {
 
 const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
 
+// Min confidence (0-100) for a wine to make it into the response.
+const MIN_WINE_CONFIDENCE = 45
+// If overall recognition rate (kept / total seen) falls below this, mark partial.
+const MIN_RECOGNITION_RATE = 0.5
+
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
+STEP 1 — READABILITY GATE:
+First, judge whether the image is readable enough to extract specific wines.
+- "good": at least one full wine label / list line / shelf tag is sharp, well-lit, and clearly readable.
+- "partial": you can read fragments but most text is blurry, glare-covered, too far, or cut off.
+- "unreadable": no wine text is legible, the image is not of wine, or the frame is too dark/blurry.
+
+If "partial" or "unreadable", populate retakeReasons with 1-3 short, user-friendly reasons from this list ONLY:
+"too_blurry", "too_dark", "too_far", "glare", "angle_skewed", "label_cut_off", "not_a_wine_image", "list_too_dense".
+
+STEP 2 — EXTRACT WINES (only the ones you can actually read):
 Extract every specific wine you can read in the image, up to 12.
 
 GROUNDING RULES — important:
@@ -49,8 +64,8 @@ GROUNDING RULES — important:
 - NEVER return OCR fragments, store text, shelf signage, category labels, initials, or single loose words as wines.
 - A producer/brand alone is NOT enough unless a visible vintage, grape, region, cuvée, appellation, or price confirms a specific wine.
 - If you can only read fragments like "BY", "Cs", "DECO", or a lone producer name, return no wine for that fragment.
-- If no specific wine can be identified, call the tool with an empty wines array and a helpful retake message.
-- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels, but still include the wine.
+- If readability is "unreadable", return an empty wines array.
+- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels, but still include the wine if you are reasonably sure.
 
 OUTPUT RULES:
 - Use the extract_wines tool only.
@@ -277,8 +292,16 @@ export const Route = createFileRoute('/api/scan')({
                           },
                         },
                         message: { type: 'string' },
+                        readability: { type: 'string', enum: ['good', 'partial', 'unreadable'] },
+                        retakeReasons: {
+                          type: 'array',
+                          items: {
+                            type: 'string',
+                            enum: ['too_blurry', 'too_dark', 'too_far', 'glare', 'angle_skewed', 'label_cut_off', 'not_a_wine_image', 'list_too_dense'],
+                          },
+                        },
                       },
-                      required: ['wines', 'message'],
+                      required: ['wines', 'message', 'readability', 'retakeReasons'],
                       additionalProperties: false,
                     },
                   },
@@ -306,14 +329,41 @@ export const Route = createFileRoute('/api/scan')({
           const message = completion?.choices?.[0]?.message
           const argsRaw = message?.tool_calls?.[0]?.function?.arguments
           const parsedArgs = typeof argsRaw === 'string' ? safeJsonParse(argsRaw) : null
-          const toolWines = Array.isArray(parsedArgs?.wines)
-            ? parsedArgs.wines.map(normalizeWine).filter(Boolean).slice(0, 12)
+          const rawToolWines = Array.isArray(parsedArgs?.wines)
+            ? parsedArgs.wines.map(normalizeWine).filter(Boolean)
             : []
           const fallbackWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
-          const wines = toolWines.length ? toolWines : fallbackWines
+          const allCandidates = (rawToolWines.length ? rawToolWines : fallbackWines) as Array<ReturnType<typeof normalizeWine> & {}>
+          const seenCount = allCandidates.length
+          // Drop low-confidence wines (post-OCR recognition gate)
+          const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE).slice(0, 12)
+          const recognitionRate = seenCount > 0 ? wines.length / seenCount : 0
+
+          const reportedReadability = typeof parsedArgs?.readability === 'string' ? parsedArgs.readability : ''
+          const reportedReasons = Array.isArray(parsedArgs?.retakeReasons)
+            ? parsedArgs.retakeReasons.filter((r: unknown) => typeof r === 'string')
+            : []
+
+          // Derive a final readability verdict combining the model's self-report with our gate.
+          let readability: 'good' | 'partial' | 'unreadable'
+          if (!wines.length) {
+            readability = reportedReadability === 'unreadable' ? 'unreadable' : 'unreadable'
+          } else if (reportedReadability === 'unreadable') {
+            readability = 'partial'
+          } else if (reportedReadability === 'partial' || recognitionRate < MIN_RECOGNITION_RATE || wines.length === 1) {
+            readability = 'partial'
+          } else {
+            readability = 'good'
+          }
+
+          const retakeReasons = readability === 'good' ? [] : reportedReasons
+          const userMessage = typeof parsedArgs?.message === 'string' && parsedArgs.message.trim()
+            ? parsedArgs.message
+            : EMPTY_SCAN_MESSAGE
+
           const response = wines.length
-            ? { wines }
-            : { wines: [], message: typeof parsedArgs?.message === 'string' && parsedArgs.message.trim() ? parsedArgs.message : EMPTY_SCAN_MESSAGE }
+            ? { wines, readability, retakeReasons, message: readability === 'good' ? '' : userMessage }
+            : { wines: [], readability, retakeReasons, message: userMessage }
           return new Response(JSON.stringify(response), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
