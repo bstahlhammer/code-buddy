@@ -1,4 +1,5 @@
 import { theme } from '../theme/theme.js'
+import MatchScore from './MatchScore.jsx'
 
 const ROLE_META = {
   topPick: {
