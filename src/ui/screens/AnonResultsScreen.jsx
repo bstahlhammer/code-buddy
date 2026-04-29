@@ -145,7 +145,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
                   width: '100%',
                   border: 'none',
                   borderRadius: theme.radius.sm,
-                  background: theme.gradients.gold,
+                  background: `linear-gradient(135deg, ${theme.colors.gold} 0%, ${theme.colors.goldBright} 100%)`,
                   color: theme.colors.brandDark,
                   padding: `${theme.spacing.sm} ${theme.spacing.md}`,
                   fontFamily: theme.typography.fontSans,
