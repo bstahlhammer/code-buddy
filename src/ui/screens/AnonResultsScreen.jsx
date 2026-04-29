@@ -170,6 +170,8 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
                 role={role}
                 wine={wine}
                 reasoning={reasoning}
+                ctaLabel={role === 'topPick' && !hasProfile ? 'Help me find wines I’ll love' : undefined}
+                onCta={role === 'topPick' && !hasProfile ? () => navigate('quizIntro') : undefined}
                 onTap={onWineSelect}
               />
             ))}
