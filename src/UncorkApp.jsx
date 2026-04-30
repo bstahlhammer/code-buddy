@@ -266,7 +266,13 @@ export default function App() {
           <ScanningScreen
             {...nav}
             file={scanFile}
-            onScanComplete={(wines) => setScannedWines(wines)}
+            onScanComplete={(payload) => {
+              setScannedWines(payload)
+              const wines = Array.isArray(payload?.wines) ? payload.wines : []
+              if (wines.length && auth.user) {
+                saveScan({ wines, photoFile: scanFile, buyingFor })
+              }
+            }}
           />
         )
       case 'anonResults':
