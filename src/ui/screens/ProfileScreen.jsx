@@ -98,9 +98,9 @@ export default function ProfileScreen({
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
-      <div style={{ backgroundColor: theme.colors.brandDark }}>
+      <div style={{ backgroundColor: theme.colors.brandDark, flexShrink: 0 }}>
         <TopBar onBack={goBack} onHome={() => navigate('home')} light />
-        <div style={{ padding: `${theme.spacing.sm} ${theme.spacing.xl} ${theme.spacing.xl}` }}>
+        <div style={{ padding: `${theme.spacing.sm} ${theme.spacing.xl} ${theme.spacing.lg}` }}>
           <div style={{
             fontSize: theme.typography.sizes.xs, color: theme.colors.gold,
             fontFamily: theme.typography.fontSans, fontWeight: 500,
@@ -110,18 +110,18 @@ export default function ProfileScreen({
           </div>
           <h1 style={{
             fontFamily: theme.typography.fontSerif,
-            fontSize: theme.typography.sizes.xxl,
+            fontSize: theme.typography.sizes.xl,
             fontStyle: 'italic', fontWeight: 400, color: theme.colors.cream, margin: 0,
           }}>
             {tasteProfile.name}
           </h1>
           {tasteProfile.description && (
             <p style={{
-              margin: `${theme.spacing.sm} 0 0`,
+              margin: `${theme.spacing.xs} 0 0`,
               color: `${theme.colors.cream}b0`,
               fontFamily: theme.typography.fontSans,
               fontSize: theme.typography.sizes.sm,
-              lineHeight: 1.5,
+              lineHeight: 1.4,
             }}>
               {tasteProfile.description}
             </p>
@@ -129,7 +129,7 @@ export default function ProfileScreen({
         </div>
       </div>
 
-      <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: theme.spacing.xl }}>
+      <div className="hide-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: theme.spacing.xl, paddingBottom: theme.spacing.xxl }}>
         {/* Snapshot */}
         <SectionLabel>Current palate</SectionLabel>
         <ScoreBar label="Body"      value={tasteProfile.palate.body} />
