@@ -133,8 +133,10 @@ export default function App() {
   const [hasScanned, setHasScanned] = useState(false)
   const [scanFile, setScanFile] = useState(null)
   const [scannedWines, setScannedWines] = useState(null)
+  // Active scan context for the shelf-spotlight feature on wine detail
+  const [activeScan, setActiveScan] = useState(null) // { scanId, photoUrl }
 
-  const { saveScan, loadScan } = useScanHistory()
+  const { saveScan, loadScan, getPhotoUrl } = useScanHistory()
   const { saveProfile, loadProfile } = useTasteProfileSync()
 
   // Hydrate taste profile from DB when user signs in
