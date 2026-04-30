@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { theme } from '../theme/theme.js'
 import TopBar from '../components/TopBar.jsx'
+import PlacePicker from '../components/PlacePicker.jsx'
 import { useScanHistory } from '../hooks/useScanHistory.js'
 
 export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
@@ -9,7 +10,6 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
   const [loading, setLoading] = useState(true)
   const [thumbs, setThumbs] = useState({})
   const [editingId, setEditingId] = useState(null)
-  const [editLabel, setEditLabel] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -19,7 +19,6 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
       if (cancelled) return
       setScans(scans)
       setLoading(false)
-      // Load signed thumbs in parallel
       const entries = await Promise.all(
         scans.filter(s => s.photo_path).map(async s => [s.id, await getPhotoUrl(s.photo_path)])
       )
@@ -34,9 +33,19 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
     setScans(s => s.filter(x => x.id !== scan.id))
   }
 
-  async function handleSaveLabel(scan) {
-    await updateScanLocation(scan.id, editLabel)
-    setScans(s => s.map(x => x.id === scan.id ? { ...x, location_label: editLabel } : x))
+  async function handlePickPlace(scan, picked) {
+    const update = picked.placeId
+      ? { place: picked }
+      : { locationLabel: picked.name }
+    await updateScanLocation(scan.id, update)
+    setScans(s => s.map(x => x.id === scan.id ? {
+      ...x,
+      location_label: picked.name || picked.placeId ? (picked.name || x.location_label) : null,
+      place_id: picked.placeId || null,
+      place_address: picked.address || null,
+      place_lat: picked.lat ?? null,
+      place_lng: picked.lng ?? null,
+    } : x))
     setEditingId(null)
   }
 
@@ -144,13 +153,21 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
                     fontWeight: 500,
                     fontSize: theme.typography.sizes.md,
                     color: theme.colors.text,
+                    display: 'flex', alignItems: 'center', gap: 6,
                   }}>
                     {scan.location_label || 'Unlabeled scan'}
+                    {scan.place_id && <span title="Linked to Google Maps" style={{ fontSize: 11 }}>📍</span>}
                   </div>
+                  {scan.place_address && (
+                    <div style={{ fontSize: 11, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 1 }}>
+                      {scan.place_address}
+                    </div>
+                  )}
                   <div style={{
                     fontSize: theme.typography.sizes.sm,
                     color: theme.colors.textMuted,
                     fontFamily: theme.typography.fontSans,
+                    marginTop: 2,
                   }}>
                     {formatDate(scan.created_at)} · {scan.wine_count} wine{scan.wine_count === 1 ? '' : 's'}
                   </div>
@@ -158,39 +175,33 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
                 <div style={{ color: theme.colors.textMuted, fontSize: 18 }}>›</div>
               </button>
 
-              <div style={{ display: 'flex', borderTop: `1px solid ${theme.colors.border}` }}>
-                {editingId === scan.id ? (
-                  <>
-                    <input
-                      autoFocus
-                      value={editLabel}
-                      onChange={e => setEditLabel(e.target.value)}
-                      placeholder="Restaurant or store…"
-                      style={{
-                        flex: 1,
-                        border: 'none',
-                        padding: '10px 14px',
-                        fontFamily: theme.typography.fontSans,
-                        fontSize: theme.typography.sizes.sm,
-                        background: theme.colors.surfaceAlt,
-                        outline: 'none',
-                      }}
-                    />
-                    <button onClick={() => handleSaveLabel(scan)} style={miniBtn(theme.colors.brand, theme.colors.cream)}>Save</button>
-                    <button onClick={() => setEditingId(null)} style={miniBtn('transparent', theme.colors.textMuted)}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => { setEditingId(scan.id); setEditLabel(scan.location_label || '') }}
-                      style={miniBtn('transparent', theme.colors.textMuted)}
+              {editingId === scan.id ? (
+                <PlacePicker
+                  initialLabel={scan.location_label || ''}
+                  onPick={(picked) => handlePickPlace(scan, picked)}
+                  onCancel={() => setEditingId(null)}
+                />
+              ) : (
+                <div style={{ display: 'flex', borderTop: `1px solid ${theme.colors.border}` }}>
+                  <button
+                    onClick={() => setEditingId(scan.id)}
+                    style={miniBtn('transparent', theme.colors.textMuted)}
+                  >
+                    {scan.location_label ? 'Edit place' : 'Add place'}
+                  </button>
+                  {(scan.place_id || scan.location_label) && (
+                    <a
+                      href={mapsUrl(scan)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ ...miniBtn('transparent', theme.colors.brand), textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {scan.location_label ? 'Edit label' : 'Add label'}
-                    </button>
-                    <button onClick={() => handleDelete(scan)} style={miniBtn('transparent', theme.colors.crimson)}>Delete</button>
-                  </>
-                )}
-              </div>
+                      View on Maps
+                    </a>
+                  )}
+                  <button onClick={() => handleDelete(scan)} style={miniBtn('transparent', theme.colors.crimson)}>Delete</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -210,7 +221,16 @@ function miniBtn(bg, color) {
     fontSize: 12,
     cursor: 'pointer',
     letterSpacing: '0.04em',
+    textAlign: 'center',
   }
+}
+
+function mapsUrl(scan) {
+  // Prefer place_id for an exact listing match, fall back to text search
+  if (scan.place_id) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(scan.location_label || '')}&query_place_id=${encodeURIComponent(scan.place_id)}`
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(scan.location_label || '')}`
 }
 
 function formatDate(iso) {

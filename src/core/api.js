@@ -36,7 +36,18 @@ import {
   computePalateFromGuidedAnswers as _computePalateFromGuidedAnswers,
 } from './engine/guidedQuizEngine.js'
 import { describePalate as _describePalate } from './ai/describePalate.functions'
+import {
+  placesAutocomplete as _placesAutocomplete,
+  placesGetDetails as _placesGetDetails,
+  placesNearby as _placesNearby,
+} from './places/places.functions'
 import { supabase } from '@/integrations/supabase/client'
+
+async function authHeaders() {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData?.session?.access_token
+  return token ? { Authorization: `Bearer ${token}` } : null
+}
 
 /**
  * Ask the AI to translate a free-text wine description into palate axes
@@ -122,4 +133,24 @@ export function getGuidedNextNode(id, answer, all) {
 }
 export function computePalateFromGuidedAnswers(answers) {
   return _computePalateFromGuidedAnswers(answers)
+}
+
+// ---------- Google Places (location matching for scan history) ----------
+
+export async function searchPlaces({ query, lat, lng, sessionToken }) {
+  const headers = await authHeaders()
+  if (!headers) return { suggestions: [], error: 'auth_required' }
+  return _placesAutocomplete({ data: { query, lat, lng, sessionToken }, headers })
+}
+
+export async function getPlaceDetails({ placeId, sessionToken }) {
+  const headers = await authHeaders()
+  if (!headers) return { place: null, error: 'auth_required' }
+  return _placesGetDetails({ data: { placeId, sessionToken }, headers })
+}
+
+export async function findNearbyPlaces({ lat, lng, radius }) {
+  const headers = await authHeaders()
+  if (!headers) return { places: [], error: 'auth_required' }
+  return _placesNearby({ data: { lat, lng, radius }, headers })
 }

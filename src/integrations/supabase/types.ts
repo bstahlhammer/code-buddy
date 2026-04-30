@@ -110,6 +110,10 @@ export type Database = {
           id: string
           location_label: string | null
           photo_path: string | null
+          place_address: string | null
+          place_id: string | null
+          place_lat: number | null
+          place_lng: number | null
           updated_at: string
           user_id: string
           wine_count: number
@@ -120,6 +124,10 @@ export type Database = {
           id?: string
           location_label?: string | null
           photo_path?: string | null
+          place_address?: string | null
+          place_id?: string | null
+          place_lat?: number | null
+          place_lng?: number | null
           updated_at?: string
           user_id: string
           wine_count?: number
@@ -130,6 +138,10 @@ export type Database = {
           id?: string
           location_label?: string | null
           photo_path?: string | null
+          place_address?: string | null
+          place_id?: string | null
+          place_lat?: number | null
+          place_lng?: number | null
           updated_at?: string
           user_id?: string
           wine_count?: number

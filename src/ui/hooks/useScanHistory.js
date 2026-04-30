@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client'
  * shouldn't block their flow on history persistence.
  */
 export function useScanHistory() {
-  const saveScan = useCallback(async ({ wines, photoFile, buyingFor, locationLabel }) => {
+  const saveScan = useCallback(async ({ wines, photoFile, buyingFor, locationLabel, place }) => {
     try {
       const { data: sessionData } = await supabase.auth.getSession()
       const userId = sessionData?.session?.user?.id
@@ -36,7 +36,11 @@ export function useScanHistory() {
         .insert({
           user_id: userId,
           photo_path: photoPath,
-          location_label: locationLabel || null,
+          location_label: place?.name || locationLabel || null,
+          place_id: place?.placeId || null,
+          place_address: place?.address || null,
+          place_lat: place?.lat ?? null,
+          place_lng: place?.lng ?? null,
           buying_for: buyingFor || null,
           wine_count: wines?.length ?? 0,
         })
@@ -89,9 +93,23 @@ export function useScanHistory() {
     return { error: error?.message }
   }, [])
 
-  const updateScanLocation = useCallback(async (scanId, locationLabel) => {
-    const { error } = await supabase
-      .from('scans').update({ location_label: locationLabel || null }).eq('id', scanId)
+  const updateScanLocation = useCallback(async (scanId, { locationLabel, place } = {}) => {
+    const patch = place
+      ? {
+          location_label: place.name || locationLabel || null,
+          place_id: place.placeId || null,
+          place_address: place.address || null,
+          place_lat: place.lat ?? null,
+          place_lng: place.lng ?? null,
+        }
+      : {
+          location_label: locationLabel || null,
+          place_id: null,
+          place_address: null,
+          place_lat: null,
+          place_lng: null,
+        }
+    const { error } = await supabase.from('scans').update(patch).eq('id', scanId)
     return { error: error?.message }
   }, [])
 
