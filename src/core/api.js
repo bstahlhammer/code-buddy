@@ -23,7 +23,7 @@ import {
 import { sortWines as _sortWines } from './engine/sortEngine.js'
 import { chooseHeroPicks as _chooseHeroPicks } from './engine/heroPicksEngine.js'
 import { computeApproachability as _computeApproachability } from './engine/approachabilityEngine.js'
-import { computeMatch as _computeMatch, explainMatch as _explainMatch } from './engine/matchEngine.js'
+import { computeMatch as _computeMatch, explainMatch as _explainMatch, explainMismatch as _explainMismatch } from './engine/matchEngine.js'
 import {
   inferPalateFromRatings as _inferPalateFromRatings,
   nearestTasteProfile as _nearestTasteProfile,
