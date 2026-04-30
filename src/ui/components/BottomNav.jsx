@@ -1,16 +1,16 @@
 import { theme } from '../theme/theme.js'
 
 const TABS = [
-  { id: 'scan',    label: 'Scan',    icon: '⊙' },
-  { id: 'profile', label: 'Profile', icon: '◎' },
+  { id: 'home',    label: 'Home',    icon: '⌂' },
   { id: 'history', label: 'History', icon: '◷' },
+  { id: 'profile', label: 'Profile', icon: '◎' },
 ]
 
-export default function BottomNav({ activeTab, navigate, tasteProfile }) {
+export default function BottomNav({ activeTab, navigate }) {
   function handleTab(id) {
-    if (id === 'scan')    navigate('scanPrompt')
-    if (id === 'profile') navigate(tasteProfile ? 'profileReveal' : 'quizIntro')
-    // history: no-op for prototype
+    if (id === 'home')    navigate('home')
+    if (id === 'history') navigate('history')
+    if (id === 'profile') navigate('profile')
   }
 
   return (
@@ -40,15 +40,15 @@ export default function BottomNav({ activeTab, navigate, tasteProfile }) {
               gap: 2,
             }}
           >
-            <span style={{ fontSize: 20, color: active ? theme.colors.brand : theme.colors.textMuted }}>
+            <span style={{ fontSize: 20, color: active ? theme.colors.ember : theme.colors.textMuted }}>
               {tab.icon}
             </span>
             <span
               style={{
                 fontSize: theme.typography.sizes.xs,
                 fontFamily: theme.typography.fontSans,
-                color: active ? theme.colors.brand : theme.colors.textMuted,
-                fontWeight: active ? theme.typography.weights.medium : theme.typography.weights.normal,
+                color: active ? theme.colors.ember : theme.colors.textMuted,
+                fontWeight: active ? 500 : 400,
               }}
             >
               {tab.label}
