@@ -133,8 +133,10 @@ export default function App() {
   const [hasScanned, setHasScanned] = useState(false)
   const [scanFile, setScanFile] = useState(null)
   const [scannedWines, setScannedWines] = useState(null)
+  // Active scan context for the shelf-spotlight feature on wine detail
+  const [activeScan, setActiveScan] = useState(null) // { scanId, photoUrl }
 
-  const { saveScan, loadScan } = useScanHistory()
+  const { saveScan, loadScan, getPhotoUrl } = useScanHistory()
   const { saveProfile, loadProfile } = useTasteProfileSync()
 
   // Hydrate taste profile from DB when user signs in
@@ -266,11 +268,19 @@ export default function App() {
           <ScanningScreen
             {...nav}
             file={scanFile}
-            onScanComplete={(payload) => {
+            onScanComplete={async (payload) => {
               setScannedWines(payload)
               const wines = Array.isArray(payload?.wines) ? payload.wines : []
               if (wines.length && auth.user) {
-                saveScan({ wines, photoFile: scanFile, buyingFor })
+                const { scan } = await saveScan({ wines, photoFile: scanFile, buyingFor })
+                if (scan) {
+                  const photoUrl = scan.photo_path ? await getPhotoUrl(scan.photo_path) : null
+                  setActiveScan({ scanId: scan.id, photoUrl })
+                } else {
+                  setActiveScan(null)
+                }
+              } else {
+                setActiveScan(null)
               }
             }}
           />
@@ -336,6 +346,7 @@ export default function App() {
             {...nav}
             wine={selectedWine}
             tasteProfile={tasteProfile}
+            activeScan={activeScan}
             onRate={handleRate}
           />
         )
@@ -348,6 +359,8 @@ export default function App() {
               if (wines?.length) {
                 setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
                 setHasScanned(true)
+                const photoUrl = scanRow.photo_path ? await getPhotoUrl(scanRow.photo_path) : null
+                setActiveScan({ scanId: scanRow.id, photoUrl })
                 navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
               }
             }}

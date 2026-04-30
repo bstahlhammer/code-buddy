@@ -23,7 +23,7 @@ import {
 import { sortWines as _sortWines } from './engine/sortEngine.js'
 import { chooseHeroPicks as _chooseHeroPicks } from './engine/heroPicksEngine.js'
 import { computeApproachability as _computeApproachability } from './engine/approachabilityEngine.js'
-import { computeMatch as _computeMatch, explainMatch as _explainMatch } from './engine/matchEngine.js'
+import { computeMatch as _computeMatch, explainMatch as _explainMatch, explainMismatch as _explainMismatch } from './engine/matchEngine.js'
 import {
   inferPalateFromRatings as _inferPalateFromRatings,
   nearestTasteProfile as _nearestTasteProfile,
@@ -106,6 +106,11 @@ export function explainMatch(wine, tasteProfile) {
   return _explainMatch(wine, tasteProfile)
 }
 
+/** Honest take on where a wine diverges from the user's palate. */
+export function explainMismatch(wine, tasteProfile) {
+  return _explainMismatch(wine, tasteProfile)
+}
+
 /**
  * Infer a palate from { wineId: bucketId } ratings.
  * Returns { palate, confidence, ratedCount, bucketCounts }.
@@ -153,4 +158,34 @@ export async function findNearbyPlaces({ lat, lng, radius }) {
   const headers = await authHeaders()
   if (!headers) return { places: [], error: 'auth_required' }
   return _placesNearby({ data: { lat, lng, radius }, headers })
+}
+
+// ---------- Shelf bottle locator ----------
+
+/**
+ * Lazy backfill: given a saved scan + wine name, ask the server to find
+ * the bottle in the photo and return a normalized bbox.
+ * Returns { found: bool, bbox?: { x, y, w, h }, error?: string }
+ */
+export async function locateBottleInScan({ scanId, wineName }) {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData?.session?.access_token
+  if (!token) return { found: false, error: 'auth_required' }
+  try {
+    const res = await fetch('/api/scan/locate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ scanId, wineName }),
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      return { found: false, error: text || `http_${res.status}` }
+    }
+    return await res.json()
+  } catch (e) {
+    return { found: false, error: e?.message || 'unknown' }
+  }
 }

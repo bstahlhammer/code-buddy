@@ -85,7 +85,10 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
 - isValue: boolean — false unless clearly a value pick.
 - isCrowd: boolean — false unless clearly a crowd-pleaser style.
 - tasting: string — one short sentence ONLY if you genuinely recognize the wine; otherwise "".
-- confidence: number 0-100 — how clearly you could read this wine's name on the image.`
+- confidence: number 0-100 — how clearly you could read this wine's name on the image.
+- bbox: object — the bounding box of THIS specific bottle/listing in the image, expressed as normalized values (0..1) of the image dimensions:
+    { "x": <left edge 0..1>, "y": <top edge 0..1>, "w": <width 0..1>, "h": <height 0..1> }
+  Be as tight as you can around the bottle/listing. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
 
 const WINE_MARKERS = [
   'cabernet', 'chardonnay', 'pinot', 'merlot', 'sauvignon', 'syrah', 'shiraz', 'riesling', 'malbec',
@@ -151,6 +154,21 @@ function findBalancedJson(text: string, open: '[' | '{', close: ']' | '}') {
   return ''
 }
 
+function normalizeBbox(raw: unknown): { x: number; y: number; w: number; h: number } | null {
+  if (!raw || typeof raw !== 'object') return null
+  const b = raw as Record<string, unknown>
+  const x = Number(b.x), y = Number(b.y), w = Number(b.w), h = Number(b.h)
+  if (![x, y, w, h].every(Number.isFinite)) return null
+  if (w <= 0 || h <= 0) return null
+  // Clamp to [0,1]
+  const cx = Math.max(0, Math.min(1, x))
+  const cy = Math.max(0, Math.min(1, y))
+  const cw = Math.max(0, Math.min(1 - cx, w))
+  const ch = Math.max(0, Math.min(1 - cy, h))
+  if (cw <= 0 || ch <= 0) return null
+  return { x: cx, y: cy, w: cw, h: ch }
+}
+
 function normalizeWine(raw: unknown, index: number) {
   if (!raw || typeof raw !== 'object') return null
   const wine = raw as Record<string, unknown>
@@ -175,6 +193,7 @@ function normalizeWine(raw: unknown, index: number) {
     isCrowd: typeof wine.isCrowd === 'boolean' ? wine.isCrowd : false,
     tasting: typeof wine.tasting === 'string' ? wine.tasting : '',
     confidence: clamp(wine.confidence),
+    bbox: normalizeBbox(wine.bbox),
   }
 }
 
@@ -286,8 +305,19 @@ export const Route = createFileRoute('/api/scan')({
                               isCrowd: { type: 'boolean' },
                               tasting: { type: 'string' },
                               confidence: { type: 'number' },
+                              bbox: {
+                                type: 'object',
+                                properties: {
+                                  x: { type: 'number' },
+                                  y: { type: 'number' },
+                                  w: { type: 'number' },
+                                  h: { type: 'number' },
+                                },
+                                required: ['x', 'y', 'w', 'h'],
+                                additionalProperties: false,
+                              },
                             },
-                            required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence'],
+                            required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence', 'bbox'],
                             additionalProperties: false,
                           },
                         },

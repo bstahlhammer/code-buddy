@@ -109,3 +109,91 @@ export function explainMatch(wine, tasteProfile) {
 
   return { headline, axes, archetype }
 }
+
+/**
+ * The honest mirror of explainMatch — surfaces axis deltas where the wine
+ * diverges from the user, framed as "skip if…" / "worth knowing" notes.
+ *
+ * Returns { headline, reasons, severity } where:
+ *   headline — short framing line ("Honest take" / "Why you might skip")
+ *   reasons  — array of { axis, severity, text } — sorted by severity desc
+ *   severity — 'low' | 'medium' | 'high' | 'none' — overall divergence
+ */
+export function explainMismatch(wine, tasteProfile) {
+  if (!tasteProfile?.palate || !wine) {
+    return { headline: '', reasons: [], severity: 'none' }
+  }
+
+  const p = tasteProfile.palate
+  const archetype = tasteProfile.name?.replace(/^The\s+/i, '') || 'palate'
+
+  // Per-axis: phrasing for "wine is HIGHER than user" / "LOWER than user"
+  const axisInfo = [
+    {
+      key: 'body', label: 'body',
+      higher: 'this wine is fuller-bodied than what you typically reach for — expect more weight and richness on the palate',
+      lower:  'this is lighter than your usual — it may feel thin if you came in expecting something bigger',
+    },
+    {
+      key: 'tannin', label: 'tannin',
+      higher: 'tannins are grippier than you tend to like — your mouth may feel dry and chalky, especially without food',
+      lower:  'softer tannins than your usual picks — could feel flabby if you love that grippy structure',
+    },
+    {
+      key: 'acidity', label: 'acidity',
+      higher: 'noticeably crisper acidity than your norm — bright and zippy, can feel sharp on its own',
+      lower:  'rounder acidity than you usually go for — might come across as flat or lacking lift',
+    },
+    {
+      key: 'sweetness', label: 'sweetness',
+      higher: 'this carries more residual sweetness than you typically prefer — there will be a noticeable sugar impression',
+      lower:  'drier than your usual — if you reach for off-dry wines, this could feel austere',
+    },
+  ]
+
+  const divergences = []
+  for (const a of axisInfo) {
+    const w = wine[a.key]
+    const u = p[a.key]
+    if (typeof w !== 'number' || typeof u !== 'number') continue
+    const delta = w - u
+    const abs = Math.abs(delta)
+    if (abs < 18) continue // aligned enough — not worth surfacing
+
+    let severity
+    if (abs >= 40) severity = 'high'
+    else if (abs >= 28) severity = 'medium'
+    else severity = 'low'
+
+    divergences.push({
+      axis: a.label,
+      severity,
+      delta: abs,
+      text: delta > 0 ? a.higher : a.lower,
+    })
+  }
+
+  divergences.sort((a, b) => b.delta - a.delta)
+
+  let severity = 'none'
+  if (divergences.some(d => d.severity === 'high')) severity = 'high'
+  else if (divergences.some(d => d.severity === 'medium')) severity = 'medium'
+  else if (divergences.length) severity = 'low'
+
+  let headline = ''
+  if (severity === 'high') {
+    headline = `Probably not your wine — meaningful differences from your ${archetype} palate.`
+  } else if (severity === 'medium') {
+    headline = `A stretch from your ${archetype} palate — go in eyes open.`
+  } else if (severity === 'low') {
+    headline = `Mostly aligned with your ${archetype} palate, with one minor caveat.`
+  } else {
+    headline = `Aligns well with your ${archetype} palate — nothing major to flag.`
+  }
+
+  return {
+    headline,
+    reasons: divergences.slice(0, 3),
+    severity,
+  }
+}
