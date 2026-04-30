@@ -58,8 +58,8 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
           aria-hidden
           style={{
             ...imgFill,
-            WebkitMaskImage: `radial-gradient(circle at ${cx}% ${cy}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${rInner}%, rgba(0,0,0,0) ${rOuter}%)`,
-            maskImage: `radial-gradient(circle at ${cx}% ${cy}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${rInner}%, rgba(0,0,0,0) ${rOuter}%)`,
+            WebkitMaskImage: `radial-gradient(${outerShape}, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${(rxInner / rxOuter) * 100}%, rgba(0,0,0,0) 100%)`,
+            maskImage: `radial-gradient(${outerShape}, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${(rxInner / rxOuter) * 100}%, rgba(0,0,0,0) 100%)`,
             filter: 'saturate(1.15) contrast(1.05)',
           }}
           draggable={false}
