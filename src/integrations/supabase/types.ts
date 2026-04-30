@@ -68,6 +68,74 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_wines: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          scan_id: string
+          user_id: string
+          wine_payload: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          scan_id: string
+          user_id: string
+          wine_payload: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          scan_id?: string
+          user_id?: string
+          wine_payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_wines_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scans: {
+        Row: {
+          buying_for: string | null
+          created_at: string
+          id: string
+          location_label: string | null
+          photo_path: string | null
+          updated_at: string
+          user_id: string
+          wine_count: number
+        }
+        Insert: {
+          buying_for?: string | null
+          created_at?: string
+          id?: string
+          location_label?: string | null
+          photo_path?: string | null
+          updated_at?: string
+          user_id: string
+          wine_count?: number
+        }
+        Update: {
+          buying_for?: string | null
+          created_at?: string
+          id?: string
+          location_label?: string | null
+          photo_path?: string | null
+          updated_at?: string
+          user_id?: string
+          wine_count?: number
+        }
+        Relationships: []
+      }
       taste_profiles: {
         Row: {
           ai_palate: Json | null
@@ -77,6 +145,7 @@ export type Database = {
           has_ai_signal: boolean | null
           id: string
           inference_confidence: number | null
+          last_refined_at: string | null
           palate: Json | null
           updated_at: string
           user_id: string
@@ -89,6 +158,7 @@ export type Database = {
           has_ai_signal?: boolean | null
           id?: string
           inference_confidence?: number | null
+          last_refined_at?: string | null
           palate?: Json | null
           updated_at?: string
           user_id: string
@@ -101,6 +171,7 @@ export type Database = {
           has_ai_signal?: boolean | null
           id?: string
           inference_confidence?: number | null
+          last_refined_at?: string | null
           palate?: Json | null
           updated_at?: string
           user_id?: string
