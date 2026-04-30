@@ -268,11 +268,19 @@ export default function App() {
           <ScanningScreen
             {...nav}
             file={scanFile}
-            onScanComplete={(payload) => {
+            onScanComplete={async (payload) => {
               setScannedWines(payload)
               const wines = Array.isArray(payload?.wines) ? payload.wines : []
               if (wines.length && auth.user) {
-                saveScan({ wines, photoFile: scanFile, buyingFor })
+                const { scan } = await saveScan({ wines, photoFile: scanFile, buyingFor })
+                if (scan) {
+                  const photoUrl = scan.photo_path ? await getPhotoUrl(scan.photo_path) : null
+                  setActiveScan({ scanId: scan.id, photoUrl })
+                } else {
+                  setActiveScan(null)
+                }
+              } else {
+                setActiveScan(null)
               }
             }}
           />
