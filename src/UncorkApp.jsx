@@ -134,6 +134,21 @@ export default function App() {
   const [scanFile, setScanFile] = useState(null)
   const [scannedWines, setScannedWines] = useState(null)
 
+  const { saveScan, loadScan } = useScanHistory()
+  const { saveProfile, loadProfile } = useTasteProfileSync()
+
+  // Hydrate taste profile from DB when user signs in
+  useEffect(() => {
+    if (!auth.user?.id) return
+    let cancelled = false
+    ;(async () => {
+      const { profile } = await loadProfile()
+      if (!cancelled && profile && !tasteProfile) setTasteProfile(profile)
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.user?.id])
+
   const navigate = useCallback((to) => {
     // Login wall: any feature screen requires auth
     if (!auth.user && to !== 'home' && to !== 'auth') {
