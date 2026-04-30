@@ -106,6 +106,11 @@ export function explainMatch(wine, tasteProfile) {
   return _explainMatch(wine, tasteProfile)
 }
 
+/** Honest take on where a wine diverges from the user's palate. */
+export function explainMismatch(wine, tasteProfile) {
+  return _explainMismatch(wine, tasteProfile)
+}
+
 /**
  * Infer a palate from { wineId: bucketId } ratings.
  * Returns { palate, confidence, ratedCount, bucketCounts }.
