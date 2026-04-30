@@ -205,7 +205,7 @@ function parseWinesFromModel(content: string) {
       const parsed = JSON.parse(candidate)
       const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.wines) ? parsed.wines : parsed?.name ? [parsed] : []
       const wines = list.map(normalizeWine).filter(Boolean)
-      if (wines.length) return wines.slice(0, 12)
+      if (wines.length) return wines
     } catch {
       // Try the next extraction strategy.
     }
