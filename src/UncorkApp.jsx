@@ -305,7 +305,15 @@ export default function App() {
           />
         )
       case 'quizIntro':
-        return <QuizIntroScreen {...nav} />
+        return (
+          <TasteBuilderScreen
+            {...nav}
+            initialRatings={quizAnswers.wineRatings}
+            initialAiPalate={quizAnswers.aiPalate}
+            initialArchetypeSeed={quizAnswers.archetypeSeed}
+            onComplete={handleQuizComplete}
+          />
+        )
       case 'guidedQuiz':
         return (
           <GuidedQuizScreen
