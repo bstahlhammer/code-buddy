@@ -4,6 +4,7 @@ import {
   nearestTasteProfile,
   groupRatingsByBucket,
   computePalateFromGuidedAnswers,
+  getTasteProfiles,
 } from '@/core/api'
 import DeviceFrame from './ui/components/DeviceFrame.jsx'
 import ScreenTransition from './ui/components/ScreenTransition.jsx'
@@ -17,7 +18,7 @@ import HomeScreen from './ui/screens/HomeScreen.jsx'
 import ScanPromptScreen from './ui/screens/ScanPromptScreen.jsx'
 import ScanningScreen from './ui/screens/ScanningScreen.jsx'
 import AnonResultsScreen from './ui/screens/AnonResultsScreen.jsx'
-import QuizIntroScreen from './ui/screens/QuizIntroScreen.jsx'
+import TasteBuilderScreen from './ui/screens/TasteBuilderScreen.jsx'
 import QuizScreen from './ui/screens/QuizScreen.jsx'
 import GuidedQuizScreen from './ui/screens/GuidedQuizScreen.jsx'
 import RateBottlesScreen from './ui/screens/RateBottlesScreen.jsx'
@@ -46,6 +47,8 @@ const INITIAL_QUIZ_ANSWERS = {
   guidedAnswers: {},
   lovedWineIds: [],
   hatedWineIds: [],
+  aiPalate: null,
+  archetypeSeed: null,
 }
 
 const SWEETNESS_MAP = {
@@ -65,6 +68,12 @@ function deriveProfile(quizAnswers) {
   const aiPalate = quizAnswers.aiPalate ?? null
   const aiConfidence = aiPalate ? 1.5 : 0
 
+  // Archetype seed: user-picked starter profile, soft signal.
+  const seedId = quizAnswers.archetypeSeed ?? null
+  const seedProfile = seedId ? getTasteProfiles().find(p => p.id === seedId) : null
+  const seedPalate = seedProfile?.palate ?? null
+  const seedConfidence = seedPalate ? 0.8 : 0
+
   const hasSlider = quizAnswers.boldness !== undefined || quizAnswers.sweetness
   const boldness     = quizAnswers.boldness ?? 50
   const sweetnessVal = SWEETNESS_MAP[quizAnswers.sweetness] ?? 30
@@ -80,6 +89,7 @@ function deriveProfile(quizAnswers) {
     { palate: inferredR.palate,  weight: inferredR.confidence },
     { palate: inferredG.palate,  weight: inferredG.confidence },
     { palate: aiPalate,          weight: aiConfidence },
+    { palate: seedPalate,        weight: seedConfidence },
     { palate: sliderPalate,      weight: sliderConfidence },
   ].filter(s => s.palate)
   const totalWeight = sources.reduce((s, x) => s + x.weight, 0)
@@ -295,7 +305,15 @@ export default function App() {
           />
         )
       case 'quizIntro':
-        return <QuizIntroScreen {...nav} />
+        return (
+          <TasteBuilderScreen
+            {...nav}
+            initialRatings={quizAnswers.wineRatings}
+            initialAiPalate={quizAnswers.aiPalate}
+            initialArchetypeSeed={quizAnswers.archetypeSeed}
+            onComplete={handleQuizComplete}
+          />
+        )
       case 'guidedQuiz':
         return (
           <GuidedQuizScreen
