@@ -22,12 +22,20 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
   }
 
   const hasBbox = bbox && bbox.w > 0 && bbox.h > 0
-  // Center of the spotlight in % (CSS friendly)
+  // Center of the spotlight in % of container
   const cx = hasBbox ? (bbox.x + bbox.w / 2) * 100 : 50
   const cy = hasBbox ? (bbox.y + bbox.h / 2) * 100 : 50
-  // Radius of the inner (full color) zone — generous enough to encompass the bbox
-  const rInner = hasBbox ? Math.max(bbox.w, bbox.h) * 60 : 0 // %
-  const rOuter = rInner + 18 // gentle fade band
+  // Ellipse radii sized to the bbox itself (with padding) so the spotlight
+  // hugs the bottle's tall, narrow shape instead of a generic circle.
+  // 0.75 = bbox half-extent, +padding for breathing room.
+  const padX = 6 // % of container width
+  const padY = 4 // % of container height
+  const rxInner = hasBbox ? (bbox.w / 2) * 100 + padX : 0
+  const ryInner = hasBbox ? (bbox.h / 2) * 100 + padY : 0
+  const rxOuter = rxInner + 10
+  const ryOuter = ryInner + 8
+  const innerShape = `ellipse ${rxInner}% ${ryInner}% at ${cx}% ${cy}%`
+  const outerShape = `ellipse ${rxOuter}% ${ryOuter}% at ${cx}% ${cy}%`
 
   return (
     <div style={frame}>
@@ -50,8 +58,8 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
           aria-hidden
           style={{
             ...imgFill,
-            WebkitMaskImage: `radial-gradient(circle at ${cx}% ${cy}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${rInner}%, rgba(0,0,0,0) ${rOuter}%)`,
-            maskImage: `radial-gradient(circle at ${cx}% ${cy}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${rInner}%, rgba(0,0,0,0) ${rOuter}%)`,
+            WebkitMaskImage: `radial-gradient(${outerShape}, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${(rxInner / rxOuter) * 100}%, rgba(0,0,0,0) 100%)`,
+            maskImage: `radial-gradient(${outerShape}, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${(rxInner / rxOuter) * 100}%, rgba(0,0,0,0) 100%)`,
             filter: 'saturate(1.15) contrast(1.05)',
           }}
           draggable={false}
@@ -66,7 +74,7 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
-            background: `radial-gradient(circle at ${cx}% ${cy}%, ${theme.colors.emberBright}38 0%, ${theme.colors.ember}14 ${rInner * 0.7}%, transparent ${rOuter}%)`,
+            background: `radial-gradient(${outerShape}, ${theme.colors.emberBright}38 0%, ${theme.colors.ember}1f ${(rxInner / rxOuter) * 70}%, transparent 100%)`,
             mixBlendMode: 'screen',
           }}
         />
