@@ -346,6 +346,7 @@ export default function App() {
             {...nav}
             wine={selectedWine}
             tasteProfile={tasteProfile}
+            activeScan={activeScan}
             onRate={handleRate}
           />
         )
@@ -358,6 +359,8 @@ export default function App() {
               if (wines?.length) {
                 setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
                 setHasScanned(true)
+                const photoUrl = scanRow.photo_path ? await getPhotoUrl(scanRow.photo_path) : null
+                setActiveScan({ scanId: scanRow.id, photoUrl })
                 navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
               }
             }}
