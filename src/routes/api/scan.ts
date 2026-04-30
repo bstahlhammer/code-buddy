@@ -366,7 +366,7 @@ export const Route = createFileRoute('/api/scan')({
           const allCandidates = (rawToolWines.length ? rawToolWines : fallbackWines) as Array<ReturnType<typeof normalizeWine> & {}>
           const seenCount = allCandidates.length
           // Drop low-confidence wines (post-OCR recognition gate)
-          const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE).slice(0, 12)
+          const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
           const recognitionRate = seenCount > 0 ? wines.length / seenCount : 0
 
           const reportedReadability = typeof parsedArgs?.readability === 'string' ? parsedArgs.readability : ''
