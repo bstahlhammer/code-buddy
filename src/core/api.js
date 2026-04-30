@@ -36,7 +36,18 @@ import {
   computePalateFromGuidedAnswers as _computePalateFromGuidedAnswers,
 } from './engine/guidedQuizEngine.js'
 import { describePalate as _describePalate } from './ai/describePalate.functions'
+import {
+  placesAutocomplete as _placesAutocomplete,
+  placesGetDetails as _placesGetDetails,
+  placesNearby as _placesNearby,
+} from './places/places.functions'
 import { supabase } from '@/integrations/supabase/client'
+
+async function authHeaders() {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData?.session?.access_token
+  return token ? { Authorization: `Bearer ${token}` } : null
+}
 
 /**
  * Ask the AI to translate a free-text wine description into palate axes
