@@ -74,7 +74,7 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
-            background: `radial-gradient(circle at ${cx}% ${cy}%, ${theme.colors.emberBright}38 0%, ${theme.colors.ember}14 ${rInner * 0.7}%, transparent ${rOuter}%)`,
+            background: `radial-gradient(${outerShape}, ${theme.colors.emberBright}38 0%, ${theme.colors.ember}1f ${(rxInner / rxOuter) * 70}%, transparent 100%)`,
             mixBlendMode: 'screen',
           }}
         />
