@@ -57,7 +57,7 @@ If "partial" or "unreadable", populate retakeReasons with 1-3 short, user-friend
 "too_blurry", "too_dark", "too_far", "glare", "angle_skewed", "label_cut_off", "not_a_wine_image", "list_too_dense".
 
 STEP 2 — EXTRACT WINES (only the ones you can actually read):
-Extract every specific wine you can read in the image, up to 12.
+Extract every specific wine you can read in the image. Do not artificially cap the list — if there are 30 readable bottles, return all 30.
 
 GROUNDING RULES — important:
 - The "name" field MUST be a specific wine actually visible in the image. Do not invent wines that aren't there.
@@ -69,7 +69,7 @@ GROUNDING RULES — important:
 
 OUTPUT RULES:
 - Use the extract_wines tool only.
-- Stop after 12 wines.
+- Return every wine you can confidently read — no upper limit.
 
 Field rules — use what you can SEE for factual fields; use sensible defaults for the rest:
 - id: integer starting at 1
@@ -205,7 +205,7 @@ function parseWinesFromModel(content: string) {
       const parsed = JSON.parse(candidate)
       const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.wines) ? parsed.wines : parsed?.name ? [parsed] : []
       const wines = list.map(normalizeWine).filter(Boolean)
-      if (wines.length) return wines.slice(0, 12)
+      if (wines.length) return wines
     } catch {
       // Try the next extraction strategy.
     }
@@ -366,7 +366,7 @@ export const Route = createFileRoute('/api/scan')({
           const allCandidates = (rawToolWines.length ? rawToolWines : fallbackWines) as Array<ReturnType<typeof normalizeWine> & {}>
           const seenCount = allCandidates.length
           // Drop low-confidence wines (post-OCR recognition gate)
-          const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE).slice(0, 12)
+          const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
           const recognitionRate = seenCount > 0 ? wines.length / seenCount : 0
 
           const reportedReadability = typeof parsedArgs?.readability === 'string' ? parsedArgs.readability : ''
