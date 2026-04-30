@@ -383,6 +383,7 @@ function ProfilePreview({ preview }) {
 }
 
 function Bar({ label, value }) {
+  const safe = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
       <div style={{
@@ -405,7 +406,7 @@ function Bar({ label, value }) {
       }}>
         <div style={{
           height: '100%',
-          width: `${Math.max(0, Math.min(100, value))}%`,
+          width: `${safe}%`,
           background: `linear-gradient(90deg, ${theme.colors.gold}, ${theme.colors.goldBright})`,
           transition: 'width 0.3s ease',
         }}/>
@@ -417,7 +418,7 @@ function Bar({ label, value }) {
         color: theme.colors.textMuted,
         fontFamily: theme.typography.fontSans,
       }}>
-        {value}
+        {safe}
       </div>
     </div>
   )
