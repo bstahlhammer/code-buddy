@@ -339,16 +339,43 @@ export default function App() {
             onRate={handleRate}
           />
         )
+      case 'history':
+        return (
+          <HistoryScreen
+            {...nav}
+            onOpenScan={async (scanRow) => {
+              const { wines } = await loadScan(scanRow.id)
+              if (wines?.length) {
+                setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
+                setHasScanned(true)
+                navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
+              }
+            }}
+          />
+        )
+      case 'profile':
+        return (
+          <ProfileScreen
+            {...nav}
+            auth={auth}
+            tasteProfile={tasteProfile}
+            onProfileUpdate={setTasteProfile}
+          />
+        )
       default:
         return <HomeScreen {...nav} auth={auth} onEmailSignIn={handleEmailSignIn} />
     }
   }
+
+  const showNav = SCREENS_WITH_NAV.has(screen) && !!auth.user
+  const activeTab = TAB_FOR_SCREEN[screen]
 
   return (
     <DeviceFrame>
       <ScreenTransition screenKey={screen} direction={direction}>
         {renderScreen()}
       </ScreenTransition>
+      {showNav && <BottomNav activeTab={activeTab} navigate={navigate} />}
       {toast && <Toast message={toast} />}
     </DeviceFrame>
   )
