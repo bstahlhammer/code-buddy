@@ -57,7 +57,7 @@ If "partial" or "unreadable", populate retakeReasons with 1-3 short, user-friend
 "too_blurry", "too_dark", "too_far", "glare", "angle_skewed", "label_cut_off", "not_a_wine_image", "list_too_dense".
 
 STEP 2 — EXTRACT WINES (only the ones you can actually read):
-Extract every specific wine you can read in the image, up to 12.
+Extract every specific wine you can read in the image. Do not artificially cap the list — if there are 30 readable bottles, return all 30.
 
 GROUNDING RULES — important:
 - The "name" field MUST be a specific wine actually visible in the image. Do not invent wines that aren't there.
@@ -69,7 +69,7 @@ GROUNDING RULES — important:
 
 OUTPUT RULES:
 - Use the extract_wines tool only.
-- Stop after 12 wines.
+- Return every wine you can confidently read — no upper limit.
 
 Field rules — use what you can SEE for factual fields; use sensible defaults for the rest:
 - id: integer starting at 1
