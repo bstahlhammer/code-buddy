@@ -134,3 +134,23 @@ export function getGuidedNextNode(id, answer, all) {
 export function computePalateFromGuidedAnswers(answers) {
   return _computePalateFromGuidedAnswers(answers)
 }
+
+// ---------- Google Places (location matching for scan history) ----------
+
+export async function searchPlaces({ query, lat, lng, sessionToken }) {
+  const headers = await authHeaders()
+  if (!headers) return { suggestions: [], error: 'auth_required' }
+  return _placesAutocomplete({ data: { query, lat, lng, sessionToken }, headers })
+}
+
+export async function getPlaceDetails({ placeId, sessionToken }) {
+  const headers = await authHeaders()
+  if (!headers) return { place: null, error: 'auth_required' }
+  return _placesGetDetails({ data: { placeId, sessionToken }, headers })
+}
+
+export async function findNearbyPlaces({ lat, lng, radius }) {
+  const headers = await authHeaders()
+  if (!headers) return { places: [], error: 'auth_required' }
+  return _placesNearby({ data: { lat, lng, radius }, headers })
+}
