@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   inferPalateFromRatings,
   nearestTasteProfile,
@@ -8,7 +8,10 @@ import {
 import DeviceFrame from './ui/components/DeviceFrame.jsx'
 import ScreenTransition from './ui/components/ScreenTransition.jsx'
 import Toast from './ui/components/Toast.jsx'
+import BottomNav from './ui/components/BottomNav.jsx'
 import { useAuth } from './ui/hooks/useAuth.js'
+import { useScanHistory } from './ui/hooks/useScanHistory.js'
+import { useTasteProfileSync } from './ui/hooks/useTasteProfileSync.js'
 
 import HomeScreen from './ui/screens/HomeScreen.jsx'
 import ScanPromptScreen from './ui/screens/ScanPromptScreen.jsx'
@@ -22,6 +25,16 @@ import ProfileRevealScreen from './ui/screens/ProfileRevealScreen.jsx'
 import PersonalizedResultsScreen from './ui/screens/PersonalizedResultsScreen.jsx'
 import WineDetailScreen from './ui/screens/WineDetailScreen.jsx'
 import AuthScreen from './ui/screens/AuthScreen.jsx'
+import HistoryScreen from './ui/screens/HistoryScreen.jsx'
+import ProfileScreen from './ui/screens/ProfileScreen.jsx'
+
+const TAB_FOR_SCREEN = {
+  home: 'home',
+  history: 'history',
+  profile: 'profile',
+  profileReveal: 'profile',
+}
+const SCREENS_WITH_NAV = new Set(['home', 'history', 'profile'])
 
 const INITIAL_QUIZ_ANSWERS = {
   flavorPreferences: [],
@@ -121,6 +134,21 @@ export default function App() {
   const [scanFile, setScanFile] = useState(null)
   const [scannedWines, setScannedWines] = useState(null)
 
+  const { saveScan, loadScan } = useScanHistory()
+  const { saveProfile, loadProfile } = useTasteProfileSync()
+
+  // Hydrate taste profile from DB when user signs in
+  useEffect(() => {
+    if (!auth.user?.id) return
+    let cancelled = false
+    ;(async () => {
+      const { profile } = await loadProfile()
+      if (!cancelled && profile && !tasteProfile) setTasteProfile(profile)
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.user?.id])
+
   const navigate = useCallback((to) => {
     // Login wall: any feature screen requires auth
     if (!auth.user && to !== 'home' && to !== 'auth') {
@@ -163,20 +191,22 @@ export default function App() {
     setQuizAnswers(merged)
     const profile = deriveProfile(merged)
     setTasteProfile(profile)
+    saveProfile(profile)
     setDirection('forward')
     setHistory(h => [...h, screen])
     setScreen('profileReveal')
-  }, [screen, quizAnswers])
+  }, [screen, quizAnswers, saveProfile])
 
   const handleGuidedComplete = useCallback((guidedAnswers) => {
     const merged = { ...quizAnswers, guidedAnswers }
     setQuizAnswers(merged)
     const profile = deriveProfile(merged)
     setTasteProfile(profile)
+    saveProfile(profile)
     setDirection('forward')
     setHistory(h => [...h, screen])
     setScreen('profileReveal')
-  }, [screen, quizAnswers])
+  }, [screen, quizAnswers, saveProfile])
 
   const showToast = useCallback((msg) => {
     setToast(msg)
@@ -236,7 +266,13 @@ export default function App() {
           <ScanningScreen
             {...nav}
             file={scanFile}
-            onScanComplete={(wines) => setScannedWines(wines)}
+            onScanComplete={(payload) => {
+              setScannedWines(payload)
+              const wines = Array.isArray(payload?.wines) ? payload.wines : []
+              if (wines.length && auth.user) {
+                saveScan({ wines, photoFile: scanFile, buyingFor })
+              }
+            }}
           />
         )
       case 'anonResults':
@@ -303,16 +339,43 @@ export default function App() {
             onRate={handleRate}
           />
         )
+      case 'history':
+        return (
+          <HistoryScreen
+            {...nav}
+            onOpenScan={async (scanRow) => {
+              const { wines } = await loadScan(scanRow.id)
+              if (wines?.length) {
+                setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
+                setHasScanned(true)
+                navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
+              }
+            }}
+          />
+        )
+      case 'profile':
+        return (
+          <ProfileScreen
+            {...nav}
+            auth={auth}
+            tasteProfile={tasteProfile}
+            onProfileUpdate={setTasteProfile}
+          />
+        )
       default:
         return <HomeScreen {...nav} auth={auth} onEmailSignIn={handleEmailSignIn} />
     }
   }
+
+  const showNav = SCREENS_WITH_NAV.has(screen) && !!auth.user
+  const activeTab = TAB_FOR_SCREEN[screen]
 
   return (
     <DeviceFrame>
       <ScreenTransition screenKey={screen} direction={direction}>
         {renderScreen()}
       </ScreenTransition>
+      {showNav && <BottomNav activeTab={activeTab} navigate={navigate} />}
       {toast && <Toast message={toast} />}
     </DeviceFrame>
   )
