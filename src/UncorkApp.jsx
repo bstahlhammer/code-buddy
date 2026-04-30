@@ -191,20 +191,22 @@ export default function App() {
     setQuizAnswers(merged)
     const profile = deriveProfile(merged)
     setTasteProfile(profile)
+    saveProfile(profile)
     setDirection('forward')
     setHistory(h => [...h, screen])
     setScreen('profileReveal')
-  }, [screen, quizAnswers])
+  }, [screen, quizAnswers, saveProfile])
 
   const handleGuidedComplete = useCallback((guidedAnswers) => {
     const merged = { ...quizAnswers, guidedAnswers }
     setQuizAnswers(merged)
     const profile = deriveProfile(merged)
     setTasteProfile(profile)
+    saveProfile(profile)
     setDirection('forward')
     setHistory(h => [...h, screen])
     setScreen('profileReveal')
-  }, [screen, quizAnswers])
+  }, [screen, quizAnswers, saveProfile])
 
   const showToast = useCallback((msg) => {
     setToast(msg)
