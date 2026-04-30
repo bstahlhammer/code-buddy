@@ -736,12 +736,16 @@ function blendWithAi(ratingsInference, aiPalate) {
   if (!aiPalate) return ratingsInference
   const ratingsWeight = ratingsInference.ratedCount
   const aiWeight = 1.5
-  const total = ratingsWeight + aiWeight
+  const total = ratingsWeight + aiWeight || 1
+  const safeAi = (k) => Number.isFinite(aiPalate?.[k]) ? aiPalate[k] : ratingsInference.palate[k]
+  const blend = (k) => Math.round(
+    (ratingsInference.palate[k] * ratingsWeight + safeAi(k) * aiWeight) / total
+  )
   const palate = {
-    body:      Math.round((ratingsInference.palate.body      * ratingsWeight + aiPalate.body      * aiWeight) / total),
-    tannin:    Math.round((ratingsInference.palate.tannin    * ratingsWeight + aiPalate.tannin    * aiWeight) / total),
-    sweetness: Math.round((ratingsInference.palate.sweetness * ratingsWeight + aiPalate.sweetness * aiWeight) / total),
-    acidity:   Math.round((ratingsInference.palate.acidity   * ratingsWeight + aiPalate.acidity   * aiWeight) / total),
+    body:      blend('body'),
+    tannin:    blend('tannin'),
+    sweetness: blend('sweetness'),
+    acidity:   blend('acidity'),
   }
   const confidence = Math.min(1, ratingsInference.confidence + 0.25)
   return {
