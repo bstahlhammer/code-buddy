@@ -312,6 +312,7 @@ function PalatePreview({ inference, archetype, hasAiSignal }) {
 }
 
 function AxisBar({ label, value }) {
+  const safe = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
       <span style={{
@@ -332,7 +333,7 @@ function AxisBar({ label, value }) {
         overflow: 'hidden',
       }}>
         <div style={{
-          width: `${value}%`,
+          width: `${safe}%`,
           height: '100%',
           background: `linear-gradient(90deg, ${theme.colors.gold}, ${theme.colors.goldBright})`,
           transition: 'width 0.4s cubic-bezier(.2,.8,.2,1)',
@@ -346,7 +347,7 @@ function AxisBar({ label, value }) {
         color: theme.colors.textOnDark,
         opacity: 0.8,
       }}>
-        {value}
+        {safe}
       </span>
     </div>
   )
