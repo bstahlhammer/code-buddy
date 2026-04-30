@@ -14,6 +14,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiScanRouteImport } from './routes/api/scan'
+import { Route as ApiScanLocateRouteImport } from './routes/api/scan.locate'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -40,20 +41,27 @@ const ApiScanRoute = ApiScanRouteImport.update({
   path: '/api/scan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiScanLocateRoute = ApiScanLocateRouteImport.update({
+  id: '/locate',
+  path: '/locate',
+  getParentRoute: () => ApiScanRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/api/scan': typeof ApiScanRoute
+  '/api/scan': typeof ApiScanRouteWithChildren
+  '/api/scan/locate': typeof ApiScanLocateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/api/scan': typeof ApiScanRoute
+  '/api/scan': typeof ApiScanRouteWithChildren
+  '/api/scan/locate': typeof ApiScanLocateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,14 +69,34 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/api/scan': typeof ApiScanRoute
+  '/api/scan': typeof ApiScanRouteWithChildren
+  '/api/scan/locate': typeof ApiScanLocateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/privacy' | '/terms' | '/api/scan'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/privacy'
+    | '/terms'
+    | '/api/scan'
+    | '/api/scan/locate'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/privacy' | '/terms' | '/api/scan'
-  id: '__root__' | '/' | '/account' | '/privacy' | '/terms' | '/api/scan'
+  to:
+    | '/'
+    | '/account'
+    | '/privacy'
+    | '/terms'
+    | '/api/scan'
+    | '/api/scan/locate'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/privacy'
+    | '/terms'
+    | '/api/scan'
+    | '/api/scan/locate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,7 +104,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
-  ApiScanRoute: typeof ApiScanRoute
+  ApiScanRoute: typeof ApiScanRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -116,15 +144,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/scan/locate': {
+      id: '/api/scan/locate'
+      path: '/locate'
+      fullPath: '/api/scan/locate'
+      preLoaderRoute: typeof ApiScanLocateRouteImport
+      parentRoute: typeof ApiScanRoute
+    }
   }
 }
+
+interface ApiScanRouteChildren {
+  ApiScanLocateRoute: typeof ApiScanLocateRoute
+}
+
+const ApiScanRouteChildren: ApiScanRouteChildren = {
+  ApiScanLocateRoute: ApiScanLocateRoute,
+}
+
+const ApiScanRouteWithChildren =
+  ApiScanRoute._addFileChildren(ApiScanRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
-  ApiScanRoute: ApiScanRoute,
+  ApiScanRoute: ApiScanRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
