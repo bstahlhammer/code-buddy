@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   inferPalateFromRatings,
   nearestTasteProfile,
@@ -8,7 +8,10 @@ import {
 import DeviceFrame from './ui/components/DeviceFrame.jsx'
 import ScreenTransition from './ui/components/ScreenTransition.jsx'
 import Toast from './ui/components/Toast.jsx'
+import BottomNav from './ui/components/BottomNav.jsx'
 import { useAuth } from './ui/hooks/useAuth.js'
+import { useScanHistory } from './ui/hooks/useScanHistory.js'
+import { useTasteProfileSync } from './ui/hooks/useTasteProfileSync.js'
 
 import HomeScreen from './ui/screens/HomeScreen.jsx'
 import ScanPromptScreen from './ui/screens/ScanPromptScreen.jsx'
@@ -22,6 +25,16 @@ import ProfileRevealScreen from './ui/screens/ProfileRevealScreen.jsx'
 import PersonalizedResultsScreen from './ui/screens/PersonalizedResultsScreen.jsx'
 import WineDetailScreen from './ui/screens/WineDetailScreen.jsx'
 import AuthScreen from './ui/screens/AuthScreen.jsx'
+import HistoryScreen from './ui/screens/HistoryScreen.jsx'
+import ProfileScreen from './ui/screens/ProfileScreen.jsx'
+
+const TAB_FOR_SCREEN = {
+  home: 'home',
+  history: 'history',
+  profile: 'profile',
+  profileReveal: 'profile',
+}
+const SCREENS_WITH_NAV = new Set(['home', 'history', 'profile'])
 
 const INITIAL_QUIZ_ANSWERS = {
   flavorPreferences: [],
