@@ -127,13 +127,13 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
         <h1
           style={{
             fontFamily: theme.typography.fontDisplay,
-            fontSize: '64px',
-            fontWeight: 500,
+            fontSize: '56px',
+            fontWeight: 300,
             color: theme.colors.cream,
-            letterSpacing: '0.04em',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
             marginTop: theme.spacing.xl,
             lineHeight: 1,
-            fontStyle: 'italic',
           }}
         >
           MySom
