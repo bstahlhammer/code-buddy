@@ -101,6 +101,34 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
 
       {/* Scrollable content */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+        {/* Filter bar */}
+        {allWines.length > 0 && (
+          <FilterBar
+            filters={filters}
+            onOpen={() => setFilterOpen(true)}
+            onChange={setFilters}
+            resultCount={wines.length}
+            totalCount={allWines.length}
+          />
+        )}
+
+        {/* Empty filtered set */}
+        {filteredEmpty && (
+          <div style={{ padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}` }}>
+            <div style={{
+              padding: theme.spacing.md, borderRadius: theme.radius.md,
+              border: `1px solid ${theme.colors.border}`, background: theme.colors.surfaceAlt,
+              fontFamily: theme.typography.fontSans, fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+            }}>
+              No wines match these filters. <button
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                style={{ background: 'transparent', border: 'none', color: theme.colors.gold, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >Clear filters</button> to see your full list.
+            </div>
+          </div>
+        )}
+
         {/* Retake guidance — shown when readability is partial OR fully unreadable */}
         {showRetakePanel && (
           <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} 0` }}>
