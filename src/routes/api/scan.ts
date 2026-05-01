@@ -262,7 +262,7 @@ export const Route = createFileRoute('/api/scan')({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-3-flash-preview',
+              model: 'google/gemini-2.5-flash',
               stream: false,
               temperature: 0.1,
               messages: [
