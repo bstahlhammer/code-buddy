@@ -84,6 +84,15 @@ const RAW_WINES = [
   { id:50, name:'Layer Cake Malbec', vintage:'2022', region:'Mendoza, Argentina', grape:'Malbec', price:'$13', priceNum:13, rating:87, ratingLabel:'Widely praised', body:76, sweetness:18, tannin:60, acidity:54, isValue:true, isCrowd:true, tasting:'Ripe plum, blueberry, and cocoa with a smooth, crowd-pleasing finish at a great everyday price.', pairings:['Burgers','BBQ','Grilled chicken','Pizza'], retailers:['costco','trader_joes','whole_foods','grocery'] },
 ]
 
+// Enrich every wine with derived filter fields. UI never re-derives these —
+// it just reads w.color / w.maker / w.certifications.
+export const wines = RAW_WINES.map((w) => ({
+  ...w,
+  color: w.color || inferColorFromGrape(w.grape),
+  maker: w.maker || MAKER_OVERRIDES[w.name] || inferMakerFromName(w.name, w.grape),
+  certifications: w.certifications || CERTIFICATION_OVERRIDES[w.name] || [],
+}))
+
 // Search-only entries: well-known bottles users may have tried but that aren't
 // in the recommendation catalog. UI uses these for the palate-rating step;
 // they have palate axes (body/sweetness/tannin/acidity) so the inference
