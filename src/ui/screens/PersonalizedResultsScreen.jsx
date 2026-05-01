@@ -116,8 +116,8 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
               </h1>
               <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
                 {fromScan
-                  ? `${scoredWines.length} wine${scoredWines.length === 1 ? '' : 's'} identified · sorted by Match Score`
-                  : `${scoredWines.length} wines · Tap any to explore`}
+                  ? `${filteredWines.length}${filteredWines.length !== scoredWines.length ? ` of ${scoredWines.length}` : ''} wine${scoredWines.length === 1 ? '' : 's'} identified · sorted by Match Score`
+                  : `${filteredWines.length} wines · Tap any to explore`}
               </p>
             </div>
             {/* Identity chip */}
