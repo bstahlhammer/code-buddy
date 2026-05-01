@@ -202,6 +202,41 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
           </div>
         )}
 
+        {/* No-strong-matches banner */}
+        {noStrongMatches && !showRetakePanel && (
+          <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} 0` }}>
+            <div style={{
+              padding: theme.spacing.md,
+              borderRadius: theme.radius.md,
+              border: `1px solid ${theme.colors.peach}80`,
+              background: `${theme.colors.peach}18`,
+              fontFamily: theme.typography.fontSans,
+              fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+              lineHeight: 1.5,
+            }}>
+              <strong style={{ fontWeight: 700 }}>No strong matches on this list.</strong> Top match is {topMatch}/100. Here are the closest from what we found.
+            </div>
+          </div>
+        )}
+
+        {/* Low-confidence read warning */}
+        {showLowConfidenceWarning && (
+          <div style={{ padding: `${theme.spacing.sm} ${theme.spacing.lg} 0` }}>
+            <div style={{
+              padding: '10px 12px',
+              borderRadius: theme.radius.sm,
+              background: `${theme.colors.gold}1a`,
+              border: `1px solid ${theme.colors.gold}55`,
+              fontFamily: theme.typography.fontSans,
+              fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+            }}>
+              Some labels were hard to read. Try a sharper photo for a more complete shortlist.
+            </div>
+          </div>
+        )}
+
         {/* Hero picks with match scores */}
         {heroPicks.length > 0 && (
           <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} 0`, display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
