@@ -37,6 +37,14 @@ import {
 } from './engine/guidedQuizEngine.js'
 import { describePalate as _describePalate } from './ai/describePalate.functions'
 import {
+  applyFilters as _applyFilters,
+  getFilterFacets as _getFilterFacets,
+  countActiveFilters as _countActiveFilters,
+  EMPTY_FILTERS,
+  CERTIFICATION_LABELS,
+  COLOR_LABELS,
+} from './engine/filterEngine.js'
+import {
   placesAutocomplete as _placesAutocomplete,
   placesGetDetails as _placesGetDetails,
   placesNearby as _placesNearby,
