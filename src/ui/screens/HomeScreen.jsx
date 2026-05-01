@@ -344,11 +344,33 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
               boxShadow: theme.shadows.brass,
             }}
           >
-            {hasProfile ? 'Find more wines I’ll love' : 'Scan a wine list, shelf or bottle'}
+            {hasProfile ? 'Scan to find a wine I’ll love' : 'Scan a wine list, shelf or bottle'}
           </button>
 
           {hasProfile ? (
             <>
+              {/* Visual break: separates the "do something now" CTA from the taste-profile section */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                marginTop: theme.spacing.sm,
+              }}>
+                <span style={{
+                  flex: 1, height: 1,
+                  background: `linear-gradient(to right, transparent, ${theme.colors.cream}33, transparent)`,
+                }} />
+                <span style={{
+                  fontSize: 9, fontFamily: theme.typography.fontSans, fontWeight: 700,
+                  letterSpacing: '0.24em', textTransform: 'uppercase',
+                  color: `${theme.colors.cream}99`,
+                }}>
+                  Your taste
+                </span>
+                <span style={{
+                  flex: 1, height: 1,
+                  background: `linear-gradient(to right, transparent, ${theme.colors.cream}33, transparent)`,
+                }} />
+              </div>
+
               <TasteProfileCard tasteProfile={tasteProfile} onTap={() => navigate('profile')} />
               <button
                 onClick={() => navigate('quizIntro')}
@@ -389,8 +411,12 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
             </button>
           )}
 
-          {hasProfile && recentScans.length > 0 && (
-            <RecentScansStrip scans={recentScans} onOpen={onOpenScan} />
+          {hasProfile && (
+            <RecentScansStrip
+              scans={recentScans}
+              onOpen={onOpenScan}
+              onAddWine={onAddWine}
+            />
           )}
         </div>
       ) : (
