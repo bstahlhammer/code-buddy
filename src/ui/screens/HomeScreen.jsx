@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { theme } from '../theme/theme.js'
 import { useScanHistory } from '../hooks/useScanHistory.js'
+import { formatScanDate } from '../utils/formatScan.js'
 import logoWatercolor from '@/assets/logo-watercolor.png'
 
 function Monogram() {
