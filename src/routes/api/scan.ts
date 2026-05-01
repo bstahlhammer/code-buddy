@@ -87,6 +87,9 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
 - isCrowd: boolean — false unless clearly a crowd-pleaser style.
 - tasting: string — one short sentence ONLY if you genuinely recognize the wine; otherwise "".
 - confidence: number 0-100 — how clearly you could read this wine's name on the image.
+- color: string — one of "red", "white", "rose", "sparkling", "dessert" if obvious from the label/list (e.g. "Rosé", "Brut", "Champagne", grape color); otherwise "".
+- maker: string — the producer/winery name (e.g. "Caymus", "Château Margaux"). Read it off the label. If only a brand line is visible, use that. Otherwise "".
+- certifications: array of strings — any of "natural", "biodynamic", "organic", "low_sulfite" ONLY if explicitly printed on the label (e.g. "USDA Organic", "Demeter Biodynamic", "Vin Méthode Nature"). Empty array if nothing is shown.
 - bbox: object — the bounding box of THIS specific bottle/listing in the image, expressed as normalized values (0..1) of the image dimensions:
     { "x": <left edge 0..1>, "y": <top edge 0..1>, "w": <width 0..1>, "h": <height 0..1> }
   Cover the FULL bottle from the top of the capsule/cork to the base, and include the entire label width — don't crop tightly to the label only. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
