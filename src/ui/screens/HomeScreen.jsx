@@ -130,8 +130,7 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
             fontSize: '56px',
             fontWeight: 300,
             color: theme.colors.cream,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
             marginTop: theme.spacing.xl,
             lineHeight: 1,
           }}
