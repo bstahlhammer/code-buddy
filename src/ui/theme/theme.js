@@ -1,46 +1,70 @@
 export const theme = {
   colors: {
-    // Core palette — Forge: Ember & Tide
-    // Deep navy (velvet) + ember orange/red (flame) + tide blue (accent)
-    brand:      '#162969',   // Forge navy (deep)
-    brandDark:  '#0B142E',   // near-black navy
-    brandDeep:  '#1B2E73',   // mid navy for layering
-    gold:       '#FF5F0E',   // ember orange (alias kept for compatibility)
-    goldBright: '#FF8048',   // bright ember highlight (alias)
-    ember:      '#FF5F0E',
-    emberBright:'#FF8048',
-    crimson:    '#B61E23',   // deep crimson (flame tip)
-    crimsonSoft:'#B8555C',   // muted rose
-    tide:       '#5EAAE6',   // mid Forge blue
-    tideLight:  '#81C3E4',   // pale tide
-    tideDeep:   '#2250B7',   // royal Forge blue
-    cream:      '#F4EBD9',   // warm parchment kept for warmth
-    parchment:  '#EFE4CC',   // aged parchment for cards on dark
-    text:       '#0F1A33',   // deep navy ink
-    textMuted:  '#5A6788',   // dusty navy
-    textOnDark: '#E8EEF8',   // pale on navy surfaces
-    surface:    '#FBF8F2',   // off-white warm surface
-    surfaceAlt: '#F1EEE5',   // alternate card surface
-    border:     '#D7DCE8',   // soft cool edge
-    borderDark: '#22356E',   // navy border on dark
-    success:    '#2F8F4E',
-    warning:    '#FF8048',
-    crowd:      '#2250B7',   // royal blue
-    matchHigh:  '#2F8F4E',
-    matchMid:   '#FF8048',
-    matchLow:   '#B61E23',
-    crowdBg:    '#E1EAF8',
-    valueBg:    '#FFE7D6',
-    bestMatchBg:'#E1F0E5',
-    criticBg:   '#162969',
-    dotEmpty:   '#D7DCE8',
-    barTrack:   '#E8EEF8',
+    // Core palette — "Watercolor Spectrum"
+    // Deep plum/aubergine bases + magenta-rose primary, watercolor teal,
+    // wine berry, peach + soft rose. Warm cream paper for light surfaces.
+    brand:       '#3D1B4E',  // deep plum (replaces navy)
+    brandDark:   '#1A0B26',  // near-black aubergine
+    brandDeep:   '#5A2A6E',  // mid plum for layering
+
+    // Primary accent — magenta-rose (replaces ember orange).
+    // gold / goldBright kept as compat aliases pointing at the same hues.
+    gold:        '#C2418A',
+    goldBright:  '#E15FA8',
+    ember:       '#C2418A',
+    emberBright: '#E15FA8',
+    magenta:     '#C2418A',
+    magentaBright: '#E15FA8',
+
+    // Wine berry — used for flame-tip / depth accents.
+    crimson:     '#8E2A5A',
+    crimsonSoft: '#D88AAE',
+    berry:       '#8E2A5A',
+    rose:        '#D88AAE',
+
+    // Tide — kept name, retuned to the watercolor teal in the wing.
+    tide:        '#4FA89C',
+    tideLight:   '#9FCFC6',
+    tideDeep:    '#1F6B66',
+    teal:        '#4FA89C',
+    tealDeep:    '#1F6B66',
+
+    // New warm hue from the wing — peach/apricot wash.
+    peach:       '#F2A57C',
+    peachDeep:   '#D87A4E',
+
+    // Surfaces & ink
+    cream:       '#FAF6EE',  // watercolor paper
+    parchment:   '#F2EAD9',  // aged paper for cards on dark
+    text:        '#2A1234',  // deep aubergine ink
+    textMuted:   '#6E5A78',  // dusty plum
+    textOnDark:  '#F4ECF6',  // soft pink-white on dark plum
+    surface:     '#FAF6EE',  // off-white warm surface
+    surfaceAlt:  '#F2EAD9',  // alternate card surface
+    border:      '#E4D8E1',  // soft plum-tinted edge
+    borderDark:  '#5A2A6E',  // plum border on dark
+
+    // Status / data
+    success:     '#4FA89C',  // teal
+    warning:     '#F2A57C',  // peach
+    crowd:       '#1F6B66',  // deep teal
+    matchHigh:   '#4FA89C',
+    matchMid:    '#F2A57C',
+    matchLow:    '#8E2A5A',
+    crowdBg:     '#DCEEEB',
+    valueBg:     '#FBE4D5',
+    bestMatchBg: '#DCEEEB',
+    criticBg:    '#3D1B4E',
+    dotEmpty:    '#E4D8E1',
+    barTrack:    '#F2EAD9',
   },
   typography: {
-    // Transitional serif (display) + refined sans (body)
-    fontSerif: "'Cormorant Garamond', 'Cormorant', Garamond, 'EB Garamond', Georgia, serif",
-    fontDisplay: "'Cormorant Garamond', 'Cormorant', Garamond, Georgia, serif",
-    fontSans:  "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    // Display: "Lotus Eater Sans" (commercial) — using Sora as a close
+    // free geometric sans stand-in until the licensed file is provided.
+    // Body/UI: "Open Sauce" — using Open Sauce One via Google Fonts.
+    fontSerif:   "'Sora', 'Lotus Eater Sans', system-ui, sans-serif",
+    fontDisplay: "'Sora', 'Lotus Eater Sans', system-ui, sans-serif",
+    fontSans:    "'Open Sauce One', 'Open Sauce', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     sizes: {
       xs:   '11px',
       sm:   '12px',
@@ -71,8 +95,8 @@ export const theme = {
     pill: '100px',
   },
   shadows: {
-    card:     '0 2px 8px rgba(15, 31, 24, 0.08), 0 1px 2px rgba(15, 31, 24, 0.04)',
-    elevated: '0 12px 32px rgba(15, 31, 24, 0.18), 0 2px 6px rgba(15, 31, 24, 0.08)',
-    brass:    '0 0 0 1px rgba(176, 141, 62, 0.3), 0 4px 16px rgba(15, 31, 24, 0.2)',
+    card:     '0 2px 8px rgba(42, 18, 52, 0.10), 0 1px 2px rgba(42, 18, 52, 0.05)',
+    elevated: '0 12px 32px rgba(42, 18, 52, 0.22), 0 2px 6px rgba(42, 18, 52, 0.10)',
+    brass:    '0 0 0 1px rgba(194, 65, 138, 0.30), 0 4px 16px rgba(42, 18, 52, 0.22)',
   },
 }
