@@ -197,3 +197,10 @@ export async function locateBottleInScan({ scanId, wineName }) {
     return { found: false, error: e?.message || 'unknown' }
   }
 }
+
+// ---------- Filters ----------
+
+export function applyFilters(wineList, filters) { return _applyFilters(wineList, filters) }
+export function getFilterFacets(wineList)       { return _getFilterFacets(wineList) }
+export function countActiveFilters(filters)     { return _countActiveFilters(filters) }
+export { EMPTY_FILTERS, CERTIFICATION_LABELS, COLOR_LABELS }
