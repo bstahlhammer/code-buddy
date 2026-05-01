@@ -89,7 +89,7 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
 - confidence: number 0-100 — how clearly you could read this wine's name on the image.
 - bbox: object — the bounding box of THIS specific bottle/listing in the image, expressed as normalized values (0..1) of the image dimensions:
     { "x": <left edge 0..1>, "y": <top edge 0..1>, "w": <width 0..1>, "h": <height 0..1> }
-  Be as tight as you can around the bottle/listing. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
+  Cover the FULL bottle from the top of the capsule/cork to the base, and include the entire label width — don't crop tightly to the label only. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
 
 const WINE_MARKERS = [
   'cabernet', 'chardonnay', 'pinot', 'merlot', 'sauvignon', 'syrah', 'shiraz', 'riesling', 'malbec',
