@@ -41,14 +41,19 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
   const hasProfile = !!tasteProfile
   const [showAll, setShowAll] = useState(false)
   const [sortKey, setSortKey] = useState('crowd')
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [filterOpen, setFilterOpen] = useState(false)
 
   const scanResult = normalizeScanResult(scannedWines)
   const scanAttempted = scanResult !== null
-  const wines = scanResult?.wines ?? []
+  const allWines = scanResult?.wines ?? []
   const readability = scanResult?.readability ?? 'good'
   const retakeReasons = scanResult?.retakeReasons ?? []
   const scanMessage = scanResult?.message
     || 'I could not identify a specific wine from that image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
+
+  const facets = useMemo(() => getFilterFacets(allWines), [allWines])
+  const wines = useMemo(() => applyFilters(allWines, filters), [allWines, filters])
 
   const heroPicks = useMemo(() => chooseHeroPicks(wines, hasProfile ? tasteProfile : null), [wines, tasteProfile, hasProfile])
   const heroIds = useMemo(() => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)), [heroPicks])
@@ -74,7 +79,8 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
   }, [wines, heroIds, sortKey, tasteProfile, hasProfile])
 
   const showRetakePanel = scanAttempted && readability !== 'good'
-  const noWines = scanAttempted && wines.length === 0
+  const noWines = scanAttempted && allWines.length === 0
+  const filteredEmpty = scanAttempted && allWines.length > 0 && wines.length === 0
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
