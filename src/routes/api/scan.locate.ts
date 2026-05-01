@@ -107,7 +107,7 @@ export const Route = createFileRoute('/api/scan/locate')({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-3-flash-preview',
+              model: 'google/gemini-2.5-flash',
               temperature: 0,
               messages: [
                 {
