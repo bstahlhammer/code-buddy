@@ -267,7 +267,7 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
 
         <h1
           style={{
-            fontFamily: theme.typography.fontDisplay,
+            fontFamily: theme.typography.fontLogo,
             fontSize: '56px',
             fontWeight: 300,
             color: theme.colors.cream,
