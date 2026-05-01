@@ -28,6 +28,8 @@ import WineDetailScreen from './ui/screens/WineDetailScreen.jsx'
 import AuthScreen from './ui/screens/AuthScreen.jsx'
 import HistoryScreen from './ui/screens/HistoryScreen.jsx'
 import ProfileScreen from './ui/screens/ProfileScreen.jsx'
+import ScanReviewScreen from './ui/screens/ScanReviewScreen.jsx'
+import AddWineSheet from './ui/components/AddWineSheet.jsx'
 
 const TAB_FOR_SCREEN = {
   home: 'home',
@@ -146,6 +148,10 @@ export default function App() {
   const [scannedWines, setScannedWines] = useState(null)
   // Active scan context for the shelf-spotlight feature on wine detail
   const [activeScan, setActiveScan] = useState(null) // { scanId, photoUrl }
+  // Scan-review flow: a past scan + its wines being rated by the user.
+  const [reviewScan, setReviewScan] = useState(null) // raw row from `scans`
+  const [reviewWines, setReviewWines] = useState([])
+  const [showAddWine, setShowAddWine] = useState(false)
 
   const { saveScan, loadScan, getPhotoUrl } = useScanHistory()
   const { saveProfile, loadProfile } = useTasteProfileSync()
@@ -262,16 +268,33 @@ export default function App() {
     const nav = { navigate, goBack }
     switch (screen) {
       case 'home':
-        return <HomeScreen {...nav} auth={auth} tasteProfile={tasteProfile} onEmailSignIn={handleEmailSignIn} onOpenScan={async (scanRow) => {
-          const { wines } = await loadScan(scanRow.id)
-          if (wines?.length) {
-            setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
-            setHasScanned(true)
-            const photoUrl = scanRow.photo_path ? await getPhotoUrl(scanRow.photo_path) : null
-            setActiveScan({ scanId: scanRow.id, photoUrl })
-            navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
-          }
-        }} />
+        return <HomeScreen
+          {...nav}
+          auth={auth}
+          tasteProfile={tasteProfile}
+          onEmailSignIn={handleEmailSignIn}
+          onAddWine={() => setShowAddWine(true)}
+          onOpenScan={async (scanRow) => {
+            const { wines } = await loadScan(scanRow.id)
+            setReviewScan(scanRow)
+            setReviewWines(wines || [])
+            navigate('scanReview')
+          }}
+        />
+      case 'scanReview':
+        return (
+          <ScanReviewScreen
+            scan={reviewScan}
+            wines={reviewWines}
+            goBack={goBack}
+            onSaved={() => {
+              setDirection('back')
+              setHistory(h => h.slice(0, -1))
+              setScreen('home')
+            }}
+            onToast={showToast}
+          />
+        )
       case 'auth':
         return <AuthScreen {...nav} onAuthed={handleAuthed} authMode={authMode} />
       case 'scanPrompt':
@@ -425,6 +448,15 @@ export default function App() {
       </ScreenTransition>
       {showNav && <BottomNav activeTab={activeTab} navigate={navigate} />}
       {toast && <Toast message={toast} />}
+      {showAddWine && (
+        <AddWineSheet
+          onClose={() => setShowAddWine(false)}
+          onSaved={(label) => {
+            setShowAddWine(false)
+            showToast(label || 'Wine logged')
+          }}
+        />
+      )}
     </DeviceFrame>
   )
 }

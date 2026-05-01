@@ -68,6 +68,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          reason: string
+          scan_id: string | null
+          user_id: string
+          wine_id: string | null
+          wine_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: string
+          scan_id?: string | null
+          user_id: string
+          wine_id?: string | null
+          wine_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: string
+          scan_id?: string | null
+          user_id?: string
+          wine_id?: string | null
+          wine_name?: string | null
+        }
+        Relationships: []
+      }
       scan_wines: {
         Row: {
           created_at: string

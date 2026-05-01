@@ -41,9 +41,9 @@ async function requireAuth(request: Request): Promise<string | Response> {
 const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
 
 // Min confidence (0-100) for a wine to make it into the response.
-const MIN_WINE_CONFIDENCE = 35
+const MIN_WINE_CONFIDENCE = 20
 // If overall recognition rate (kept / total seen) falls below this, mark partial.
-const MIN_RECOGNITION_RATE = 0.5
+const MIN_RECOGNITION_RATE = 0.3
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
@@ -57,16 +57,15 @@ If "partial" or "unreadable", populate retakeReasons with 1-3 short, user-friend
 "too_blurry", "too_dark", "too_far", "glare", "angle_skewed", "label_cut_off", "not_a_wine_image", "list_too_dense".
 
 STEP 2 — EXTRACT WINES (only the ones you can actually read):
-Scan the image SYSTEMATICALLY — top-to-bottom, left-to-right. Do not stop early. If there are 30 readable bottles or list lines, return all 30. Missing real wines is just as bad as inventing fake ones.
+Scan the image SYSTEMATICALLY, top-to-bottom and left-to-right. Do not stop early. If there are 30 readable bottles or list lines, return all 30. Be generous: when in doubt about a partially legible wine, include it with a lower confidence score rather than dropping it.
 
-GROUNDING RULES — these are strict:
-- The "name" field MUST be a specific wine ACTUALLY VISIBLE in the image. Read it off the label, list line, or shelf tag. Never infer wines from context, store name, neighboring bottles, or general knowledge of what a place "probably" carries.
-- If you are not directly reading the wine's text in this image, DO NOT include it. When in doubt, leave it out.
-- NEVER return OCR fragments, store text, shelf signage, category labels, initials, or single loose words as wines.
-- A producer/brand alone is NOT enough unless a visible vintage, grape, region, cuvée, appellation, or price confirms a specific wine.
-- If you can only read fragments like "BY", "Cs", "DECO", or a lone producer name, return no wine for that fragment.
+GROUNDING RULES:
+- The "name" field should be a wine actually visible in the image. Read it off the label, list line, or shelf tag — do not invent wines from store context or general knowledge.
+- If you can read most of a wine name and at least one supporting detail (vintage, region, grape, producer, price), include it. Lower the confidence if the read is partial.
+- Avoid returning OCR fragments, store signage, category labels, or single loose words as wines.
+- A producer/brand alone is okay if there's any other supporting detail (vintage, grape, region, price, cuvée). If only an isolated brand word is visible with nothing else, leave it out.
 - If readability is "unreadable", return an empty wines array.
-- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels. Set confidence below 35 if you are guessing — those will be dropped.
+- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read it. Use lower scores (20-40) for partial reads — they will be kept and shown to the user with a "we may have read this wrong" warning.
 
 OUTPUT RULES:
 - Use the extract_wines tool only.
@@ -117,18 +116,25 @@ function hasWineMarker(value: string) {
 function hasEnoughSpecificity(wine: Record<string, unknown>, name: string) {
   const words = name.split(/\s+/).filter(Boolean)
   const compact = name.replace(/[^a-z0-9]/gi, '')
-  if (compact.length < 5 || words.every((word) => word.length <= 2)) return false
-  const support = [wine.vintage, wine.region, wine.grape, wine.tasting, wine.price, wine.ratingLabel]
+  // Reject only obvious junk: empty, very short, or single tiny word fragments.
+  if (compact.length < 4) return false
+  if (words.length === 1 && words[0].length <= 3) return false
+  const support = [wine.vintage, wine.region, wine.grape, wine.tasting, wine.price, wine.ratingLabel, wine.maker]
     .filter((v) => typeof v === 'string' && v.trim() && v !== '—')
     .join(' ')
   const combined = `${name} ${support}`
   const vintageVisible = typeof wine.vintage === 'string' && /^(19|20)\d{2}|NV$/i.test(wine.vintage.trim())
   const hasPrice = typeof wine.price === 'string' && /\d/.test(wine.price)
   const hasRating = typeof wine.rating === 'number' && wine.rating > 0
+  const hasMaker = typeof wine.maker === 'string' && wine.maker.trim().length >= 3
+  const hasSupport = support.trim().length > 0
 
-  if (words.length >= 3) return true
-  if (words.length >= 2 && hasWineMarker(combined)) return true
-  if (words.length >= 2 && (vintageVisible || hasPrice || hasRating)) return true
+  // Be generous: any of these signals is enough to keep the wine.
+  if (words.length >= 2) return true
+  if (hasMaker) return true
+  if (hasWineMarker(combined)) return true
+  if (vintageVisible || hasPrice || hasRating) return true
+  if (hasSupport) return true
   return false
 }
 
