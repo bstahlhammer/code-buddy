@@ -315,6 +315,15 @@ export const Route = createFileRoute('/api/scan')({
                               isCrowd: { type: 'boolean' },
                               tasting: { type: 'string' },
                               confidence: { type: 'number' },
+                              color: { type: 'string', enum: ['red', 'white', 'rose', 'sparkling', 'dessert', ''] },
+                              maker: { type: 'string' },
+                              certifications: {
+                                type: 'array',
+                                items: {
+                                  type: 'string',
+                                  enum: ['natural', 'biodynamic', 'organic', 'low_sulfite'],
+                                },
+                              },
                               bbox: {
                                 type: 'object',
                                 properties: {
@@ -327,7 +336,7 @@ export const Route = createFileRoute('/api/scan')({
                                 additionalProperties: false,
                               },
                             },
-                            required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence', 'bbox'],
+                            required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence', 'color', 'maker', 'certifications', 'bbox'],
                             additionalProperties: false,
                           },
                         },
