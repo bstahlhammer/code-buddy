@@ -4,8 +4,8 @@ import { LegalLayout } from '@/ui/components/LegalLayout'
 export const Route = createFileRoute('/privacy')({
   head: () => ({
     meta: [
-      { title: 'Privacy Policy — MySom' },
-      { name: 'description', content: 'How MySom collects, uses, and protects your wine taste data and personal information.' },
+      { title: 'Privacy Policy — Wine Flight' },
+      { name: 'description', content: 'How Wine Flight collects, uses, and protects your wine taste data and personal information.' },
     ],
   }),
   component: PrivacyPage,
@@ -15,8 +15,8 @@ function PrivacyPage() {
   return (
     <LegalLayout eyebrow="The Cellar Records" title="Privacy Policy" updated="April 28, 2026">
       <p>
-        MySom (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is operated by MySom. This policy explains
-        what we collect when you use the MySom web app at apps.forgeproductstrategy.com, why,
+        Wine Flight (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is operated by Wine Flight. This policy explains
+        what we collect when you use the Wine Flight web app at apps.forgeproductstrategy.com, why,
         and what choices you have. We aim to collect only what we need to give you better
         wine recommendations.
       </p>
@@ -60,7 +60,7 @@ function PrivacyPage() {
       <h2>Sharing</h2>
       <p>
         We do <strong>not</strong> sell your data. We share data only with the service providers
-        that make MySom run: our backend infrastructure (Lovable Cloud, powered by Supabase) and
+        that make Wine Flight run: our backend infrastructure (Lovable Cloud, powered by Supabase) and
         our AI provider (Lovable AI Gateway, which routes requests to Google and OpenAI models).
         Each is bound by their own privacy commitments.
       </p>
@@ -75,7 +75,7 @@ function PrivacyPage() {
 
       <h2>Children</h2>
       <p>
-        MySom is intended for adults of legal drinking age in their jurisdiction. We do not
+        Wine Flight is intended for adults of legal drinking age in their jurisdiction. We do not
         knowingly collect data from anyone under 21 (US) or under the local legal drinking
         age elsewhere.
       </p>

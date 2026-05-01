@@ -5,7 +5,7 @@ import UncorkApp from "@/UncorkApp.jsx";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MySom — Your Personal Sommelier" },
+      { title: "Wine Flight — Your Personal Sommelier" },
       {
         name: "description",
         content:
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebApplication",
-          name: "MySom",
+          name: "Wine Flight",
           description:
             "Your personal sommelier. Scan a wine, take a taste quiz, and get personalized wine recommendations matched to your palate.",
           url: "https://apps.forgeproductstrategy.com",

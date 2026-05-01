@@ -9,8 +9,8 @@ import { supabase } from '@/integrations/supabase/client'
 export const Route = createFileRoute('/account')({
   head: () => ({
     meta: [
-      { title: 'Account — MySom' },
-      { name: 'description', content: 'Manage your MySom account, sign out, or permanently delete your data.' },
+      { title: 'Account — Wine Flight' },
+      { name: 'description', content: 'Manage your Wine Flight account, sign out, or permanently delete your data.' },
     ],
   }),
   component: AccountPage,
@@ -71,7 +71,7 @@ function AccountPage() {
           color: theme.colors.gold, fontSize: 11,
           letterSpacing: '0.2em', textTransform: 'uppercase', textDecoration: 'none',
         }}>
-          ← Back to MySom
+          ← Back to Wine Flight
         </Link>
 
         <div style={{ fontSize: 10, letterSpacing: '0.32em', color: theme.colors.gold, textTransform: 'uppercase', marginBottom: 8 }}>

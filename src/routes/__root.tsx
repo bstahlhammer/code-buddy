@@ -32,17 +32,17 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#3D1B4E" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "MySom" },
-      { title: "MySom — Your Personal Sommelier" },
+      { name: "apple-mobile-web-app-title", content: "Wine Flight" },
+      { title: "Wine Flight — Your Personal Sommelier" },
       {
         name: "description",
         content:
           "Discover wines you'll love. Scan a bottle, take a quick taste quiz, and get personalized recommendations matched to your palate.",
       },
-      { name: "author", content: "MySom" },
+      { name: "author", content: "Wine Flight" },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "MySom" },
-      { property: "og:title", content: "MySom — Your Personal Sommelier" },
+      { property: "og:site_name", content: "Wine Flight" },
+      { property: "og:title", content: "Wine Flight — Your Personal Sommelier" },
       {
         property: "og:description",
         content:
@@ -53,7 +53,7 @@ export const Route = createRootRoute({
       { property: "og:image:height", content: "630" },
       { property: "og:url", content: "https://apps.forgeproductstrategy.com" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "MySom — Your Personal Sommelier" },
+      { name: "twitter:title", content: "Wine Flight — Your Personal Sommelier" },
       {
         name: "twitter:description",
         content:
