@@ -58,6 +58,110 @@ function GoogleLogo() {
   )
 }
 
+function TasteProfileCard({ tasteProfile, onTap }) {
+  const archetype = tasteProfile?.name || tasteProfile?.archetype?.name || 'Your taste profile'
+  const palate = tasteProfile?.palate || {}
+  const dims = [
+    { key: 'body',      label: 'Body' },
+    { key: 'sweetness', label: 'Sweet' },
+    { key: 'tannin',    label: 'Tannin' },
+    { key: 'acidity',   label: 'Acid' },
+  ]
+  return (
+    <button
+      onClick={onTap}
+      style={{
+        width: '100%', textAlign: 'left',
+        padding: theme.spacing.md,
+        background: `linear-gradient(135deg, ${theme.colors.parchment}f5 0%, ${theme.colors.cream}f0 100%)`,
+        border: `1px solid ${theme.colors.magenta}55`,
+        borderRadius: theme.radius.md,
+        cursor: 'pointer',
+        boxShadow: `0 8px 24px ${theme.colors.brandDark}66`,
+      }}
+    >
+      <div style={{
+        fontSize: 10, fontFamily: theme.typography.fontSans, fontWeight: 700,
+        letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: theme.colors.magenta, marginBottom: 4,
+      }}>
+        Your taste profile
+      </div>
+      <div style={{
+        fontFamily: theme.typography.fontDisplay,
+        fontSize: 22, color: theme.colors.brand, lineHeight: 1.1,
+        marginBottom: 10,
+      }}>
+        {archetype}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {dims.map(d => {
+          const v = Math.max(0, Math.min(100, palate[d.key] ?? 0))
+          return (
+            <div key={d.key} style={{ flex: 1 }}>
+              <div style={{
+                height: 4, borderRadius: 2,
+                background: `${theme.colors.brand}22`, overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${v}%`, height: '100%',
+                  background: `linear-gradient(90deg, ${theme.colors.magenta}, ${theme.colors.berry})`,
+                }} />
+              </div>
+              <div style={{
+                fontSize: 9, marginTop: 4,
+                fontFamily: theme.typography.fontSans, color: theme.colors.brand,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+              }}>
+                {d.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </button>
+  )
+}
+
+function RecentScansStrip({ scans, onOpen }) {
+  return (
+    <div>
+      <div style={{
+        fontSize: 10, fontFamily: theme.typography.fontSans, fontWeight: 700,
+        letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: `${theme.colors.cream}aa`, marginBottom: 8,
+      }}>
+        Pick up where you left off
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {scans.map(s => (
+          <button
+            key={s.id}
+            onClick={() => onOpen?.(s)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              width: '100%', textAlign: 'left',
+              padding: '10px 14px',
+              background: 'rgba(255,255,255,0.06)',
+              border: `1px solid ${theme.colors.cream}22`,
+              borderRadius: theme.radius.sm,
+              color: theme.colors.cream,
+              fontFamily: theme.typography.fontSans,
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {s.location_label || `${s.wine_count} wine${s.wine_count === 1 ? '' : 's'} scanned`}
+            </span>
+            <span style={{ opacity: 0.6, fontSize: 11 }}>Rate →</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn, onOpenScan }) {
   const user = auth?.user
   const profileName = auth?.profile?.display_name
