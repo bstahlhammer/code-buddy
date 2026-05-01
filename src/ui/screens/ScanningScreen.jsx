@@ -358,3 +358,82 @@ export default function ScanningScreen({
     </div>
   )
 }
+
+function IntentPicker({ intent, onChange }) {
+  const tags = intent?.tags || []
+  const toggle = (id) => {
+    const has = tags.includes(id)
+    const nextTags = has ? tags.filter(t => t !== id) : [...tags, id].slice(-2)
+    onChange?.({ ...(intent || {}), tags: nextTags })
+  }
+  const setField = (key, value) => onChange?.({ ...(intent || {}), tags, [key]: value })
+
+  return (
+    <div>
+      <div style={{
+        fontSize: 11, fontFamily: theme.typography.fontSans, fontWeight: 700,
+        letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: `${theme.colors.cream}cc`, marginBottom: 8, textAlign: 'center',
+      }}>
+        What are you looking for? <span style={{ opacity: 0.6 }}>(pick up to 2)</span>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+        {INTENT_TAGS.map(opt => {
+          const active = tags.includes(opt.id)
+          return (
+            <button
+              key={opt.id}
+              onClick={() => toggle(opt.id)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: theme.radius.pill,
+                border: `1.5px solid ${active ? theme.colors.peach : `${theme.colors.cream}44`}`,
+                background: active ? `${theme.colors.peach}26` : 'transparent',
+                color: theme.colors.cream,
+                fontSize: 12,
+                fontWeight: active ? 700 : 500,
+                fontFamily: theme.typography.fontSans,
+                cursor: 'pointer',
+              }}
+            >
+              {opt.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {tags.includes('maker') && (
+        <IntentInput placeholder="Which maker?" value={intent?.maker || ''} onChange={v => setField('maker', v)} />
+      )}
+      {tags.includes('region') && (
+        <IntentInput placeholder="Which region?" value={intent?.region || ''} onChange={v => setField('region', v)} />
+      )}
+      {tags.includes('varietal') && (
+        <IntentInput placeholder="Which varietal or blend?" value={intent?.varietal || ''} onChange={v => setField('varietal', v)} />
+      )}
+    </div>
+  )
+}
+
+function IntentInput({ placeholder, value, onChange }) {
+  return (
+    <input
+      type="text"
+      placeholder={placeholder}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        marginTop: 8,
+        width: '100%',
+        padding: '10px 12px',
+        borderRadius: theme.radius.sm,
+        border: `1px solid ${theme.colors.cream}33`,
+        background: 'rgba(0,0,0,0.18)',
+        color: theme.colors.cream,
+        fontFamily: theme.typography.fontSans,
+        fontSize: 13,
+        outline: 'none',
+      }}
+    />
+  )
+}
