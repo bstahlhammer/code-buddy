@@ -87,7 +87,7 @@ export default function TasteBuilderScreen({
       <TopBar onBack={goBack} onHome={() => navigate('home')} />
 
       {/* Header */}
-      <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} ${theme.spacing.md}` }}>
+      <div style={{ flexShrink: 0, padding: `${theme.spacing.lg} ${theme.spacing.lg} ${theme.spacing.md}` }}>
         <div style={{
           fontSize: theme.typography.sizes.xs,
           color: theme.colors.gold,
@@ -123,8 +123,10 @@ export default function TasteBuilderScreen({
 
       {/* Sections */}
       <div className="hide-scrollbar" style={{
-        flex: 1,
+        flex: '1 1 0',
+        minHeight: 0,
         overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
         padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}`,
         display: 'flex',
         flexDirection: 'column',
