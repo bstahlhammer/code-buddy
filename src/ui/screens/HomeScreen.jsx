@@ -121,11 +121,34 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
         </div>
       )}
 
-      {/* Subtle parchment texture overlay */}
+      {/* Watercolor pigment pools — soft, blurred blobs that bleed like paint on wet paper */}
       <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.04,
-        backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px), radial-gradient(circle at 70% 80%, #fff 1px, transparent 1px)',
-        backgroundSize: '40px 40px, 60px 60px',
+        position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', top: '-8%', left: '-10%', width: '60%', height: '55%',
+          background: theme.colors.magenta, opacity: 0.28, filter: 'blur(70px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', top: '8%', right: '-12%', width: '55%', height: '50%',
+          background: theme.colors.peach, opacity: 0.18, filter: 'blur(80px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-10%', left: '-8%', width: '65%', height: '55%',
+          background: theme.colors.tealDeep, opacity: 0.32, filter: 'blur(75px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-5%', right: '-10%', width: '55%', height: '50%',
+          background: theme.colors.berry, opacity: 0.35, filter: 'blur(70px)', borderRadius: '50%',
+        }} />
+      </div>
+
+      {/* Paper grain texture overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.05,
+        backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px), radial-gradient(circle at 70% 80%, #fff 1px, transparent 1px), radial-gradient(circle at 45% 65%, #fff 0.5px, transparent 1px)',
+        backgroundSize: '40px 40px, 60px 60px, 25px 25px',
+        mixBlendMode: 'overlay',
       }} />
 
       <div style={{ position: 'relative', textAlign: 'center', marginTop: theme.spacing.xxl }}>
