@@ -321,6 +321,14 @@ export default function ScanningScreen({
         )}
       </div>
 
+      {/* Intent question, only when buying for group or gift */}
+      {(buyingFor === 'group' || buyingFor === 'gift') && (
+        <IntentPicker
+          intent={scanIntent}
+          onChange={onScanIntentChange}
+        />
+      )}
+
       {/* No-profile invite */}
       {!hasProfile && (
         <button
@@ -344,7 +352,7 @@ export default function ScanningScreen({
           }}>
             New here?
           </div>
-          Build your taste profile while we scan — better matches in 60 seconds. →
+          Build your taste profile while we scan. Better matches in 60 seconds. →
         </button>
       )}
     </div>
