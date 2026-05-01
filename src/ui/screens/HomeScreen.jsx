@@ -77,7 +77,14 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        background: `radial-gradient(ellipse at top, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 70%)`,
+        background: `
+          radial-gradient(ellipse 70% 50% at 18% 12%, ${theme.colors.magentaBright}55 0%, transparent 60%),
+          radial-gradient(ellipse 60% 45% at 88% 22%, ${theme.colors.peach}40 0%, transparent 55%),
+          radial-gradient(ellipse 80% 55% at 12% 95%, ${theme.colors.teal}50 0%, transparent 60%),
+          radial-gradient(ellipse 65% 50% at 95% 88%, ${theme.colors.berry}66 0%, transparent 60%),
+          radial-gradient(ellipse 90% 70% at 50% 50%, ${theme.colors.brandDeep}cc 0%, transparent 70%),
+          linear-gradient(168deg, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 55%, #0F0617 100%)
+        `,
         padding: `${theme.spacing.xxl} ${theme.spacing.xl}`,
         justifyContent: 'space-between',
         position: 'relative',
