@@ -105,32 +105,25 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
         overflow: 'hidden',
       }}
     >
-      {/* Auth chip — only shown when signed in */}
+      {/* Auth chip — initial only, no "Account" label */}
       {user && (
         <div style={{ position: 'absolute', top: theme.spacing.lg, right: theme.spacing.lg, zIndex: 2 }}>
           <a
             href="/account"
             title="Account"
+            aria-label="Account"
             style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'rgba(255,255,255,0.06)',
-              border: `1px solid ${theme.colors.gold}55`,
-              borderRadius: theme.radius.pill,
-              padding: '4px 14px 4px 4px',
-              color: theme.colors.cream,
-              fontFamily: theme.typography.fontSans,
-              fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-              textDecoration: 'none',
-            }}
-          >
-            <span style={{
-              width: 24, height: 24, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 36, height: 36, borderRadius: '50%',
               background: `linear-gradient(180deg, ${theme.colors.goldBright}, ${theme.colors.gold})`,
               color: theme.colors.brandDark,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, fontSize: 12,
-            }}>{initial}</span>
-            Account
+              fontFamily: theme.typography.fontSans,
+              fontWeight: 700, fontSize: 14,
+              textDecoration: 'none',
+              boxShadow: `0 4px 14px ${theme.colors.brandDark}99`,
+            }}
+          >
+            {initial}
           </a>
         </div>
       )}
