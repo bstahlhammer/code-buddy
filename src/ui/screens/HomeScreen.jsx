@@ -77,7 +77,14 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        background: `radial-gradient(ellipse at top, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 70%)`,
+        background: `
+          radial-gradient(ellipse 70% 50% at 18% 12%, ${theme.colors.magentaBright}55 0%, transparent 60%),
+          radial-gradient(ellipse 60% 45% at 88% 22%, ${theme.colors.peach}40 0%, transparent 55%),
+          radial-gradient(ellipse 80% 55% at 12% 95%, ${theme.colors.teal}50 0%, transparent 60%),
+          radial-gradient(ellipse 65% 50% at 95% 88%, ${theme.colors.berry}66 0%, transparent 60%),
+          radial-gradient(ellipse 90% 70% at 50% 50%, ${theme.colors.brandDeep}cc 0%, transparent 70%),
+          linear-gradient(168deg, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 55%, #0F0617 100%)
+        `,
         padding: `${theme.spacing.xxl} ${theme.spacing.xl}`,
         justifyContent: 'space-between',
         position: 'relative',
@@ -114,11 +121,34 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
         </div>
       )}
 
-      {/* Subtle parchment texture overlay */}
+      {/* Watercolor pigment pools — soft, blurred blobs that bleed like paint on wet paper */}
       <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.04,
-        backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px), radial-gradient(circle at 70% 80%, #fff 1px, transparent 1px)',
-        backgroundSize: '40px 40px, 60px 60px',
+        position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', top: '-8%', left: '-10%', width: '60%', height: '55%',
+          background: theme.colors.magenta, opacity: 0.28, filter: 'blur(70px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', top: '8%', right: '-12%', width: '55%', height: '50%',
+          background: theme.colors.peach, opacity: 0.18, filter: 'blur(80px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-10%', left: '-8%', width: '65%', height: '55%',
+          background: theme.colors.tealDeep, opacity: 0.32, filter: 'blur(75px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-5%', right: '-10%', width: '55%', height: '50%',
+          background: theme.colors.berry, opacity: 0.35, filter: 'blur(70px)', borderRadius: '50%',
+        }} />
+      </div>
+
+      {/* Paper grain texture overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.05,
+        backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px), radial-gradient(circle at 70% 80%, #fff 1px, transparent 1px), radial-gradient(circle at 45% 65%, #fff 0.5px, transparent 1px)',
+        backgroundSize: '40px 40px, 60px 60px, 25px 25px',
+        mixBlendMode: 'overlay',
       }} />
 
       <div style={{ position: 'relative', textAlign: 'center', marginTop: theme.spacing.xxl }}>
