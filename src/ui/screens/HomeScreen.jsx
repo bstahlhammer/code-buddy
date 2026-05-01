@@ -124,7 +124,7 @@ function TasteProfileCard({ tasteProfile, onTap }) {
   )
 }
 
-function RecentScansStrip({ scans, onOpen }) {
+function RecentScansStrip({ scans, onOpen, onAddWine }) {
   return (
     <div>
       <div style={{
@@ -132,32 +132,60 @@ function RecentScansStrip({ scans, onOpen }) {
         letterSpacing: '0.2em', textTransform: 'uppercase',
         color: `${theme.colors.cream}aa`, marginBottom: 8,
       }}>
-        Pick up where you left off
+        What did you enjoy from your recent scans?
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {scans.map(s => (
-          <button
-            key={s.id}
-            onClick={() => onOpen?.(s)}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              width: '100%', textAlign: 'left',
-              padding: '10px 14px',
-              background: 'rgba(255,255,255,0.06)',
-              border: `1px solid ${theme.colors.cream}22`,
-              borderRadius: theme.radius.sm,
-              color: theme.colors.cream,
-              fontFamily: theme.typography.fontSans,
-              fontSize: 13,
-              cursor: 'pointer',
-            }}
-          >
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {s.location_label || `${s.wine_count} wine${s.wine_count === 1 ? '' : 's'} scanned`}
-            </span>
-            <span style={{ opacity: 0.6, fontSize: 11 }}>Rate →</span>
-          </button>
-        ))}
+        {scans.map(s => {
+          const date = formatScanDate(s.created_at)
+          const place = (s.location_label || '').trim()
+          const primary = date ? `Scan from ${date}` : `${s.wine_count} wine${s.wine_count === 1 ? '' : 's'} scanned`
+          return (
+            <button
+              key={s.id}
+              onClick={() => onOpen?.(s)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', textAlign: 'left',
+                padding: '10px 14px',
+                background: 'rgba(255,255,255,0.06)',
+                border: `1px solid ${theme.colors.cream}22`,
+                borderRadius: theme.radius.sm,
+                color: theme.colors.cream,
+                fontFamily: theme.typography.fontSans,
+                fontSize: 13,
+                cursor: 'pointer',
+                gap: 10,
+              }}
+            >
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                {primary}
+                {place && (
+                  <span style={{ opacity: 0.7 }}> · {place}</span>
+                )}
+              </span>
+              <span style={{ opacity: 0.7, fontSize: 11, flexShrink: 0 }}>Tell us →</span>
+            </button>
+          )
+        })}
+
+        <button
+          onClick={onAddWine}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            width: '100%', textAlign: 'left',
+            padding: '10px 14px',
+            background: 'rgba(255,255,255,0.03)',
+            border: `1px dashed ${theme.colors.cream}44`,
+            borderRadius: theme.radius.sm,
+            color: theme.colors.cream,
+            fontFamily: theme.typography.fontSans,
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          <span>+ Add a wine I drank</span>
+          <span style={{ opacity: 0.7, fontSize: 11 }}>Log it →</span>
+        </button>
       </div>
     </div>
   )
