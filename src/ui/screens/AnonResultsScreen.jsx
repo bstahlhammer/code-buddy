@@ -9,14 +9,14 @@ import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
 
 const REASON_COPY = {
-  too_blurry:       'The image was a little blurry — try holding steadier.',
-  too_dark:         'It was too dark — move toward better light.',
-  too_far:          'You were too far away — get closer so the labels fill the frame.',
-  glare:            'There was glare on the labels — change angle or shade the page.',
-  angle_skewed:     'The angle was skewed — square the camera to the list or bottle.',
-  label_cut_off:    'Part of the label was cut off — re-frame to include the full label.',
+  too_blurry:       'The image was a little blurry, try holding steadier.',
+  too_dark:         'It was too dark, move toward better light.',
+  too_far:          'You were too far away, get closer so the labels fill the frame.',
+  glare:            'There was glare on the labels, change angle or shade the page.',
+  angle_skewed:     'The angle was skewed, square the camera to the list or bottle.',
+  label_cut_off:    'Part of the label was cut off, re-frame to include the full label.',
   not_a_wine_image: 'I could not find any wine text in this image.',
-  list_too_dense:   'The list was too dense to read at once — try one section.',
+  list_too_dense:   'The list was too dense to read at once, try one section.',
 }
 
 function normalizeScanResult(scannedWines) {

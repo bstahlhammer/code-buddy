@@ -21,7 +21,7 @@ const ROLE_META = {
 
 export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap, matchScore, matchExplanation }) {
   const meta = ROLE_META[role] || ROLE_META.topPick
-  const priceStr = wine.price && wine.price !== '—' && String(wine.price).trim() !== ''
+  const priceStr = wine.price && wine.price !== ',' && String(wine.price).trim() !== ''
     ? (String(wine.price).startsWith('$') ? wine.price : `$${wine.price}`)
     : null
   const subline = [wine.vintage, wine.region, wine.grape, priceStr].filter(v => v && String(v).trim() !== '').join(' · ')

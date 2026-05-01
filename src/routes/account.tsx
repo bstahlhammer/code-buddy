@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client'
 export const Route = createFileRoute('/account')({
   head: () => ({
     meta: [
-      { title: 'Account — Wine Flight' },
+      { title: 'Account, Wine Flight' },
       { name: 'description', content: 'Manage your Wine Flight account, sign out, or permanently delete your data.' },
     ],
   }),
@@ -41,7 +41,7 @@ function AccountPage() {
     try {
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData?.session?.access_token
-      if (!token) throw new Error('Session expired — please sign in again.')
+      if (!token) throw new Error('Session expired, please sign in again.')
 
       const { error: fnErr } = await supabase.functions.invoke('delete-account', {
         headers: { Authorization: `Bearer ${token}` },

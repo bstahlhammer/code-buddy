@@ -4,7 +4,7 @@ import { LegalLayout } from '@/ui/components/LegalLayout'
 export const Route = createFileRoute('/privacy')({
   head: () => ({
     meta: [
-      { title: 'Privacy Policy — Wine Flight' },
+      { title: 'Privacy Policy, Wine Flight' },
       { name: 'description', content: 'How Wine Flight collects, uses, and protects your wine taste data and personal information.' },
     ],
   }),
@@ -53,7 +53,7 @@ function PrivacyPage() {
       <ul>
         <li>To create and secure your account.</li>
         <li>To compute and improve your personalized wine recommendations.</li>
-        <li>To send transactional emails (verification, password reset) — not marketing.</li>
+        <li>To send transactional emails (verification, password reset), not marketing.</li>
         <li>To diagnose bugs and prevent abuse of our AI endpoints.</li>
       </ul>
 

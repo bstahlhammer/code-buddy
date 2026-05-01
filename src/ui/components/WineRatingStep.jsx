@@ -551,7 +551,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
         fontStyle: 'italic',
         lineHeight: 1.4,
       }}>
-        Don't know the names? Describe what you like in your own words — "smooth reds, nothing too dry" — and we'll translate it into your taste profile.
+        Don't know the names? Describe what you like in your own words, "smooth reds, nothing too dry", and we'll translate it into your taste profile.
       </p>
       <textarea
         value={text}
