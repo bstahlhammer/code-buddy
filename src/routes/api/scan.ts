@@ -252,7 +252,7 @@ export const Route = createFileRoute('/api/scan')({
           : `data:image/jpeg;base64,${payload.imageBase64}`
 
         const abort = new AbortController()
-        const timeout = setTimeout(() => abort.abort(), 38_000)
+        const timeout = setTimeout(() => abort.abort(), 55_000)
         try {
           const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
@@ -262,7 +262,7 @@ export const Route = createFileRoute('/api/scan')({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-3-flash-preview',
+              model: 'google/gemini-2.5-flash',
               stream: false,
               temperature: 0.1,
               messages: [
