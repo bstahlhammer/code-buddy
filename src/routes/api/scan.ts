@@ -57,16 +57,15 @@ If "partial" or "unreadable", populate retakeReasons with 1-3 short, user-friend
 "too_blurry", "too_dark", "too_far", "glare", "angle_skewed", "label_cut_off", "not_a_wine_image", "list_too_dense".
 
 STEP 2 — EXTRACT WINES (only the ones you can actually read):
-Scan the image SYSTEMATICALLY — top-to-bottom, left-to-right. Do not stop early. If there are 30 readable bottles or list lines, return all 30. Missing real wines is just as bad as inventing fake ones.
+Scan the image SYSTEMATICALLY, top-to-bottom and left-to-right. Do not stop early. If there are 30 readable bottles or list lines, return all 30. Be generous: when in doubt about a partially legible wine, include it with a lower confidence score rather than dropping it.
 
-GROUNDING RULES — these are strict:
-- The "name" field MUST be a specific wine ACTUALLY VISIBLE in the image. Read it off the label, list line, or shelf tag. Never infer wines from context, store name, neighboring bottles, or general knowledge of what a place "probably" carries.
-- If you are not directly reading the wine's text in this image, DO NOT include it. When in doubt, leave it out.
-- NEVER return OCR fragments, store text, shelf signage, category labels, initials, or single loose words as wines.
-- A producer/brand alone is NOT enough unless a visible vintage, grape, region, cuvée, appellation, or price confirms a specific wine.
-- If you can only read fragments like "BY", "Cs", "DECO", or a lone producer name, return no wine for that fragment.
+GROUNDING RULES:
+- The "name" field should be a wine actually visible in the image. Read it off the label, list line, or shelf tag — do not invent wines from store context or general knowledge.
+- If you can read most of a wine name and at least one supporting detail (vintage, region, grape, producer, price), include it. Lower the confidence if the read is partial.
+- Avoid returning OCR fragments, store signage, category labels, or single loose words as wines.
+- A producer/brand alone is okay if there's any other supporting detail (vintage, grape, region, price, cuvée). If only an isolated brand word is visible with nothing else, leave it out.
 - If readability is "unreadable", return an empty wines array.
-- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels. Set confidence below 35 if you are guessing — those will be dropped.
+- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read it. Use lower scores (20-40) for partial reads — they will be kept and shown to the user with a "we may have read this wrong" warning.
 
 OUTPUT RULES:
 - Use the extract_wines tool only.
