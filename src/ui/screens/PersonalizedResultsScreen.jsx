@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch } from '@/core/api'
+import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
 import WineCard from '../components/WineCard.jsx'
 import SortToggle from '../components/SortToggle.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
+import FilterBar from '../components/FilterBar.jsx'
+import FilterSheet from '../components/FilterSheet.jsx'
 
 const SORT_OPTIONS = [
   { value: 'match',          label: 'My Match' },
