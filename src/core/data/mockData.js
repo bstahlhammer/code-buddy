@@ -1,4 +1,29 @@
-export const wines = [
+import { inferColorFromGrape, inferMakerFromName } from '../engine/filterEngine.js'
+
+// Explicit overrides for makers where the auto-inference is wrong
+// (e.g. wines whose names start with "The" or otherwise don't lead with the maker).
+const MAKER_OVERRIDES = {
+  'The Prisoner Red Blend':                              'The Prisoner Wine Co.',
+  "Stag's Leap Artemis Cabernet":                        "Stag's Leap Wine Cellars",
+  'Whispering Angel Rosé':                               'Château d\'Esclans',
+  'The Walking Dead Shiraz':                             'The Walking Dead',
+  'Layer Cake Malbec':                                   'Layer Cake',
+  'Apothic Red':                                         'Apothic',
+  'Seven Deadly Zins Old Vine Zinfandel':                'Michael David Winery',
+  'Cune (CVNE) Monopole White Rioja':                    'CVNE',
+  'Bartenura Moscato d\'Asti':                           'Bartenura',
+  'Marchesi de\' Frescobaldi Nipozzano Chianti Riserva': 'Frescobaldi',
+}
+
+// Wines with documented certifications (organic / biodynamic / natural / low-sulfite).
+// Conservative — only wineries with public, verifiable practices.
+const CERTIFICATION_OVERRIDES = {
+  'Frog\'s Leap Zinfandel':            ['organic'],
+  'Ridge Geyserville':                 ['organic'],
+  'Bonterra':                          ['organic', 'biodynamic'],
+}
+
+const RAW_WINES = [
   // ── California Reds ──────────────────────────────────────────────
   { id:1, name:'Caymus Cabernet Sauvignon', vintage:'2022', region:'Napa Valley, CA', grape:'Cabernet Sauvignon', price:'$92', priceNum:92, rating:93, ratingLabel:'Outstanding', body:85, sweetness:22, tannin:65, acidity:48, isValue:false, isCrowd:true, tasting:'Rich blackcurrant, mocha, and velvety smooth finish — polished and immediately accessible.', pairings:['Grilled steak','BBQ brisket','Dark chocolate','Mushroom pasta'], retailers:['costco','grocery','restaurant','wine_shop'] },
   { id:2, name:"Stag's Leap Artemis Cabernet", vintage:'2021', region:'Napa Valley, CA', grape:'Cabernet Sauvignon', price:'$65', priceNum:65, rating:94, ratingLabel:'Outstanding', body:85, sweetness:14, tannin:80, acidity:58, isValue:false, isCrowd:false, tasting:'Cassis, dried herbs, and cedar with firm tannins and a lingering, structured finish.', pairings:['Filet mignon','Lamb rack','Aged gouda','Wild mushroom risotto'], retailers:['whole_foods','restaurant','wine_shop'] },
