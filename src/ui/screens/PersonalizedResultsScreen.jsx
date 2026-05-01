@@ -147,6 +147,34 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
 
       {/* Scrollable content */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+        {/* Filter bar */}
+        {scoredWines.length > 0 && (
+          <FilterBar
+            filters={filters}
+            onOpen={() => setFilterOpen(true)}
+            onChange={setFilters}
+            resultCount={filteredWines.length}
+            totalCount={scoredWines.length}
+          />
+        )}
+
+        {/* Empty filtered set */}
+        {scoredWines.length > 0 && filteredWines.length === 0 && (
+          <div style={{ padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}` }}>
+            <div style={{
+              padding: theme.spacing.md, borderRadius: theme.radius.md,
+              border: `1px solid ${theme.colors.border}`, background: theme.colors.surfaceAlt,
+              fontFamily: theme.typography.fontSans, fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+            }}>
+              No wines match these filters. <button
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                style={{ background: 'transparent', border: 'none', color: theme.colors.gold, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >Clear filters</button> to see your full list.
+            </div>
+          </div>
+        )}
+
         {/* Retake guidance — when scan was partial */}
         {showRetakePanel && (
           <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} 0` }}>
