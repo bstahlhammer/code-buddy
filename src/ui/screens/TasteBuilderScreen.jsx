@@ -340,7 +340,7 @@ function ProfilePreview({ preview }) {
         fontFamily: theme.typography.fontSans,
         fontStyle: 'italic',
       }}>
-        Your profile will appear here as you go.
+        Pick a starting archetype, rate a bottle, or describe what you like to see your profile take shape.
       </div>
     )
   }
