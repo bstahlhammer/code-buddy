@@ -67,22 +67,29 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
     }))
   }, [baseWines, tasteProfile])
 
+  // Facets are computed from the full (unfiltered) scored set so the
+  // user can always re-add a facet they just filtered away.
+  const facets = useMemo(() => getFilterFacets(scoredWines), [scoredWines])
+
+  // Apply user filters BEFORE hero-pick selection and sort.
+  const filteredWines = useMemo(() => applyFilters(scoredWines, filters), [scoredWines, filters])
+
   const topMatch = useMemo(() => {
-    if (!tasteProfile || scoredWines.length === 0) return 0
-    return Math.max(...scoredWines.map(w => w.computedMatch ?? 0))
-  }, [scoredWines, tasteProfile])
-  const noStrongMatches = tasteProfile && scoredWines.length > 0 && topMatch < 80
+    if (!tasteProfile || filteredWines.length === 0) return 0
+    return Math.max(...filteredWines.map(w => w.computedMatch ?? 0))
+  }, [filteredWines, tasteProfile])
+  const noStrongMatches = tasteProfile && filteredWines.length > 0 && topMatch < 80
 
   const lowConfidenceCount = useMemo(
-    () => scoredWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
-    [scoredWines]
+    () => filteredWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
+    [filteredWines]
   )
-  const showLowConfidenceWarning = fromScan && scoredWines.length > 0 &&
-    lowConfidenceCount / scoredWines.length >= 0.3
+  const showLowConfidenceWarning = fromScan && filteredWines.length > 0 &&
+    lowConfidenceCount / filteredWines.length >= 0.3
 
   const heroPicks = useMemo(
-    () => chooseHeroPicks(scoredWines, tasteProfile),
-    [scoredWines, tasteProfile]
+    () => chooseHeroPicks(filteredWines, tasteProfile),
+    [filteredWines, tasteProfile]
   )
   const heroIds = useMemo(
     () => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)),
@@ -90,9 +97,9 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   )
 
   const sortedRest = useMemo(() => {
-    const rest = scoredWines.filter(w => !heroIds.has(w.id ?? w.name))
+    const rest = filteredWines.filter(w => !heroIds.has(w.id ?? w.name))
     return sortWines(rest, sortKey, tasteProfile)
-  }, [scoredWines, heroIds, sortKey, tasteProfile])
+  }, [filteredWines, heroIds, sortKey, tasteProfile])
 
   const showRetakePanel = fromScan && readability !== 'good'
 
