@@ -448,6 +448,15 @@ export default function App() {
       </ScreenTransition>
       {showNav && <BottomNav activeTab={activeTab} navigate={navigate} />}
       {toast && <Toast message={toast} />}
+      {showAddWine && (
+        <AddWineSheet
+          onClose={() => setShowAddWine(false)}
+          onSaved={(label) => {
+            setShowAddWine(false)
+            showToast(label || 'Wine logged')
+          }}
+        />
+      )}
     </DeviceFrame>
   )
 }
