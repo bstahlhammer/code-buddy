@@ -1,4 +1,29 @@
-export const wines = [
+import { inferColorFromGrape, inferMakerFromName } from '../engine/filterEngine.js'
+
+// Explicit overrides for makers where the auto-inference is wrong
+// (e.g. wines whose names start with "The" or otherwise don't lead with the maker).
+const MAKER_OVERRIDES = {
+  'The Prisoner Red Blend':                              'The Prisoner Wine Co.',
+  "Stag's Leap Artemis Cabernet":                        "Stag's Leap Wine Cellars",
+  'Whispering Angel Rosé':                               'Château d\'Esclans',
+  'The Walking Dead Shiraz':                             'The Walking Dead',
+  'Layer Cake Malbec':                                   'Layer Cake',
+  'Apothic Red':                                         'Apothic',
+  'Seven Deadly Zins Old Vine Zinfandel':                'Michael David Winery',
+  'Cune (CVNE) Monopole White Rioja':                    'CVNE',
+  'Bartenura Moscato d\'Asti':                           'Bartenura',
+  'Marchesi de\' Frescobaldi Nipozzano Chianti Riserva': 'Frescobaldi',
+}
+
+// Wines with documented certifications (organic / biodynamic / natural / low-sulfite).
+// Conservative — only wineries with public, verifiable practices.
+const CERTIFICATION_OVERRIDES = {
+  'Frog\'s Leap Zinfandel':            ['organic'],
+  'Ridge Geyserville':                 ['organic'],
+  'Bonterra':                          ['organic', 'biodynamic'],
+}
+
+const RAW_WINES = [
   // ── California Reds ──────────────────────────────────────────────
   { id:1, name:'Caymus Cabernet Sauvignon', vintage:'2022', region:'Napa Valley, CA', grape:'Cabernet Sauvignon', price:'$92', priceNum:92, rating:93, ratingLabel:'Outstanding', body:85, sweetness:22, tannin:65, acidity:48, isValue:false, isCrowd:true, tasting:'Rich blackcurrant, mocha, and velvety smooth finish — polished and immediately accessible.', pairings:['Grilled steak','BBQ brisket','Dark chocolate','Mushroom pasta'], retailers:['costco','grocery','restaurant','wine_shop'] },
   { id:2, name:"Stag's Leap Artemis Cabernet", vintage:'2021', region:'Napa Valley, CA', grape:'Cabernet Sauvignon', price:'$65', priceNum:65, rating:94, ratingLabel:'Outstanding', body:85, sweetness:14, tannin:80, acidity:58, isValue:false, isCrowd:false, tasting:'Cassis, dried herbs, and cedar with firm tannins and a lingering, structured finish.', pairings:['Filet mignon','Lamb rack','Aged gouda','Wild mushroom risotto'], retailers:['whole_foods','restaurant','wine_shop'] },
@@ -58,6 +83,15 @@ export const wines = [
   { id:49, name:'Barefoot Bubbly Brut Rosé', vintage:'NV', region:'California', grape:'Sparkling rosé blend', price:'$10', priceNum:10, rating:85, ratingLabel:'Popular pick', body:28, sweetness:35, tannin:5, acidity:62, isValue:true, isCrowd:true, tasting:'Strawberry, light citrus, and toasty bubbles — fun, festive, and affordable.', pairings:['Brunch','Fresh fruit','Light desserts','Charcuterie'], retailers:['costco','trader_joes','whole_foods','grocery'] },
   { id:50, name:'Layer Cake Malbec', vintage:'2022', region:'Mendoza, Argentina', grape:'Malbec', price:'$13', priceNum:13, rating:87, ratingLabel:'Widely praised', body:76, sweetness:18, tannin:60, acidity:54, isValue:true, isCrowd:true, tasting:'Ripe plum, blueberry, and cocoa with a smooth, crowd-pleasing finish at a great everyday price.', pairings:['Burgers','BBQ','Grilled chicken','Pizza'], retailers:['costco','trader_joes','whole_foods','grocery'] },
 ]
+
+// Enrich every wine with derived filter fields. UI never re-derives these —
+// it just reads w.color / w.maker / w.certifications.
+export const wines = RAW_WINES.map((w) => ({
+  ...w,
+  color: w.color || inferColorFromGrape(w.grape),
+  maker: w.maker || MAKER_OVERRIDES[w.name] || inferMakerFromName(w.name, w.grape),
+  certifications: w.certifications || CERTIFICATION_OVERRIDES[w.name] || [],
+}))
 
 // Search-only entries: well-known bottles users may have tried but that aren't
 // in the recommendation catalog. UI uses these for the palate-rating step;

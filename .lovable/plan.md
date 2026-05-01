@@ -1,96 +1,95 @@
-## Wine Flight — Onboarding, Profile & Results Polish
+## Goal
 
-A consolidated plan covering copy fixes, the taste-builder scroll bug, smarter scan results, label thumbnails, filtering, and a group/gift intent prompt.
+Let users narrow scan results by **price, color, varietal, maker, region, and certifications** (natural / biodynamic / organic / low-sulfite). Filters appear on both `PersonalizedResultsScreen` and `AnonResultsScreen`. Match Score remains the default sort; filters stack on top.
 
----
+## 1. Extend the wine data schema
 
-### 1. Copy & CTA cleanup (small, fast)
+Three new fields, derived where possible so we don't have to retype every row.
 
-- **HomeScreen** (`src/ui/screens/HomeScreen.jsx`): when `hasProfile` is true, no CTA should imply "build". The primary CTA stays "Find more wines I'll love"; the TasteProfileCard is the way to update. Add a small "Update my taste profile" link below the card for users who want to refine.
-- **Em-dash sweep**: replace every `—` and `–` with either a colon, comma, or period across user-facing strings. Files in scope (UI copy only — not engine math comments):
-  - `src/ui/screens/HomeScreen.jsx`, `ScanningScreen.jsx`, `ScanPromptScreen.jsx`, `AnonResultsScreen.jsx`, `PersonalizedResultsScreen.jsx`, `TasteBuilderScreen.jsx`, `WineDetailScreen.jsx`, `ProfileScreen.jsx`, `ProfileRevealScreen.jsx`, `HistoryScreen.jsx`, `RateBottlesScreen.jsx`, `GuidedQuizScreen.jsx`, `QuizScreen.jsx`, `AuthScreen.jsx`
-  - `src/ui/components/HeroPickCard.jsx`, `WineCard.jsx`, `UpsellBanner.jsx`, `MatchScore.jsx`, `WineRatingStep.jsx`, `WineSearchStep.jsx`
-  - `src/routes/privacy.tsx`, `terms.tsx`, `index.tsx`, `account.tsx`
-  - `src/core/data/wineFacts.js` and any `tasting`/`reasoning` strings produced in engines (keep punctuation natural — replace with comma/period, not just deletion).
+`src/core/data/mockData.js`:
+- Add explicit fields to each wine: `color` (`'red' | 'white' | 'rose' | 'sparkling' | 'dessert'`), `maker` (string), `certifications` (`string[]` from: `'natural'`, `'biodynamic'`, `'organic'`, `'low_sulfite'`).
+- For speed, add a small helper `inferColorFromGrape(grape)` and apply it in a one-time `wines.map(...)` pass at module load to backfill `color` for any row that doesn't set it explicitly. We'll set certifications/maker explicitly only on wines where it's true / known; everything else gets `[]` and a maker derived from the wine name (text before the grape/varietal token).
 
-### 2. Fix the Taste Builder scroll bug
+This keeps the diff manageable while shipping all four filter facets from day one.
 
-`TasteBuilderScreen.jsx` wraps content in a flex column with `min-height: 0` but the inner scroll container shares that flex context with a header AND a fixed footer. On short viewports the inner `overflow-y: auto` div can lock at zero scroll height. Fix:
-- Give the scroll container an explicit `flex: 1 1 0`, `minHeight: 0`, and ensure its parent chain (`<DeviceFrame>` content / route shell) does not double-constrain height.
-- When a Section is open, scroll it into view so users can see the just-revealed content.
+## 2. New filter engine
 
-### 3. Empty profile preview — replace "The Bold Red Lover"
+`src/core/engine/filterEngine.js` (new) exporting:
 
-The `ProfilePreview` placeholder currently shows a hint string but the source of "The Bold Red Lover" is the empty state of TasteProfileCard / archetype fallback rendering on results screens.
-- TasteBuilder empty preview: change to a friendlier prompt: "Pick a starting archetype or rate one bottle to see your profile take shape." No archetype name shown.
-- HomeScreen TasteProfileCard: render only when `tasteProfile` truly exists (already does), and never substitute a default archetype name when ratings are zero.
-- Audit `nearestTasteProfile` callers to ensure we never render an archetype label when the underlying palate has no signal.
+```text
+applyFilters(wines, filters) -> Wine[]
+getFilterFacets(wines) -> { colors, varietals, makers, regions, certifications, priceRange:{min,max} }
+```
 
-### 4. Scanning experience — group/gift intent
+`filters` shape:
+```text
+{
+  priceMin?: number,
+  priceMax?: number,
+  colors: string[],         // OR within facet
+  varietalsInclude: string[],
+  varietalsExclude: string[],
+  makers: string[],
+  regions: string[],
+  certifications: string[], // AND across, OR within (any selected match)
+}
+```
 
-On `ScanningScreen.jsx`, after the user selects "A group" or "A gift", reveal a second question: "What are you looking for?" with these options:
-- Crowd pleaser
-- Something unique and interesting
-- A splurge
-- Something from a specific maker (free-text input)
-- Something from a specific region (free-text input)
-- A specific varietal or blend (free-text input)
+Rules: empty array = no constraint on that facet. Filters AND across facets, OR within. Heroes are filtered too — if a hero pick is filtered out, it drops from the hero rail.
 
-Multi-select up to 2. Store as `scanIntent: { mode: 'group'|'gift', tags: string[], maker?: string, region?: string, varietal?: string }` on the app state (`UncorkApp.jsx`). Pass it through to results so it can preselect filters/sort.
+Expose via `src/core/api.js`: `applyFilters`, `getFilterFacets`.
 
-Allow the user to keep typing while the scan runs (fields remain interactive). Advance to results only when scan is done AND buyingFor is chosen (intent tags optional).
+## 3. Filter UI
 
-### 5. Results screen — readout, warnings, match-first sorting
+New `src/ui/components/FilterSheet.jsx` — bottom sheet / inline panel with:
+- **Price** range (dual slider, min + max from facets).
+- **Color** — pill multi-select.
+- **Varietals** — two pill groups: *Include* and *Exclude* (mutually exclusive per varietal).
+- **Makers** — searchable pill list (collapses to "+N more" when long).
+- **Regions** — pill multi-select.
+- **Certifications** — pill multi-select with explanatory subtitle.
+- Footer: "Reset" + "Show N wines".
 
-In `AnonResultsScreen.jsx` and `PersonalizedResultsScreen.jsx`:
+New `src/ui/components/FilterBar.jsx` — compact row above the wine list showing:
+- "Filter" button (opens sheet) with badge count of active filters.
+- Active filters as removable chips.
 
-- **Readout line** under the title: "X wines identified · Y readable · sorted by Match Score". Pull `wines.length` and a count of `confidence >= 70`.
-- **Low-confidence warning**: if `wines.filter(w => w.confidence < 60).length / wines.length >= 0.3`, show a soft amber chip: "Some labels were hard to read — try a sharper photo for a complete shortlist."
-- **Match Score is the default sort** for any user with a profile (overrides previous group/approachability default per your decision). Buying-for becomes a *filter intent*, not a sort.
-- **Match Score column treatment**: every WineCard/HeroPickCard already shows a score chip when a profile exists. Make it more prominent on the list rows (right-aligned, /100 wording on first card: "92/100"), and show the existing tooltip on tap.
-- **Drill-in**: tap the Match Score chip to open a small explanation sheet using `explainMatch()` — already implemented in `MatchScore.jsx` tooltip; promote it to a full bottom sheet on small screens with the headline + axis breakdown + a "How is this calculated?" footer link explaining the body/tannin/sweetness/acidity weighting and rating bonuses.
-- **No-strong-matches banner**: if `max(matchScore) < 80`, render a soft banner above hero picks: "No strong matches on this list — here are the closest from what we found." Hero picks still render.
+Both use existing theme tokens — no new visuals.
 
-### 6. Label thumbnails (web-sourced, not the photo)
+## 4. Wire into results screens
 
-- Add an optional `labelImageUrl` to wine objects. For mock data, hand-pick public bottle-shot URLs (or use a free CDN like Unsplash placeholders) per wine in `mockData.js`.
-- For scan-derived wines, add a server lookup step in the scan pipeline: given `name + vintage + region`, query a label-image source (Wikipedia/Wikidata `P18` or a simple Google Image Search proxy via an edge function) and cache the URL on the result. If lookup fails, fall back to a generic SVG bottle silhouette tinted by wine color.
-- Render the thumbnail at 56×72 to the left of the wine name in `WineCard.jsx` and `HeroPickCard.jsx`.
+In `PersonalizedResultsScreen.jsx` and `AnonResultsScreen.jsx`:
+- Add `const [filters, setFilters] = useState(EMPTY_FILTERS)`.
+- Apply `applyFilters(scoredWines, filters)` BEFORE hero-pick selection and sort.
+- Render `<FilterBar />` between the header banners and the hero picks.
+- Update the readout count: "X of Y wines · sorted by Match Score" when filters active.
+- Empty-filtered state: friendly message + "Clear filters" button (do not hide the screen).
 
-### 7. Filters
+Match Score sort stays the default for profiled users; the no-strong-matches banner still triggers off the *filtered* set's top score.
 
-Schema additions (in `src/core/data/mockData.js` and the scan response normalizer):
-- `color`: `red | white | rose | sparkling | dessert` (derived from grape + name where missing).
-- `maker`: producer/winery name (parse from `name` for mock data; ask the model in the scan prompt).
-- `certifications`: `string[]` from `natural | biodynamic | organic | low_sulfite`.
-- `priceNum`: already present.
+## 5. Scan normalizer
 
-UI: a `<Filters />` component above the full list (collapsible), with chips/sliders:
-- Price range slider (min/max from current results).
-- Color toggle group (multi-select).
-- Varietal multi-select (built from current results' grapes).
-- Maker multi-select (built from current results' makers).
-- Certifications multi-select.
+`src/routes/api/scan.ts` already returns wine objects from the AI. Update the prompt + normalizer to also emit `color`, `maker`, `certifications` when confidently visible on the bottle/list (otherwise omit). For scan results that don't include these fields, the filter engine treats them as "unknown" and excludes them only when the user explicitly filters that facet (so a missing `certifications` won't be hidden unless the user picks a cert filter).
 
-Filters apply on top of the current sort. If `scanIntent` is set, prefill: "specific maker" → maker filter, "specific region" → region filter (new chip, derived from results), "specific varietal" → varietal filter, "splurge" → price-desc within top 25%, "unique" → exclude `isCrowd`, "crowd pleaser" → require `isCrowd`.
+## 6. Out of scope this pass
 
-### 8. Implementation order
+- Label image thumbnails (deferred from prior plan, still deferred here).
+- Server-side maker/region normalization. We use string-equality with light normalization (trim + casefold) in the filter engine.
 
-1. Copy + em-dash sweep + HomeScreen "update my taste profile" CTA.
-2. Empty-state copy fix in TasteBuilder & ProfilePreview.
-3. Taste-builder scroll fix.
-4. Scanning screen: add intent question with conditional follow-ups.
-5. Results: readout line, low-confidence warning, match-first sort, drill-in sheet, no-strong-matches banner.
-6. Wine schema additions in mockData + scan normalizer + filter UI.
-7. Label thumbnail: schema + mock URLs + render. (Server lookup for live scans is a follow-up if the simple proxy is too much for this pass — confirm before that step.)
+## Technical notes
 
-### Technical notes
+- Color inference fallback table: `Cabernet*, Pinot Noir, Zinfandel*, Sangiovese*, Tempranillo*, Gamay, Merlot, Syrah, Malbec` → red; `Chardonnay, Sauvignon Blanc, Pinot Grigio, Riesling, Viura, Moscato*` → white; anything with "rosé"/"rose" in grape → rose; "Champagne", "Prosecco", "Cava", "Sparkling" → sparkling.
+- Maker inference: split wine name on the varietal token; first segment is maker (e.g., "Caymus Cabernet Sauvignon" → "Caymus"). Where this is wrong on iconic wines (e.g., "The Prisoner Red Blend"), set `maker` explicitly.
+- Certifications: only set on wines where it's documented in the existing tasting notes (Ridge, Frog's Leap, etc.). Default `[]`.
+- All filter state lives in the screen component for now — no URL persistence yet (we can add `validateSearch` later if you want shareable filter URLs).
 
-- All copy edits respect the architecture rule: UI files only.
-- Filter logic and `scanIntent` interpretation belong behind `@/core/api` (new `applyFilters(wines, filterState)` and `intentToFilters(intent)` helpers in a new `src/core/engine/filterEngine.js`).
-- Match-Score drill-in reuses `explainMatch()`; no engine changes required for the calculation.
-- Label thumbnail server lookup, if implemented now, should be a new TanStack server route under `src/routes/api/label-image.ts` returning `{ url }` with caching headers; otherwise defer.
+## Files touched
 
-Open items to confirm before/after kickoff:
-- OK to defer the server-side label image lookup and ship mock URLs only in this pass? (Faster, less risk.)
-- For "specific maker / region / varietal" intent inputs: free-text now, or constrained dropdown built from the catalogue?
+- new: `src/core/engine/filterEngine.js`
+- new: `src/ui/components/FilterSheet.jsx`
+- new: `src/ui/components/FilterBar.jsx`
+- edited: `src/core/data/mockData.js` (add fields + inference helper)
+- edited: `src/core/api.js` (export filter API)
+- edited: `src/ui/screens/PersonalizedResultsScreen.jsx`
+- edited: `src/ui/screens/AnonResultsScreen.jsx`
+- edited: `src/routes/api/scan.ts` (extend AI output schema)

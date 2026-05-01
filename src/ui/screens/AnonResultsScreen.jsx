@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { chooseHeroPicks, sortWines } from '@/core/api'
+import { chooseHeroPicks, sortWines, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
 import WineCard from '../components/WineCard.jsx'
 import SortToggle from '../components/SortToggle.jsx'
 import UpsellBanner from '../components/UpsellBanner.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
+import FilterBar from '../components/FilterBar.jsx'
+import FilterSheet from '../components/FilterSheet.jsx'
 
 const REASON_COPY = {
   too_blurry:       'The image was a little blurry, try holding steadier.',
@@ -39,14 +41,19 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
   const hasProfile = !!tasteProfile
   const [showAll, setShowAll] = useState(false)
   const [sortKey, setSortKey] = useState('crowd')
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [filterOpen, setFilterOpen] = useState(false)
 
   const scanResult = normalizeScanResult(scannedWines)
   const scanAttempted = scanResult !== null
-  const wines = scanResult?.wines ?? []
+  const allWines = scanResult?.wines ?? []
   const readability = scanResult?.readability ?? 'good'
   const retakeReasons = scanResult?.retakeReasons ?? []
   const scanMessage = scanResult?.message
     || 'I could not identify a specific wine from that image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
+
+  const facets = useMemo(() => getFilterFacets(allWines), [allWines])
+  const wines = useMemo(() => applyFilters(allWines, filters), [allWines, filters])
 
   const heroPicks = useMemo(() => chooseHeroPicks(wines, hasProfile ? tasteProfile : null), [wines, tasteProfile, hasProfile])
   const heroIds = useMemo(() => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)), [heroPicks])
@@ -72,7 +79,8 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
   }, [wines, heroIds, sortKey, tasteProfile, hasProfile])
 
   const showRetakePanel = scanAttempted && readability !== 'good'
-  const noWines = scanAttempted && wines.length === 0
+  const noWines = scanAttempted && allWines.length === 0
+  const filteredEmpty = scanAttempted && allWines.length > 0 && wines.length === 0
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
@@ -86,13 +94,41 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
           <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
             {noWines
               ? 'Take another photo to get a reliable result'
-              : `${wines.length} wine${wines.length === 1 ? '' : 's'} identified · Tap any to explore`}
+              : `${wines.length}${wines.length !== allWines.length ? ` of ${allWines.length}` : ''} wine${allWines.length === 1 ? '' : 's'} identified · Tap any to explore`}
           </p>
         </div>
       </div>
 
       {/* Scrollable content */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+        {/* Filter bar */}
+        {allWines.length > 0 && (
+          <FilterBar
+            filters={filters}
+            onOpen={() => setFilterOpen(true)}
+            onChange={setFilters}
+            resultCount={wines.length}
+            totalCount={allWines.length}
+          />
+        )}
+
+        {/* Empty filtered set */}
+        {filteredEmpty && (
+          <div style={{ padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}` }}>
+            <div style={{
+              padding: theme.spacing.md, borderRadius: theme.radius.md,
+              border: `1px solid ${theme.colors.border}`, background: theme.colors.surfaceAlt,
+              fontFamily: theme.typography.fontSans, fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+            }}>
+              No wines match these filters. <button
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                style={{ background: 'transparent', border: 'none', color: theme.colors.gold, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >Clear filters</button> to see your full list.
+            </div>
+          </div>
+        )}
+
         {/* Retake guidance — shown when readability is partial OR fully unreadable */}
         {showRetakePanel && (
           <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} 0` }}>
@@ -236,6 +272,15 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
           </div>
         )}
       </div>
+
+      <FilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        onApply={(next) => { setFilters(next); setFilterOpen(false) }}
+        facets={facets}
+        totalWines={allWines.length}
+      />
 
       <BottomNav activeTab="scan" navigate={navigate} tasteProfile={tasteProfile} />
     </div>

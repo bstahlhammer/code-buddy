@@ -37,6 +37,14 @@ import {
 } from './engine/guidedQuizEngine.js'
 import { describePalate as _describePalate } from './ai/describePalate.functions'
 import {
+  applyFilters as _applyFilters,
+  getFilterFacets as _getFilterFacets,
+  countActiveFilters as _countActiveFilters,
+  EMPTY_FILTERS,
+  CERTIFICATION_LABELS,
+  COLOR_LABELS,
+} from './engine/filterEngine.js'
+import {
   placesAutocomplete as _placesAutocomplete,
   placesGetDetails as _placesGetDetails,
   placesNearby as _placesNearby,
@@ -189,3 +197,10 @@ export async function locateBottleInScan({ scanId, wineName }) {
     return { found: false, error: e?.message || 'unknown' }
   }
 }
+
+// ---------- Filters ----------
+
+export function applyFilters(wineList, filters) { return _applyFilters(wineList, filters) }
+export function getFilterFacets(wineList)       { return _getFilterFacets(wineList) }
+export function countActiveFilters(filters)     { return _countActiveFilters(filters) }
+export { EMPTY_FILTERS, CERTIFICATION_LABELS, COLOR_LABELS }

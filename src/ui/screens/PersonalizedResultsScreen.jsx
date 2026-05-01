@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch } from '@/core/api'
+import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
 import WineCard from '../components/WineCard.jsx'
 import SortToggle from '../components/SortToggle.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
+import FilterBar from '../components/FilterBar.jsx'
+import FilterSheet from '../components/FilterSheet.jsx'
 
 const SORT_OPTIONS = [
   { value: 'match',          label: 'My Match' },
@@ -45,6 +47,8 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   // Always default to match-first when a profile exists.
   const [sortKey, setSortKey] = useState('match')
   const [showAll, setShowAll] = useState(false)
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [filterOpen, setFilterOpen] = useState(false)
 
   // If we came from a scan, use those wines; otherwise fall back to the catalogue.
   const scanResult = normalizeScanResult(scannedWines)
@@ -63,22 +67,29 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
     }))
   }, [baseWines, tasteProfile])
 
+  // Facets are computed from the full (unfiltered) scored set so the
+  // user can always re-add a facet they just filtered away.
+  const facets = useMemo(() => getFilterFacets(scoredWines), [scoredWines])
+
+  // Apply user filters BEFORE hero-pick selection and sort.
+  const filteredWines = useMemo(() => applyFilters(scoredWines, filters), [scoredWines, filters])
+
   const topMatch = useMemo(() => {
-    if (!tasteProfile || scoredWines.length === 0) return 0
-    return Math.max(...scoredWines.map(w => w.computedMatch ?? 0))
-  }, [scoredWines, tasteProfile])
-  const noStrongMatches = tasteProfile && scoredWines.length > 0 && topMatch < 80
+    if (!tasteProfile || filteredWines.length === 0) return 0
+    return Math.max(...filteredWines.map(w => w.computedMatch ?? 0))
+  }, [filteredWines, tasteProfile])
+  const noStrongMatches = tasteProfile && filteredWines.length > 0 && topMatch < 80
 
   const lowConfidenceCount = useMemo(
-    () => scoredWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
-    [scoredWines]
+    () => filteredWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
+    [filteredWines]
   )
-  const showLowConfidenceWarning = fromScan && scoredWines.length > 0 &&
-    lowConfidenceCount / scoredWines.length >= 0.3
+  const showLowConfidenceWarning = fromScan && filteredWines.length > 0 &&
+    lowConfidenceCount / filteredWines.length >= 0.3
 
   const heroPicks = useMemo(
-    () => chooseHeroPicks(scoredWines, tasteProfile),
-    [scoredWines, tasteProfile]
+    () => chooseHeroPicks(filteredWines, tasteProfile),
+    [filteredWines, tasteProfile]
   )
   const heroIds = useMemo(
     () => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)),
@@ -86,9 +97,9 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   )
 
   const sortedRest = useMemo(() => {
-    const rest = scoredWines.filter(w => !heroIds.has(w.id ?? w.name))
+    const rest = filteredWines.filter(w => !heroIds.has(w.id ?? w.name))
     return sortWines(rest, sortKey, tasteProfile)
-  }, [scoredWines, heroIds, sortKey, tasteProfile])
+  }, [filteredWines, heroIds, sortKey, tasteProfile])
 
   const showRetakePanel = fromScan && readability !== 'good'
 
@@ -105,8 +116,8 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
               </h1>
               <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
                 {fromScan
-                  ? `${scoredWines.length} wine${scoredWines.length === 1 ? '' : 's'} identified · sorted by Match Score`
-                  : `${scoredWines.length} wines · Tap any to explore`}
+                  ? `${filteredWines.length}${filteredWines.length !== scoredWines.length ? ` of ${scoredWines.length}` : ''} wine${scoredWines.length === 1 ? '' : 's'} identified · sorted by Match Score`
+                  : `${filteredWines.length} wines · Tap any to explore`}
               </p>
             </div>
             {/* Identity chip */}
@@ -136,6 +147,34 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
 
       {/* Scrollable content */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+        {/* Filter bar */}
+        {scoredWines.length > 0 && (
+          <FilterBar
+            filters={filters}
+            onOpen={() => setFilterOpen(true)}
+            onChange={setFilters}
+            resultCount={filteredWines.length}
+            totalCount={scoredWines.length}
+          />
+        )}
+
+        {/* Empty filtered set */}
+        {scoredWines.length > 0 && filteredWines.length === 0 && (
+          <div style={{ padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}` }}>
+            <div style={{
+              padding: theme.spacing.md, borderRadius: theme.radius.md,
+              border: `1px solid ${theme.colors.border}`, background: theme.colors.surfaceAlt,
+              fontFamily: theme.typography.fontSans, fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+            }}>
+              No wines match these filters. <button
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                style={{ background: 'transparent', border: 'none', color: theme.colors.gold, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >Clear filters</button> to see your full list.
+            </div>
+          </div>
+        )}
+
         {/* Retake guidance — when scan was partial */}
         {showRetakePanel && (
           <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} 0` }}>
@@ -311,6 +350,15 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
           </div>
         )}
       </div>
+
+      <FilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        onApply={(next) => { setFilters(next); setFilterOpen(false) }}
+        facets={facets}
+        totalWines={scoredWines.length}
+      />
 
       <BottomNav activeTab="scan" navigate={navigate} tasteProfile={tasteProfile} />
     </div>
