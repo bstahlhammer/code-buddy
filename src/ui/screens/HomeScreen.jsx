@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { theme } from '../theme/theme.js'
+import { useScanHistory } from '../hooks/useScanHistory.js'
 import logoWatercolor from '@/assets/logo-watercolor.png'
 
 function Monogram() {
@@ -57,13 +58,26 @@ function GoogleLogo() {
   )
 }
 
-export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
+export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn, onOpenScan }) {
   const user = auth?.user
   const profileName = auth?.profile?.display_name
   const initial = (profileName || user?.email || '?').trim()[0]?.toUpperCase() ?? '?'
+  const hasProfile = !!tasteProfile
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [recentScans, setRecentScans] = useState([])
+  const { listScans } = useScanHistory()
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    ;(async () => {
+      const { scans } = await listScans()
+      if (!cancelled) setRecentScans((scans || []).slice(0, 3))
+    })()
+    return () => { cancelled = true }
+  }, [user, listScans])
 
   async function handleGoogle() {
     setError(null); setBusy(true)
