@@ -252,7 +252,7 @@ export const Route = createFileRoute('/api/scan')({
           : `data:image/jpeg;base64,${payload.imageBase64}`
 
         const abort = new AbortController()
-        const timeout = setTimeout(() => abort.abort(), 38_000)
+        const timeout = setTimeout(() => abort.abort(), 55_000)
         try {
           const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
