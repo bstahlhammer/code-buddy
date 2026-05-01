@@ -41,9 +41,9 @@ function normalizeScanResult(scannedWines) {
   return null
 }
 
-export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfile, buyingFor, scannedWines, onWineSelect }) {
-  const defaultSort = buyingFor === 'group' ? 'approachability' : 'match'
-  const [sortKey, setSortKey] = useState(defaultSort)
+export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfile, buyingFor, scanIntent, scannedWines, onWineSelect }) {
+  // Always default to match-first when a profile exists.
+  const [sortKey, setSortKey] = useState('match')
   const [showAll, setShowAll] = useState(false)
 
   // If we came from a scan, use those wines; otherwise fall back to the catalogue.
@@ -53,9 +53,32 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   const readability = scanResult?.readability ?? 'good'
   const retakeReasons = scanResult?.retakeReasons ?? []
 
+  // Compute match score for every wine so we can detect "no strong matches"
+  // and flag low-confidence reads.
+  const scoredWines = useMemo(() => {
+    if (!tasteProfile) return baseWines
+    return baseWines.map(w => ({
+      ...w,
+      computedMatch: w.computedMatch ?? computeMatch(w, tasteProfile),
+    }))
+  }, [baseWines, tasteProfile])
+
+  const topMatch = useMemo(() => {
+    if (!tasteProfile || scoredWines.length === 0) return 0
+    return Math.max(...scoredWines.map(w => w.computedMatch ?? 0))
+  }, [scoredWines, tasteProfile])
+  const noStrongMatches = tasteProfile && scoredWines.length > 0 && topMatch < 80
+
+  const lowConfidenceCount = useMemo(
+    () => scoredWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
+    [scoredWines]
+  )
+  const showLowConfidenceWarning = fromScan && scoredWines.length > 0 &&
+    lowConfidenceCount / scoredWines.length >= 0.3
+
   const heroPicks = useMemo(
-    () => chooseHeroPicks(baseWines, tasteProfile),
-    [baseWines, tasteProfile]
+    () => chooseHeroPicks(scoredWines, tasteProfile),
+    [scoredWines, tasteProfile]
   )
   const heroIds = useMemo(
     () => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)),
@@ -63,9 +86,9 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   )
 
   const sortedRest = useMemo(() => {
-    const rest = baseWines.filter(w => !heroIds.has(w.id ?? w.name))
+    const rest = scoredWines.filter(w => !heroIds.has(w.id ?? w.name))
     return sortWines(rest, sortKey, tasteProfile)
-  }, [baseWines, heroIds, sortKey, tasteProfile])
+  }, [scoredWines, heroIds, sortKey, tasteProfile])
 
   const showRetakePanel = fromScan && readability !== 'good'
 
