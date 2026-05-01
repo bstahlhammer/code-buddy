@@ -319,7 +319,28 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
           </button>
 
           {hasProfile ? (
-            <TasteProfileCard tasteProfile={tasteProfile} onTap={() => navigate('profile')} />
+            <>
+              <TasteProfileCard tasteProfile={tasteProfile} onTap={() => navigate('profile')} />
+              <button
+                onClick={() => navigate('quizIntro')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: `${theme.colors.cream}cc`,
+                  fontSize: 12,
+                  fontFamily: theme.typography.fontSans,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: '3px',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  alignSelf: 'center',
+                  padding: 4,
+                }}
+              >
+                Update my taste profile
+              </button>
+            </>
           ) : (
             <button
               onClick={() => navigate('quizIntro')}
