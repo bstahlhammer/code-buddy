@@ -1,71 +1,37 @@
 import { useState } from 'react'
 import { theme } from '../theme/theme.js'
+import logoWatercolor from '@/assets/logo-watercolor.png'
 
 function Monogram() {
   return (
     <div
       style={{
-        width: 88,
-        height: 88,
-        borderRadius: '50%',
-        border: `1px solid ${theme.colors.brand}`,
-        boxShadow: `0 0 0 6px ${theme.colors.brandDark}, 0 0 0 7px ${theme.colors.ember}55`,
+        width: 168,
+        height: 168,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         margin: '0 auto',
-        background: `radial-gradient(circle at 50% 70%, ${theme.colors.ember}18, transparent 65%)`,
+        position: 'relative',
+        // Soft luminous halo behind the watercolor mark
+        background: `radial-gradient(circle at 50% 55%, ${theme.colors.magentaBright}33 0%, ${theme.colors.peach}22 35%, transparent 70%)`,
+        filter: `drop-shadow(0 8px 24px ${theme.colors.brandDark}66)`,
       }}
     >
-      <svg width="46" height="58" viewBox="0 0 46 58" fill="none" aria-hidden="true">
-        {/* Wine glass — navy outline */}
-        {/* bowl */}
-        <path
-          d="M9 22 Q9 36 23 38 Q37 36 37 22 Z"
-          stroke={theme.colors.brand}
-          strokeWidth="1.4"
-          fill="none"
-          strokeLinejoin="round"
-        />
-        {/* rim curve */}
-        <path
-          d="M9 22 Q23 16 37 22"
-          stroke={theme.colors.brand}
-          strokeWidth="1.4"
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* stem */}
-        <line x1="23" y1="38" x2="23" y2="52" stroke={theme.colors.brand} strokeWidth="1.4" />
-        {/* base */}
-        <line x1="14" y1="52" x2="32" y2="52" stroke={theme.colors.brand} strokeWidth="1.6" strokeLinecap="round" />
-
-        {/* Flame swirl rising from bowl — three intertwined ribbons (Forge motif) */}
-        {/* Tide blue ribbon (background, base motion) */}
-        <path
-          d="M19 26 Q14 18 17 9 Q19 4 22 7"
-          stroke={theme.colors.tide}
-          strokeWidth="2.2"
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* Ember orange — main flame body */}
-        <path
-          d="M22 28 Q18 19 22 11 Q26 4 28 9 Q30 14 26 19"
-          stroke={theme.colors.ember}
-          strokeWidth="2.6"
-          fill="none"
-          strokeLinecap="round"
-        />
-        {/* Crimson — flame tip curl */}
-        <path
-          d="M27 18 Q31 13 30 7 Q29 3 32 5 Q35 8 33 14"
-          stroke={theme.colors.crimson}
-          strokeWidth="2.2"
-          fill="none"
-          strokeLinecap="round"
-        />
-      </svg>
+      <img
+        src={logoWatercolor}
+        alt="MySom — watercolor wine glass with wing"
+        width={150}
+        height={150}
+        style={{
+          width: 150,
+          height: 150,
+          objectFit: 'contain',
+          // Knock out the cream paper background of the source image so it
+          // sits cleanly on dark plum and on cream surfaces alike.
+          mixBlendMode: 'multiply',
+        }}
+      />
     </div>
   )
 }
