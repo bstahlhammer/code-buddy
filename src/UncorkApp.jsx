@@ -277,7 +277,8 @@ export default function App() {
         return (
           <ScanPromptScreen
             {...nav}
-            onScan={(file) => { setScanFile(file); setScannedWines(null) }}
+            tasteProfile={tasteProfile}
+            onScan={(file) => { setScanFile(file); setScannedWines(null); setBuyingFor(null); setScanIntent(null) }}
           />
         )
       case 'scanning':
