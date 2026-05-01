@@ -28,12 +28,13 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
   // Ellipse radii sized to the bbox itself (with padding) so the spotlight
   // hugs the bottle's tall, narrow shape instead of a generic circle.
   // 0.75 = bbox half-extent, +padding for breathing room.
-  const padX = 6 // % of container width
-  const padY = 4 // % of container height
+  // Generous padding so the spotlight is clearly larger than the bottle.
+  const padX = 12 // % of container width
+  const padY = 9  // % of container height
   const rxInner = hasBbox ? (bbox.w / 2) * 100 + padX : 0
   const ryInner = hasBbox ? (bbox.h / 2) * 100 + padY : 0
-  const rxOuter = rxInner + 10
-  const ryOuter = ryInner + 8
+  const rxOuter = rxInner + 14
+  const ryOuter = ryInner + 12
   const innerShape = `ellipse ${rxInner}% ${ryInner}% at ${cx}% ${cy}%`
   const outerShape = `ellipse ${rxOuter}% ${ryOuter}% at ${cx}% ${cy}%`
 
