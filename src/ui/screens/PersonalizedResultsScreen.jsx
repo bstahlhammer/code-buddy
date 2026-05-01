@@ -351,6 +351,15 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
         )}
       </div>
 
+      <FilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        onApply={(next) => { setFilters(next); setFilterOpen(false) }}
+        facets={facets}
+        totalWines={scoredWines.length}
+      />
+
       <BottomNav activeTab="scan" navigate={navigate} tasteProfile={tasteProfile} />
     </div>
   )
