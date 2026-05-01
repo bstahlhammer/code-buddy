@@ -268,16 +268,33 @@ export default function App() {
     const nav = { navigate, goBack }
     switch (screen) {
       case 'home':
-        return <HomeScreen {...nav} auth={auth} tasteProfile={tasteProfile} onEmailSignIn={handleEmailSignIn} onOpenScan={async (scanRow) => {
-          const { wines } = await loadScan(scanRow.id)
-          if (wines?.length) {
-            setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
-            setHasScanned(true)
-            const photoUrl = scanRow.photo_path ? await getPhotoUrl(scanRow.photo_path) : null
-            setActiveScan({ scanId: scanRow.id, photoUrl })
-            navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
-          }
-        }} />
+        return <HomeScreen
+          {...nav}
+          auth={auth}
+          tasteProfile={tasteProfile}
+          onEmailSignIn={handleEmailSignIn}
+          onAddWine={() => setShowAddWine(true)}
+          onOpenScan={async (scanRow) => {
+            const { wines } = await loadScan(scanRow.id)
+            setReviewScan(scanRow)
+            setReviewWines(wines || [])
+            navigate('scanReview')
+          }}
+        />
+      case 'scanReview':
+        return (
+          <ScanReviewScreen
+            scan={reviewScan}
+            wines={reviewWines}
+            goBack={goBack}
+            onSaved={() => {
+              setDirection('back')
+              setHistory(h => h.slice(0, -1))
+              setScreen('home')
+            }}
+            onToast={showToast}
+          />
+        )
       case 'auth':
         return <AuthScreen {...nav} onAuthed={handleAuthed} authMode={authMode} />
       case 'scanPrompt':
