@@ -94,7 +94,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
           <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
             {noWines
               ? 'Take another photo to get a reliable result'
-              : `${wines.length} wine${wines.length === 1 ? '' : 's'} identified · Tap any to explore`}
+              : `${wines.length}${wines.length !== allWines.length ? ` of ${allWines.length}` : ''} wine${allWines.length === 1 ? '' : 's'} identified · Tap any to explore`}
           </p>
         </div>
       </div>
