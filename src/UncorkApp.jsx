@@ -28,6 +28,8 @@ import WineDetailScreen from './ui/screens/WineDetailScreen.jsx'
 import AuthScreen from './ui/screens/AuthScreen.jsx'
 import HistoryScreen from './ui/screens/HistoryScreen.jsx'
 import ProfileScreen from './ui/screens/ProfileScreen.jsx'
+import ScanReviewScreen from './ui/screens/ScanReviewScreen.jsx'
+import AddWineSheet from './ui/components/AddWineSheet.jsx'
 
 const TAB_FOR_SCREEN = {
   home: 'home',
