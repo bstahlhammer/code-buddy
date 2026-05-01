@@ -35,7 +35,7 @@ function normalizeScanResult(scannedWines) {
   return null
 }
 
-export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tasteProfile, scannedWines }) {
+export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tasteProfile, scannedWines, scanIntent, buyingFor }) {
   const hasProfile = !!tasteProfile
   const [showAll, setShowAll] = useState(false)
   const [sortKey, setSortKey] = useState('crowd')
