@@ -47,6 +47,8 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   // Always default to match-first when a profile exists.
   const [sortKey, setSortKey] = useState('match')
   const [showAll, setShowAll] = useState(false)
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [filterOpen, setFilterOpen] = useState(false)
 
   // If we came from a scan, use those wines; otherwise fall back to the catalogue.
   const scanResult = normalizeScanResult(scannedWines)
