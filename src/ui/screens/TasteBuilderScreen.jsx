@@ -108,7 +108,7 @@ export default function TasteBuilderScreen({
           lineHeight: 1.2,
           marginBottom: theme.spacing.sm,
         }}>
-          Three ways in. Use any — or all.
+          Three ways in. Use any, or all.
         </h2>
         <p style={{
           fontSize: theme.typography.sizes.md,
