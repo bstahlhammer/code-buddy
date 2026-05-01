@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { theme } from '../theme/theme.js'
-import { chooseHeroPicks, sortWines } from '@/core/api'
+import { chooseHeroPicks, sortWines, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
 import WineCard from '../components/WineCard.jsx'
 import SortToggle from '../components/SortToggle.jsx'
 import UpsellBanner from '../components/UpsellBanner.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
+import FilterBar from '../components/FilterBar.jsx'
+import FilterSheet from '../components/FilterSheet.jsx'
 
 const REASON_COPY = {
   too_blurry:       'The image was a little blurry, try holding steadier.',
