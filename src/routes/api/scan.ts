@@ -197,6 +197,12 @@ function normalizeWine(raw: unknown, index: number) {
     isCrowd: typeof wine.isCrowd === 'boolean' ? wine.isCrowd : false,
     tasting: typeof wine.tasting === 'string' ? wine.tasting : '',
     confidence: clamp(wine.confidence),
+    color: typeof wine.color === 'string' ? wine.color : '',
+    maker: typeof wine.maker === 'string' ? wine.maker : '',
+    certifications: Array.isArray(wine.certifications)
+      ? wine.certifications.filter((c: unknown): c is string =>
+          typeof c === 'string' && ['natural','biodynamic','organic','low_sulfite'].includes(c))
+      : [],
     bbox: normalizeBbox(wine.bbox),
   }
 }
