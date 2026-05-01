@@ -22,7 +22,7 @@ function Monogram() {
     >
       <img
         src={logoWatercolor}
-        alt="MySom — watercolor wine glass with wing"
+        alt="Wine Flight — watercolor wine glass with wing"
         width={150}
         height={150}
         style={{
@@ -135,7 +135,7 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
             lineHeight: 1,
           }}
         >
-          MySom
+          Wine Flight
         </h1>
 
         <div style={{ marginTop: theme.spacing.md }}>

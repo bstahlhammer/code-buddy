@@ -32,7 +32,7 @@ export function LegalLayout({ eyebrow, title, updated, children }: {
             textDecoration: 'none',
           }}
         >
-          ← Back to MySom
+          ← Back to Wine Flight
         </Link>
 
         <div style={{
