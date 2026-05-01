@@ -133,7 +133,7 @@ export default function App() {
   const [direction,    setDirection]    = useState('forward')
   const [selectedWine, setSelectedWine] = useState(null)
   const [returnScreen, setReturnScreen] = useState('anonResults')
-  const [buyingFor,    setBuyingFor]    = useState('me')
+  const [buyingFor,    setBuyingFor]    = useState(null)
   const [quizAnswers,  setQuizAnswers]  = useState(INITIAL_QUIZ_ANSWERS)
   const [tasteProfile, setTasteProfile] = useState(null)
   const [toast,        setToast]        = useState(null)
