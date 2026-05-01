@@ -261,7 +261,16 @@ export default function App() {
     const nav = { navigate, goBack }
     switch (screen) {
       case 'home':
-        return <HomeScreen {...nav} auth={auth} onEmailSignIn={handleEmailSignIn} />
+        return <HomeScreen {...nav} auth={auth} tasteProfile={tasteProfile} onEmailSignIn={handleEmailSignIn} onOpenScan={async (scanRow) => {
+          const { wines } = await loadScan(scanRow.id)
+          if (wines?.length) {
+            setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
+            setHasScanned(true)
+            const photoUrl = scanRow.photo_path ? await getPhotoUrl(scanRow.photo_path) : null
+            setActiveScan({ scanId: scanRow.id, photoUrl })
+            navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
+          }
+        }} />
       case 'auth':
         return <AuthScreen {...nav} onAuthed={handleAuthed} authMode={authMode} />
       case 'scanPrompt':
