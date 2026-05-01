@@ -191,7 +191,7 @@ function RecentScansStrip({ scans, onOpen, onAddWine }) {
   )
 }
 
-export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn, onOpenScan }) {
+export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn, onOpenScan, onAddWine }) {
   const user = auth?.user
   const profileName = auth?.profile?.display_name
   const initial = (profileName || user?.email || '?').trim()[0]?.toUpperCase() ?? '?'
