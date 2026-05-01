@@ -277,8 +277,6 @@ export default function App() {
         return (
           <ScanPromptScreen
             {...nav}
-            buyingFor={buyingFor}
-            onBuyingForChange={setBuyingFor}
             onScan={(file) => { setScanFile(file); setScannedWines(null) }}
           />
         )
@@ -287,6 +285,9 @@ export default function App() {
           <ScanningScreen
             {...nav}
             file={scanFile}
+            buyingFor={buyingFor}
+            onBuyingForChange={setBuyingFor}
+            tasteProfile={tasteProfile}
             onScanComplete={async (payload) => {
               setScannedWines(payload)
               const wines = Array.isArray(payload?.wines) ? payload.wines : []
