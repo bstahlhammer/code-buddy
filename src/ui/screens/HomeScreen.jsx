@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { theme } from '../theme/theme.js'
+import { useScanHistory } from '../hooks/useScanHistory.js'
 import logoWatercolor from '@/assets/logo-watercolor.png'
 
 function Monogram() {
@@ -57,13 +58,130 @@ function GoogleLogo() {
   )
 }
 
-export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
+function TasteProfileCard({ tasteProfile, onTap }) {
+  const archetype = tasteProfile?.name || tasteProfile?.archetype?.name || 'Your taste profile'
+  const palate = tasteProfile?.palate || {}
+  const dims = [
+    { key: 'body',      label: 'Body' },
+    { key: 'sweetness', label: 'Sweet' },
+    { key: 'tannin',    label: 'Tannin' },
+    { key: 'acidity',   label: 'Acid' },
+  ]
+  return (
+    <button
+      onClick={onTap}
+      style={{
+        width: '100%', textAlign: 'left',
+        padding: theme.spacing.md,
+        background: `linear-gradient(135deg, ${theme.colors.parchment}f5 0%, ${theme.colors.cream}f0 100%)`,
+        border: `1px solid ${theme.colors.magenta}55`,
+        borderRadius: theme.radius.md,
+        cursor: 'pointer',
+        boxShadow: `0 8px 24px ${theme.colors.brandDark}66`,
+      }}
+    >
+      <div style={{
+        fontSize: 10, fontFamily: theme.typography.fontSans, fontWeight: 700,
+        letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: theme.colors.magenta, marginBottom: 4,
+      }}>
+        Your taste profile
+      </div>
+      <div style={{
+        fontFamily: theme.typography.fontDisplay,
+        fontSize: 22, color: theme.colors.brand, lineHeight: 1.1,
+        marginBottom: 10,
+      }}>
+        {archetype}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {dims.map(d => {
+          const v = Math.max(0, Math.min(100, palate[d.key] ?? 0))
+          return (
+            <div key={d.key} style={{ flex: 1 }}>
+              <div style={{
+                height: 4, borderRadius: 2,
+                background: `${theme.colors.brand}22`, overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${v}%`, height: '100%',
+                  background: `linear-gradient(90deg, ${theme.colors.magenta}, ${theme.colors.berry})`,
+                }} />
+              </div>
+              <div style={{
+                fontSize: 9, marginTop: 4,
+                fontFamily: theme.typography.fontSans, color: theme.colors.brand,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+              }}>
+                {d.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </button>
+  )
+}
+
+function RecentScansStrip({ scans, onOpen }) {
+  return (
+    <div>
+      <div style={{
+        fontSize: 10, fontFamily: theme.typography.fontSans, fontWeight: 700,
+        letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: `${theme.colors.cream}aa`, marginBottom: 8,
+      }}>
+        Pick up where you left off
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {scans.map(s => (
+          <button
+            key={s.id}
+            onClick={() => onOpen?.(s)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              width: '100%', textAlign: 'left',
+              padding: '10px 14px',
+              background: 'rgba(255,255,255,0.06)',
+              border: `1px solid ${theme.colors.cream}22`,
+              borderRadius: theme.radius.sm,
+              color: theme.colors.cream,
+              fontFamily: theme.typography.fontSans,
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {s.location_label || `${s.wine_count} wine${s.wine_count === 1 ? '' : 's'} scanned`}
+            </span>
+            <span style={{ opacity: 0.6, fontSize: 11 }}>Rate →</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn, onOpenScan }) {
   const user = auth?.user
   const profileName = auth?.profile?.display_name
   const initial = (profileName || user?.email || '?').trim()[0]?.toUpperCase() ?? '?'
+  const hasProfile = !!tasteProfile
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [recentScans, setRecentScans] = useState([])
+  const { listScans } = useScanHistory()
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    ;(async () => {
+      const { scans } = await listScans()
+      if (!cancelled) setRecentScans((scans || []).slice(0, 3))
+    })()
+    return () => { cancelled = true }
+  }, [user, listScans])
 
   async function handleGoogle() {
     setError(null); setBusy(true)
@@ -91,32 +209,25 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
         overflow: 'hidden',
       }}
     >
-      {/* Auth chip — only shown when signed in */}
+      {/* Auth chip — initial only, no "Account" label */}
       {user && (
         <div style={{ position: 'absolute', top: theme.spacing.lg, right: theme.spacing.lg, zIndex: 2 }}>
           <a
             href="/account"
             title="Account"
+            aria-label="Account"
             style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'rgba(255,255,255,0.06)',
-              border: `1px solid ${theme.colors.gold}55`,
-              borderRadius: theme.radius.pill,
-              padding: '4px 14px 4px 4px',
-              color: theme.colors.cream,
-              fontFamily: theme.typography.fontSans,
-              fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-              textDecoration: 'none',
-            }}
-          >
-            <span style={{
-              width: 24, height: 24, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 36, height: 36, borderRadius: '50%',
               background: `linear-gradient(180deg, ${theme.colors.goldBright}, ${theme.colors.gold})`,
               color: theme.colors.brandDark,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, fontSize: 12,
-            }}>{initial}</span>
-            Account
+              fontFamily: theme.typography.fontSans,
+              fontWeight: 700, fontSize: 14,
+              textDecoration: 'none',
+              boxShadow: `0 4px 14px ${theme.colors.brandDark}99`,
+            }}
+          >
+            {initial}
           </a>
         </div>
       )}
@@ -204,40 +315,33 @@ export default function HomeScreen({ navigate, auth, onEmailSignIn }) {
               boxShadow: theme.shadows.brass,
             }}
           >
-            Choose a wine now
+            {hasProfile ? 'Find more wines I’ll love' : 'Scan a wine list, shelf or bottle'}
           </button>
 
-          <button
-            onClick={() => navigate('quizIntro')}
-            style={{
-              width: '100%', padding: '17px',
-              backgroundColor: 'transparent',
-              color: theme.colors.cream,
-              border: `1px solid ${theme.colors.gold}80`,
-              borderRadius: theme.radius.sm,
-              fontSize: '15px', fontWeight: 500,
-              fontFamily: theme.typography.fontSans,
-              cursor: 'pointer',
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-            }}
-          >
-            Build my taste profile
-          </button>
+          {hasProfile ? (
+            <TasteProfileCard tasteProfile={tasteProfile} onTap={() => navigate('profile')} />
+          ) : (
+            <button
+              onClick={() => navigate('quizIntro')}
+              style={{
+                width: '100%', padding: '17px',
+                backgroundColor: 'transparent',
+                color: theme.colors.cream,
+                border: `1px solid ${theme.colors.gold}80`,
+                borderRadius: theme.radius.sm,
+                fontSize: '15px', fontWeight: 500,
+                fontFamily: theme.typography.fontSans,
+                cursor: 'pointer',
+                letterSpacing: '0.06em', textTransform: 'uppercase',
+              }}
+            >
+              Build my taste profile
+            </button>
+          )}
 
-          <button
-            onClick={() => navigate('scanPrompt')}
-            style={{
-              background: 'none', border: 'none',
-              color: `${theme.colors.parchment}99`,
-              fontSize: theme.typography.sizes.md,
-              fontFamily: theme.typography.fontDisplay,
-              fontStyle: 'italic',
-              cursor: 'pointer',
-              marginTop: theme.spacing.xs,
-            }}
-          >
-            — just let me explore —
-          </button>
+          {hasProfile && recentScans.length > 0 && (
+            <RecentScansStrip scans={recentScans} onOpen={onOpenScan} />
+          )}
         </div>
       ) : (
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.sm }}>

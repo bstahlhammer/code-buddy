@@ -133,7 +133,7 @@ export default function App() {
   const [direction,    setDirection]    = useState('forward')
   const [selectedWine, setSelectedWine] = useState(null)
   const [returnScreen, setReturnScreen] = useState('anonResults')
-  const [buyingFor,    setBuyingFor]    = useState('me')
+  const [buyingFor,    setBuyingFor]    = useState(null)
   const [quizAnswers,  setQuizAnswers]  = useState(INITIAL_QUIZ_ANSWERS)
   const [tasteProfile, setTasteProfile] = useState(null)
   const [toast,        setToast]        = useState(null)
@@ -261,15 +261,22 @@ export default function App() {
     const nav = { navigate, goBack }
     switch (screen) {
       case 'home':
-        return <HomeScreen {...nav} auth={auth} onEmailSignIn={handleEmailSignIn} />
+        return <HomeScreen {...nav} auth={auth} tasteProfile={tasteProfile} onEmailSignIn={handleEmailSignIn} onOpenScan={async (scanRow) => {
+          const { wines } = await loadScan(scanRow.id)
+          if (wines?.length) {
+            setScannedWines({ wines, readability: 'good', retakeReasons: [], message: '' })
+            setHasScanned(true)
+            const photoUrl = scanRow.photo_path ? await getPhotoUrl(scanRow.photo_path) : null
+            setActiveScan({ scanId: scanRow.id, photoUrl })
+            navigate(tasteProfile ? 'personalizedResults' : 'anonResults')
+          }
+        }} />
       case 'auth':
         return <AuthScreen {...nav} onAuthed={handleAuthed} authMode={authMode} />
       case 'scanPrompt':
         return (
           <ScanPromptScreen
             {...nav}
-            buyingFor={buyingFor}
-            onBuyingForChange={setBuyingFor}
             onScan={(file) => { setScanFile(file); setScannedWines(null) }}
           />
         )
@@ -278,6 +285,9 @@ export default function App() {
           <ScanningScreen
             {...nav}
             file={scanFile}
+            buyingFor={buyingFor}
+            onBuyingForChange={setBuyingFor}
+            tasteProfile={tasteProfile}
             onScanComplete={async (payload) => {
               setScannedWines(payload)
               const wines = Array.isArray(payload?.wines) ? payload.wines : []
