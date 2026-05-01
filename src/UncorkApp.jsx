@@ -148,6 +148,10 @@ export default function App() {
   const [scannedWines, setScannedWines] = useState(null)
   // Active scan context for the shelf-spotlight feature on wine detail
   const [activeScan, setActiveScan] = useState(null) // { scanId, photoUrl }
+  // Scan-review flow: a past scan + its wines being rated by the user.
+  const [reviewScan, setReviewScan] = useState(null) // raw row from `scans`
+  const [reviewWines, setReviewWines] = useState([])
+  const [showAddWine, setShowAddWine] = useState(false)
 
   const { saveScan, loadScan, getPhotoUrl } = useScanHistory()
   const { saveProfile, loadProfile } = useTasteProfileSync()
