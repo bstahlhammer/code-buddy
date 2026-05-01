@@ -20,11 +20,22 @@ const BUYING_FOR = [
   { id: 'gift',  label: 'A gift' },
 ]
 
+const INTENT_TAGS = [
+  { id: 'crowd',   label: 'Crowd pleaser' },
+  { id: 'unique',  label: 'Unique & interesting' },
+  { id: 'splurge', label: 'A splurge' },
+  { id: 'maker',   label: 'A specific maker' },
+  { id: 'region',  label: 'A specific region' },
+  { id: 'varietal',label: 'A specific varietal' },
+]
+
 export default function ScanningScreen({
   navigate,
   file,
   buyingFor,
   onBuyingForChange,
+  scanIntent,
+  onScanIntentChange,
   tasteProfile,
   onScanComplete,
 }) {
