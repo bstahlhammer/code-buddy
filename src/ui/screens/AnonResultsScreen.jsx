@@ -273,6 +273,15 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
         )}
       </div>
 
+      <FilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        onApply={(next) => { setFilters(next); setFilterOpen(false) }}
+        facets={facets}
+        totalWines={allWines.length}
+      />
+
       <BottomNav activeTab="scan" navigate={navigate} tasteProfile={tasteProfile} />
     </div>
   )
