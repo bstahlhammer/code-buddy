@@ -116,18 +116,25 @@ function hasWineMarker(value: string) {
 function hasEnoughSpecificity(wine: Record<string, unknown>, name: string) {
   const words = name.split(/\s+/).filter(Boolean)
   const compact = name.replace(/[^a-z0-9]/gi, '')
-  if (compact.length < 5 || words.every((word) => word.length <= 2)) return false
-  const support = [wine.vintage, wine.region, wine.grape, wine.tasting, wine.price, wine.ratingLabel]
+  // Reject only obvious junk: empty, very short, or single tiny word fragments.
+  if (compact.length < 4) return false
+  if (words.length === 1 && words[0].length <= 3) return false
+  const support = [wine.vintage, wine.region, wine.grape, wine.tasting, wine.price, wine.ratingLabel, wine.maker]
     .filter((v) => typeof v === 'string' && v.trim() && v !== '—')
     .join(' ')
   const combined = `${name} ${support}`
   const vintageVisible = typeof wine.vintage === 'string' && /^(19|20)\d{2}|NV$/i.test(wine.vintage.trim())
   const hasPrice = typeof wine.price === 'string' && /\d/.test(wine.price)
   const hasRating = typeof wine.rating === 'number' && wine.rating > 0
+  const hasMaker = typeof wine.maker === 'string' && wine.maker.trim().length >= 3
+  const hasSupport = support.trim().length > 0
 
-  if (words.length >= 3) return true
-  if (words.length >= 2 && hasWineMarker(combined)) return true
-  if (words.length >= 2 && (vintageVisible || hasPrice || hasRating)) return true
+  // Be generous: any of these signals is enough to keep the wine.
+  if (words.length >= 2) return true
+  if (hasMaker) return true
+  if (hasWineMarker(combined)) return true
+  if (vintageVisible || hasPrice || hasRating) return true
+  if (hasSupport) return true
   return false
 }
 
