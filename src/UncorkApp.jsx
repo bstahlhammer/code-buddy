@@ -134,6 +134,7 @@ export default function App() {
   const [selectedWine, setSelectedWine] = useState(null)
   const [returnScreen, setReturnScreen] = useState('anonResults')
   const [buyingFor,    setBuyingFor]    = useState(null)
+  const [scanIntent,   setScanIntent]   = useState(null) // { tags: string[], maker?, region?, varietal? }
   const [quizAnswers,  setQuizAnswers]  = useState(INITIAL_QUIZ_ANSWERS)
   const [tasteProfile, setTasteProfile] = useState(null)
   const [toast,        setToast]        = useState(null)
@@ -288,6 +289,8 @@ export default function App() {
             file={scanFile}
             buyingFor={buyingFor}
             onBuyingForChange={setBuyingFor}
+            scanIntent={scanIntent}
+            onScanIntentChange={setScanIntent}
             tasteProfile={tasteProfile}
             onScanComplete={async (payload) => {
               setScannedWines(payload)
@@ -312,6 +315,8 @@ export default function App() {
             {...nav}
             tasteProfile={tasteProfile}
             scannedWines={scannedWines}
+            scanIntent={scanIntent}
+            buyingFor={buyingFor}
             onWineSelect={w => handleWineSelect(w, 'anonResults')}
           />
         )
@@ -365,6 +370,7 @@ export default function App() {
             {...nav}
             tasteProfile={tasteProfile}
             buyingFor={buyingFor}
+            scanIntent={scanIntent}
             scannedWines={scannedWines}
             onWineSelect={w => handleWineSelect(w, 'personalizedResults')}
           />
