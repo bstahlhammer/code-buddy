@@ -13,9 +13,11 @@ function Monogram() {
         justifyContent: 'center',
         margin: '0 auto',
         position: 'relative',
-        // Soft luminous halo behind the watercolor mark
-        background: `radial-gradient(circle at 50% 55%, ${theme.colors.magentaBright}33 0%, ${theme.colors.peach}22 35%, transparent 70%)`,
-        filter: `drop-shadow(0 8px 24px ${theme.colors.brandDark}66)`,
+        borderRadius: '50%',
+        // Cream "paper" disc so the watercolor mark reads on dark plum.
+        background: `radial-gradient(circle at 50% 45%, ${theme.colors.cream} 0%, ${theme.colors.parchment} 75%, ${theme.colors.parchment} 100%)`,
+        boxShadow: `0 0 0 1px ${theme.colors.magenta}55, 0 0 0 8px ${theme.colors.brandDark}, 0 0 0 9px ${theme.colors.magenta}33, 0 12px 36px ${theme.colors.brandDark}aa`,
+        overflow: 'hidden',
       }}
     >
       <img
@@ -27,8 +29,6 @@ function Monogram() {
           width: 150,
           height: 150,
           objectFit: 'contain',
-          // Knock out the cream paper background of the source image so it
-          // sits cleanly on dark plum and on cream surfaces alike.
           mixBlendMode: 'multiply',
         }}
       />
