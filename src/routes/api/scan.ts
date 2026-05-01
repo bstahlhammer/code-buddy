@@ -41,7 +41,7 @@ async function requireAuth(request: Request): Promise<string | Response> {
 const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
 
 // Min confidence (0-100) for a wine to make it into the response.
-const MIN_WINE_CONFIDENCE = 45
+const MIN_WINE_CONFIDENCE = 35
 // If overall recognition rate (kept / total seen) falls below this, mark partial.
 const MIN_RECOGNITION_RATE = 0.5
 
@@ -57,19 +57,20 @@ If "partial" or "unreadable", populate retakeReasons with 1-3 short, user-friend
 "too_blurry", "too_dark", "too_far", "glare", "angle_skewed", "label_cut_off", "not_a_wine_image", "list_too_dense".
 
 STEP 2 — EXTRACT WINES (only the ones you can actually read):
-Extract every specific wine you can read in the image. Do not artificially cap the list — if there are 30 readable bottles, return all 30.
+Scan the image SYSTEMATICALLY — top-to-bottom, left-to-right. Do not stop early. If there are 30 readable bottles or list lines, return all 30. Missing real wines is just as bad as inventing fake ones.
 
-GROUNDING RULES — important:
-- The "name" field MUST be a specific wine actually visible in the image. Do not invent wines that aren't there.
+GROUNDING RULES — these are strict:
+- The "name" field MUST be a specific wine ACTUALLY VISIBLE in the image. Read it off the label, list line, or shelf tag. Never infer wines from context, store name, neighboring bottles, or general knowledge of what a place "probably" carries.
+- If you are not directly reading the wine's text in this image, DO NOT include it. When in doubt, leave it out.
 - NEVER return OCR fragments, store text, shelf signage, category labels, initials, or single loose words as wines.
 - A producer/brand alone is NOT enough unless a visible vintage, grape, region, cuvée, appellation, or price confirms a specific wine.
 - If you can only read fragments like "BY", "Cs", "DECO", or a lone producer name, return no wine for that fragment.
 - If readability is "unreadable", return an empty wines array.
-- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels, but still include the wine if you are reasonably sure.
+- For each wine, include a "confidence" score (0-100) reflecting how clearly you could read the name on the image. Lower it for blurry/partial labels. Set confidence below 35 if you are guessing — those will be dropped.
 
 OUTPUT RULES:
 - Use the extract_wines tool only.
-- Return every wine you can confidently read — no upper limit.
+- Return every wine you can confidently read — no upper limit. Err on the side of completeness for wines that ARE visible, but never invent ones that aren't.
 
 Field rules — use what you can SEE for factual fields; use sensible defaults for the rest:
 - id: integer starting at 1
@@ -88,7 +89,7 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
 - confidence: number 0-100 — how clearly you could read this wine's name on the image.
 - bbox: object — the bounding box of THIS specific bottle/listing in the image, expressed as normalized values (0..1) of the image dimensions:
     { "x": <left edge 0..1>, "y": <top edge 0..1>, "w": <width 0..1>, "h": <height 0..1> }
-  Be as tight as you can around the bottle/listing. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
+  Cover the FULL bottle from the top of the capsule/cork to the base, and include the entire label width — don't crop tightly to the label only. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
 
 const WINE_MARKERS = [
   'cabernet', 'chardonnay', 'pinot', 'merlot', 'sauvignon', 'syrah', 'shiraz', 'riesling', 'malbec',

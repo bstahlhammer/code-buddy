@@ -59,11 +59,11 @@ export const theme = {
     barTrack:    '#F2EAD9',
   },
   typography: {
-    // Display: "Lotus Eater Sans" (commercial) — using Sora as a close
-    // free geometric sans stand-in until the licensed file is provided.
-    // Body/UI: "Open Sauce" — using Open Sauce One via Google Fonts.
-    fontSerif:   "'Lotus Eater Sans', 'Sora', system-ui, sans-serif",
-    fontDisplay: "'Lotus Eater Sans', 'Sora', system-ui, sans-serif",
+    // Logo only: "Lotus Eater Sans" — reserved for the wordmark on the home screen.
+    // Display & Body/UI use "Open Sauce One" everywhere else.
+    fontLogo:    "'Lotus Eater Sans', 'Sora', system-ui, sans-serif",
+    fontSerif:   "'Open Sauce One', 'Open Sauce', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    fontDisplay: "'Open Sauce One', 'Open Sauce', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     fontSans:    "'Open Sauce One', 'Open Sauce', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     sizes: {
       xs:   '11px',

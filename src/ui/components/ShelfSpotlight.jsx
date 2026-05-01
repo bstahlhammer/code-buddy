@@ -28,12 +28,13 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
   // Ellipse radii sized to the bbox itself (with padding) so the spotlight
   // hugs the bottle's tall, narrow shape instead of a generic circle.
   // 0.75 = bbox half-extent, +padding for breathing room.
-  const padX = 6 // % of container width
-  const padY = 4 // % of container height
+  // Generous padding so the spotlight is clearly larger than the bottle.
+  const padX = 12 // % of container width
+  const padY = 9  // % of container height
   const rxInner = hasBbox ? (bbox.w / 2) * 100 + padX : 0
   const ryInner = hasBbox ? (bbox.h / 2) * 100 + padY : 0
-  const rxOuter = rxInner + 10
-  const ryOuter = ryInner + 8
+  const rxOuter = rxInner + 14
+  const ryOuter = ryInner + 12
   const innerShape = `ellipse ${rxInner}% ${ryInner}% at ${cx}% ${cy}%`
   const outerShape = `ellipse ${rxOuter}% ${ryOuter}% at ${cx}% ${cy}%`
 
@@ -80,23 +81,31 @@ export default function ShelfSpotlight({ photoUrl, bbox, loading, error, onRetry
         />
       )}
 
-      {/* Tight bbox highlight (subtle) */}
-      {hasBbox && !loading && (
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            left: `${bbox.x * 100}%`,
-            top: `${bbox.y * 100}%`,
-            width: `${bbox.w * 100}%`,
-            height: `${bbox.h * 100}%`,
-            border: `1.5px solid ${theme.colors.emberBright}`,
-            borderRadius: 4,
-            boxShadow: `0 0 18px 2px ${theme.colors.ember}66`,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
+      {/* Inflated bbox highlight — bigger than the raw bbox so the bottle
+          isn't hugged too tight. Grows the box ~30% on each axis. */}
+      {hasBbox && !loading && (() => {
+        const grow = 0.3
+        const gx = Math.max(0, bbox.x - bbox.w * grow / 2)
+        const gy = Math.max(0, bbox.y - bbox.h * grow / 2)
+        const gw = Math.min(1 - gx, bbox.w * (1 + grow))
+        const gh = Math.min(1 - gy, bbox.h * (1 + grow))
+        return (
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: `${gx * 100}%`,
+              top: `${gy * 100}%`,
+              width: `${gw * 100}%`,
+              height: `${gh * 100}%`,
+              border: `2px solid ${theme.colors.emberBright}`,
+              borderRadius: 6,
+              boxShadow: `0 0 24px 4px ${theme.colors.ember}77`,
+              pointerEvents: 'none',
+            }}
+          />
+        )
+      })()}
 
       {/* Loading state */}
       {loading && (

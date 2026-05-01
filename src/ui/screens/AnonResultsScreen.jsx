@@ -181,7 +181,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
         {/* Upsell + collapsible full list */}
         {wines.length > 0 && (
           <>
-            <UpsellBanner onCta={() => navigate('quizIntro')} />
+            {!tasteProfile && <UpsellBanner onCta={() => navigate('quizIntro')} />}
 
             {sortedRest.length > 0 && (
               <div style={{ padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}` }}>
