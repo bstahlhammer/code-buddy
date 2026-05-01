@@ -41,9 +41,9 @@ async function requireAuth(request: Request): Promise<string | Response> {
 const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
 
 // Min confidence (0-100) for a wine to make it into the response.
-const MIN_WINE_CONFIDENCE = 35
+const MIN_WINE_CONFIDENCE = 20
 // If overall recognition rate (kept / total seen) falls below this, mark partial.
-const MIN_RECOGNITION_RATE = 0.5
+const MIN_RECOGNITION_RATE = 0.3
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
