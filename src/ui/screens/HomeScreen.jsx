@@ -211,40 +211,33 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
               boxShadow: theme.shadows.brass,
             }}
           >
-            Choose a wine now
+            {hasProfile ? 'Find more wines I’ll love' : 'Scan a wine list, shelf or bottle'}
           </button>
 
-          <button
-            onClick={() => navigate('quizIntro')}
-            style={{
-              width: '100%', padding: '17px',
-              backgroundColor: 'transparent',
-              color: theme.colors.cream,
-              border: `1px solid ${theme.colors.gold}80`,
-              borderRadius: theme.radius.sm,
-              fontSize: '15px', fontWeight: 500,
-              fontFamily: theme.typography.fontSans,
-              cursor: 'pointer',
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-            }}
-          >
-            Build my taste profile
-          </button>
+          {hasProfile ? (
+            <TasteProfileCard tasteProfile={tasteProfile} onTap={() => navigate('profile')} />
+          ) : (
+            <button
+              onClick={() => navigate('quizIntro')}
+              style={{
+                width: '100%', padding: '17px',
+                backgroundColor: 'transparent',
+                color: theme.colors.cream,
+                border: `1px solid ${theme.colors.gold}80`,
+                borderRadius: theme.radius.sm,
+                fontSize: '15px', fontWeight: 500,
+                fontFamily: theme.typography.fontSans,
+                cursor: 'pointer',
+                letterSpacing: '0.06em', textTransform: 'uppercase',
+              }}
+            >
+              Build my taste profile
+            </button>
+          )}
 
-          <button
-            onClick={() => navigate('scanPrompt')}
-            style={{
-              background: 'none', border: 'none',
-              color: `${theme.colors.parchment}99`,
-              fontSize: theme.typography.sizes.md,
-              fontFamily: theme.typography.fontDisplay,
-              fontStyle: 'italic',
-              cursor: 'pointer',
-              marginTop: theme.spacing.xs,
-            }}
-          >
-            — just let me explore —
-          </button>
+          {hasProfile && recentScans.length > 0 && (
+            <RecentScansStrip scans={recentScans} onOpen={onOpenScan} />
+          )}
         </div>
       ) : (
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.sm }}>
