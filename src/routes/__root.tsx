@@ -33,7 +33,7 @@ export const Route = createRootRoute({
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Wine Flight" },
-      { title: "Wine Flight — Your Personal Sommelier" },
+      { title: "Wine Flight, Your Personal Sommelier" },
       {
         name: "description",
         content:
@@ -42,7 +42,7 @@ export const Route = createRootRoute({
       { name: "author", content: "Wine Flight" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Wine Flight" },
-      { property: "og:title", content: "Wine Flight — Your Personal Sommelier" },
+      { property: "og:title", content: "Wine Flight, Your Personal Sommelier" },
       {
         property: "og:description",
         content:
@@ -53,7 +53,7 @@ export const Route = createRootRoute({
       { property: "og:image:height", content: "630" },
       { property: "og:url", content: "https://apps.forgeproductstrategy.com" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Wine Flight — Your Personal Sommelier" },
+      { name: "twitter:title", content: "Wine Flight, Your Personal Sommelier" },
       {
         name: "twitter:description",
         content:

@@ -5,7 +5,7 @@ import UncorkApp from "@/UncorkApp.jsx";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Wine Flight — Your Personal Sommelier" },
+      { title: "Wine Flight, Your Personal Sommelier" },
       {
         name: "description",
         content:

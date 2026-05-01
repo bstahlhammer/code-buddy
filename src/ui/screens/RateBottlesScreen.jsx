@@ -109,7 +109,7 @@ export default function RateBottlesScreen({ navigate, goBack, initialRatings = {
             padding: theme.spacing.xs,
           }}
         >
-          I don't know any — guide me with questions instead
+          I don't know any. Guide me with questions instead
         </button>
       </div>
     </div>

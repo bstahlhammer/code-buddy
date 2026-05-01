@@ -128,7 +128,7 @@ export default function WineSearchStep({ mode, value = [], onChange }) {
 
       {addedWines.length === 0 && query.length === 0 && (
         <p style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, fontStyle: 'italic' }}>
-          {isHate ? 'No wines added yet — this step is optional.' : 'No wines added yet — this step is optional.'}
+          {isHate ? 'No wines added yet, this step is optional.' : 'No wines added yet, this step is optional.'}
         </p>
       )}
     </div>

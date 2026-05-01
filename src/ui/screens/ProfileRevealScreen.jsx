@@ -264,7 +264,7 @@ export default function ProfileRevealScreen({ navigate, goBack, tasteProfile, ha
               textAlign: 'center',
             }}
           >
-            Refine my profile — rate more bottles
+            Refine my profile, rate more bottles
           </button>
         </div>
       </div>

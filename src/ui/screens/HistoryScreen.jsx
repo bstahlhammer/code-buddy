@@ -88,7 +88,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
               No scans yet
             </div>
             <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginBottom: theme.spacing.lg }}>
-              Snap a wine list or shelf — it'll show up here.
+              Snap a wine list or shelf, it'll show up here.
             </div>
             <button
               onClick={() => navigate('scanPrompt')}

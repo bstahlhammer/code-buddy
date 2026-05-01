@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { theme } from '../theme/theme.js'
 import TopBar from '../components/TopBar.jsx'
 
-export default function ScanPromptScreen({ navigate, goBack, onScan }) {
+export default function ScanPromptScreen({ navigate, goBack, onScan, tasteProfile }) {
   const fileRef = useRef(null)
 
   const pick = () => fileRef.current?.click()
@@ -24,7 +24,7 @@ export default function ScanPromptScreen({ navigate, goBack, onScan }) {
             Show me the wine
           </h1>
           <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}b0`, fontFamily: theme.typography.fontSans, marginTop: theme.spacing.xs, lineHeight: 1.5 }}>
-            Snap a wine list, a store shelf, or a single bottle — I’ll do the rest.
+            Snap a wine list, a store shelf, or a single bottle. We’ll do the rest.
           </p>
         </div>
       </div>
@@ -65,21 +65,23 @@ export default function ScanPromptScreen({ navigate, goBack, onScan }) {
           Take or upload a photo
         </button>
 
-        <button
-          onClick={() => navigate('quizIntro')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: theme.colors.brand,
-            fontSize: theme.typography.sizes.sm,
-            fontFamily: theme.typography.fontSans,
-            cursor: 'pointer',
-            textDecoration: 'underline',
-            textUnderlineOffset: '3px',
-          }}
-        >
-          Build my taste profile first →
-        </button>
+        {!tasteProfile && (
+          <button
+            onClick={() => navigate('quizIntro')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: theme.colors.brand,
+              fontSize: theme.typography.sizes.sm,
+              fontFamily: theme.typography.fontSans,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px',
+            }}
+          >
+            Build my taste profile first →
+          </button>
+        )}
       </div>
     </div>
   )

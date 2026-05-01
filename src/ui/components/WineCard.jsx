@@ -48,7 +48,7 @@ export default function WineCard({ wine, personalized, isBestMatch, tasteProfile
             {wine.name}
           </div>
           {(() => {
-            const priceStr = wine.price && wine.price !== '—' && String(wine.price).trim() !== ''
+            const priceStr = wine.price && wine.price !== ',' && String(wine.price).trim() !== ''
               ? (String(wine.price).startsWith('$') ? wine.price : `$${wine.price}`)
               : null
             const meta = [wine.vintage, wine.region, wine.grape, priceStr]

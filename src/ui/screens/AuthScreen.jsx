@@ -61,7 +61,7 @@ export default function AuthScreen({ goBack, onAuthed, authMode = 'full' }) {
         const { data, error } = await signUpWithEmail(email, password, displayName)
         if (error) throw error
         if (data.session) onAuthed?.()
-        else setInfo('Account created — you can sign in now.')
+        else setInfo('Account created, you can sign in now.')
       }
     } catch (err) {
       setError(err.message || 'Something went wrong')
@@ -203,8 +203,8 @@ export default function AuthScreen({ goBack, onAuthed, authMode = 'full' }) {
         }}
       >
         {mode === 'signin'
-          ? "— don't have an account? create one —"
-          : '— already have an account? sign in —'}
+          ? ", don't have an account? create one ,"
+          : ', already have an account? sign in ,'}
       </button>
 
       <div style={{

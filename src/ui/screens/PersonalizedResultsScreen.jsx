@@ -15,14 +15,14 @@ const SORT_OPTIONS = [
 ]
 
 const REASON_COPY = {
-  too_blurry:       'The image was a little blurry — try holding steadier.',
-  too_dark:         'It was too dark — move toward better light.',
-  too_far:          'You were too far away — get closer so the labels fill the frame.',
-  glare:            'There was glare on the labels — change angle or shade the page.',
-  angle_skewed:     'The angle was skewed — square the camera to the list or bottle.',
-  label_cut_off:    'Part of the label was cut off — re-frame to include the full label.',
+  too_blurry:       'The image was a little blurry, try holding steadier.',
+  too_dark:         'It was too dark, move toward better light.',
+  too_far:          'You were too far away, get closer so the labels fill the frame.',
+  glare:            'There was glare on the labels, change angle or shade the page.',
+  angle_skewed:     'The angle was skewed, square the camera to the list or bottle.',
+  label_cut_off:    'Part of the label was cut off, re-frame to include the full label.',
   not_a_wine_image: 'I could not find any wine text in this image.',
-  list_too_dense:   'The list was too dense to read at once — try one section.',
+  list_too_dense:   'The list was too dense to read at once, try one section.',
 }
 
 function normalizeScanResult(scannedWines) {
@@ -41,9 +41,9 @@ function normalizeScanResult(scannedWines) {
   return null
 }
 
-export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfile, buyingFor, scannedWines, onWineSelect }) {
-  const defaultSort = buyingFor === 'group' ? 'approachability' : 'match'
-  const [sortKey, setSortKey] = useState(defaultSort)
+export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfile, buyingFor, scanIntent, scannedWines, onWineSelect }) {
+  // Always default to match-first when a profile exists.
+  const [sortKey, setSortKey] = useState('match')
   const [showAll, setShowAll] = useState(false)
 
   // If we came from a scan, use those wines; otherwise fall back to the catalogue.
@@ -53,9 +53,32 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   const readability = scanResult?.readability ?? 'good'
   const retakeReasons = scanResult?.retakeReasons ?? []
 
+  // Compute match score for every wine so we can detect "no strong matches"
+  // and flag low-confidence reads.
+  const scoredWines = useMemo(() => {
+    if (!tasteProfile) return baseWines
+    return baseWines.map(w => ({
+      ...w,
+      computedMatch: w.computedMatch ?? computeMatch(w, tasteProfile),
+    }))
+  }, [baseWines, tasteProfile])
+
+  const topMatch = useMemo(() => {
+    if (!tasteProfile || scoredWines.length === 0) return 0
+    return Math.max(...scoredWines.map(w => w.computedMatch ?? 0))
+  }, [scoredWines, tasteProfile])
+  const noStrongMatches = tasteProfile && scoredWines.length > 0 && topMatch < 80
+
+  const lowConfidenceCount = useMemo(
+    () => scoredWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
+    [scoredWines]
+  )
+  const showLowConfidenceWarning = fromScan && scoredWines.length > 0 &&
+    lowConfidenceCount / scoredWines.length >= 0.3
+
   const heroPicks = useMemo(
-    () => chooseHeroPicks(baseWines, tasteProfile),
-    [baseWines, tasteProfile]
+    () => chooseHeroPicks(scoredWines, tasteProfile),
+    [scoredWines, tasteProfile]
   )
   const heroIds = useMemo(
     () => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)),
@@ -63,9 +86,9 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   )
 
   const sortedRest = useMemo(() => {
-    const rest = baseWines.filter(w => !heroIds.has(w.id ?? w.name))
+    const rest = scoredWines.filter(w => !heroIds.has(w.id ?? w.name))
     return sortWines(rest, sortKey, tasteProfile)
-  }, [baseWines, heroIds, sortKey, tasteProfile])
+  }, [scoredWines, heroIds, sortKey, tasteProfile])
 
   const showRetakePanel = fromScan && readability !== 'good'
 
@@ -82,8 +105,8 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
               </h1>
               <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
                 {fromScan
-                  ? `${baseWines.length} wine${baseWines.length === 1 ? '' : 's'} identified · matched to your taste`
-                  : `${baseWines.length} wines · Tap any to explore`}
+                  ? `${scoredWines.length} wine${scoredWines.length === 1 ? '' : 's'} identified · sorted by Match Score`
+                  : `${scoredWines.length} wines · Tap any to explore`}
               </p>
             </div>
             {/* Identity chip */}
@@ -175,6 +198,41 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
               >
                 Try another photo
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* No-strong-matches banner */}
+        {noStrongMatches && !showRetakePanel && (
+          <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} 0` }}>
+            <div style={{
+              padding: theme.spacing.md,
+              borderRadius: theme.radius.md,
+              border: `1px solid ${theme.colors.peach}80`,
+              background: `${theme.colors.peach}18`,
+              fontFamily: theme.typography.fontSans,
+              fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+              lineHeight: 1.5,
+            }}>
+              <strong style={{ fontWeight: 700 }}>No strong matches on this list.</strong> Top match is {topMatch}/100. Here are the closest from what we found.
+            </div>
+          </div>
+        )}
+
+        {/* Low-confidence read warning */}
+        {showLowConfidenceWarning && (
+          <div style={{ padding: `${theme.spacing.sm} ${theme.spacing.lg} 0` }}>
+            <div style={{
+              padding: '10px 12px',
+              borderRadius: theme.radius.sm,
+              background: `${theme.colors.gold}1a`,
+              border: `1px solid ${theme.colors.gold}55`,
+              fontFamily: theme.typography.fontSans,
+              fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+            }}>
+              Some labels were hard to read. Try a sharper photo for a more complete shortlist.
             </div>
           </div>
         )}

@@ -4,7 +4,7 @@ import { LegalLayout } from '@/ui/components/LegalLayout'
 export const Route = createFileRoute('/terms')({
   head: () => ({
     meta: [
-      { title: 'Terms of Service — Wine Flight' },
+      { title: 'Terms of Service, Wine Flight' },
       { name: 'description', content: 'The terms that govern your use of the Wine Flight wine recommendation app.' },
     ],
   }),

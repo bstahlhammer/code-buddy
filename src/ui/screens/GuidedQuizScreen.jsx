@@ -238,7 +238,7 @@ export default function GuidedQuizScreen({ navigate, goBack, onComplete }) {
             padding: theme.spacing.xs,
           }}
         >
-          Not sure — skip this question
+          Not sure, skip this question
         </button>
       </div>
     </div>
