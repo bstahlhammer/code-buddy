@@ -343,15 +343,17 @@ export const Route = createFileRoute('/api/scan')({
             })
           }
 
-          const completion = safeJsonParse(raw)
-          const message = completion?.choices?.[0]?.message
-          const argsRaw = message?.tool_calls?.[0]?.function?.arguments
-          const parsedArgs = typeof argsRaw === 'string' ? safeJsonParse(argsRaw) : null
-          const rawToolWines = Array.isArray(parsedArgs?.wines)
-            ? parsedArgs.wines.map(normalizeWine).filter(Boolean)
-            : []
-          const contentWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
-          const allCandidates = (rawToolWines.length ? rawToolWines : contentWines) as Array<ReturnType<typeof normalizeWine> & {}>
+          const { candidates: firstCandidates, parsedArgs, message } = extractCandidatesFromCompletion(raw)
+          let allCandidates = firstCandidates as Array<ReturnType<typeof normalizeWine> & {}>
+          if (!allCandidates.length) {
+            const rescue = await callVisionModel(apiKey, dataUrl, RESCUE_PROMPT, abort.signal, false)
+            const rescueRaw = await rescue.text().catch(() => '')
+            if (rescue.ok) {
+              allCandidates = extractCandidatesFromCompletion(rescueRaw).candidates as Array<ReturnType<typeof normalizeWine> & {}>
+            } else {
+              console.warn('AI gateway rescue scan error', rescue.status, rescueRaw)
+            }
+          }
           const seenCount = allCandidates.length
           // Drop low-confidence wines (post-OCR recognition gate)
           const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
