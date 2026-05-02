@@ -12,7 +12,10 @@ export function useScan() {
     const timeout = setTimeout(() => controller.abort(), 70_000)
     try {
       onProgress?.({ stage: 'preparing', message: 'Cutting the foil…' })
-      const base64 = await fileToBase64(file)
+      const base64 = await fileToDownscaledBase64(file).catch(async (err) => {
+        console.warn('downscale failed, falling back to raw upload', err)
+        return fileToBase64(file)
+      })
       onProgress?.({ stage: 'uploading', message: 'Presenting the bottle…' })
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData?.session?.access_token
@@ -77,6 +80,66 @@ function safeJsonParse(value) {
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    const timeout = setTimeout(() => {
+      reader.abort()
+      reject(new Error('file_read_timeout'))
+    }, 8000)
+    reader.onload = () => {
+      clearTimeout(timeout)
+      const result = reader.result || ''
+      const comma = String(result).indexOf(',')
+      resolve(comma >= 0 ? String(result).slice(comma + 1) : '')
+    }
+    reader.onerror = () => { clearTimeout(timeout); reject(reader.error || new Error('Could not read file')) }
+    reader.onabort = () => { clearTimeout(timeout); reject(new Error('file_read_aborted')) }
+    reader.readAsDataURL(file)
+  })
+}
+
+// Downscale image client-side to keep request bodies small (avoids Cloudflare 502
+// on large iPhone HEIC/JPEG uploads). Targets ~1800px max edge, JPEG q=0.82.
+async function fileToDownscaledBase64(file) {
+  const MAX_EDGE = 1800
+  const QUALITY = 0.82
+  const dataUrl = await readAsDataUrl(file)
+  const img = await loadImage(dataUrl)
+  const { width, height } = img
+  if (!width || !height) throw new Error('image_decode_failed')
+  const scale = Math.min(1, MAX_EDGE / Math.max(width, height))
+  const w = Math.max(1, Math.round(width * scale))
+  const h = Math.max(1, Math.round(height * scale))
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('canvas_unavailable')
+  ctx.drawImage(img, 0, 0, w, h)
+  const out = canvas.toDataURL('image/jpeg', QUALITY)
+  const comma = out.indexOf(',')
+  return comma >= 0 ? out.slice(comma + 1) : ''
+}
+
+function readAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    const timeout = setTimeout(() => { reader.abort(); reject(new Error('file_read_timeout')) }, 10_000)
+    reader.onload = () => { clearTimeout(timeout); resolve(String(reader.result || '')) }
+    reader.onerror = () => { clearTimeout(timeout); reject(reader.error || new Error('Could not read file')) }
+    reader.onabort = () => { clearTimeout(timeout); reject(new Error('file_read_aborted')) }
+    reader.readAsDataURL(file)
+  })
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const timeout = setTimeout(() => reject(new Error('image_load_timeout')), 12_000)
+    img.onload = () => { clearTimeout(timeout); resolve(img) }
+    img.onerror = () => { clearTimeout(timeout); reject(new Error('image_load_failed')) }
+    img.src = src
+  })
+}
     const reader = new FileReader()
     const timeout = setTimeout(() => {
       reader.abort()
