@@ -12,7 +12,10 @@ export function useScan() {
     const timeout = setTimeout(() => controller.abort(), 70_000)
     try {
       onProgress?.({ stage: 'preparing', message: 'Cutting the foil…' })
-      const base64 = await fileToBase64(file)
+      const base64 = await fileToDownscaledBase64(file).catch(async (err) => {
+        console.warn('downscale failed, falling back to raw upload', err)
+        return fileToBase64(file)
+      })
       onProgress?.({ stage: 'uploading', message: 'Presenting the bottle…' })
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData?.session?.access_token
