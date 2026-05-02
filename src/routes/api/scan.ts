@@ -278,9 +278,10 @@ export const Route = createFileRoute('/api/scan')({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
+              model: 'google/gemini-2.5-pro',
               stream: false,
               temperature: 0.1,
+              max_tokens: 8192,
               messages: [
                 {
                   role: 'user',
@@ -387,8 +388,8 @@ export const Route = createFileRoute('/api/scan')({
           const rawToolWines = Array.isArray(parsedArgs?.wines)
             ? parsedArgs.wines.map(normalizeWine).filter(Boolean)
             : []
-          const fallbackWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
-          const allCandidates = (rawToolWines.length ? rawToolWines : fallbackWines) as Array<ReturnType<typeof normalizeWine> & {}>
+          const contentWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
+          const allCandidates = (rawToolWines.length ? rawToolWines : contentWines) as Array<ReturnType<typeof normalizeWine> & {}>
           const seenCount = allCandidates.length
           // Drop low-confidence wines (post-OCR recognition gate)
           const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
