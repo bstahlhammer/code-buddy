@@ -41,13 +41,13 @@ async function requireAuth(request: Request): Promise<string | Response> {
 const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
 
 // Min confidence (0-100) for a wine to make it into the response.
-const MIN_WINE_CONFIDENCE = 20
+const MIN_WINE_CONFIDENCE = 10
 // If overall recognition rate (kept / total seen) falls below this, mark partial.
 const MIN_RECOGNITION_RATE = 0.3
 
 const PROMPT = `You are a wine expert analyzing an image of a wine list, wine shelf, or single bottle.
 
-STEP 1 — READABILITY GATE:
+STEP 1 — READABILITY CHECK:
 First, judge whether the image is readable enough to extract specific wines.
 - "good": at least one full wine label / list line / shelf tag is sharp, well-lit, and clearly readable.
 - "partial": you can read fragments but most text is blurry, glare-covered, too far, or cut off.
@@ -56,7 +56,7 @@ First, judge whether the image is readable enough to extract specific wines.
 If "partial" or "unreadable", populate retakeReasons with 1-3 short, user-friendly reasons from this list ONLY:
 "too_blurry", "too_dark", "too_far", "glare", "angle_skewed", "label_cut_off", "not_a_wine_image", "list_too_dense".
 
-STEP 2 — EXTRACT WINES (only the ones you can actually read):
+STEP 2 — EXTRACT WINES (extract even if readability is partial):
 Scan the image SYSTEMATICALLY, top-to-bottom and left-to-right. Do not stop early. If there are 30 readable bottles or list lines, return all 30. Be generous: when in doubt about a partially legible wine, include it with a lower confidence score rather than dropping it.
 
 GROUNDING RULES:
@@ -64,7 +64,7 @@ GROUNDING RULES:
 - If you can read most of a wine name and at least one supporting detail (vintage, region, grape, producer, price), include it. Lower the confidence if the read is partial.
 - Avoid returning OCR fragments, store signage, category labels, or single loose words as wines.
 - A producer/brand alone is okay if there's any other supporting detail (vintage, grape, region, price, cuvée). If only an isolated brand word is visible with nothing else, leave it out.
-- If readability is "unreadable", return an empty wines array.
+- Only return an empty wines array when absolutely no wine producer, cuvée, varietal, region, vintage, shelf tag, or list line can be read.
 - For each wine, include a "confidence" score (0-100) reflecting how clearly you could read it. Use lower scores (20-40) for partial reads — they will be kept and shown to the user with a "we may have read this wrong" warning.
 
 OUTPUT RULES:
@@ -92,6 +92,14 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
 - bbox: object — the bounding box of THIS specific bottle/listing in the image, expressed as normalized values (0..1) of the image dimensions:
     { "x": <left edge 0..1>, "y": <top edge 0..1>, "w": <width 0..1>, "h": <height 0..1> }
   Cover the FULL bottle from the top of the capsule/cork to the base, and include the entire label width — don't crop tightly to the label only. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
+
+const RESCUE_PROMPT = `The previous structured extraction found no wines. Re-check the image as a tolerant OCR pass for a wine app.
+
+Return JSON only in this exact shape: {"wines":[...]}. Include every visible wine candidate you can read, even partial reads, as long as it appears to be from a bottle label, shelf tag, or wine-list line. Do not include store signs, section headers, or unrelated text.
+
+Each wine object must include: id, name, vintage, region, grape, price, priceNum, rating, ratingLabel, body, sweetness, tannin, acidity, isValue, isCrowd, tasting, confidence, color, maker, certifications, bbox.
+
+Use confidence 10-35 for uncertain partial reads. Use empty strings, 0, false, [], and bbox {"x":0,"y":0,"w":0,"h":0} when details are not visible.`
 
 const WINE_MARKERS = [
   'cabernet', 'chardonnay', 'pinot', 'merlot', 'sauvignon', 'syrah', 'shiraz', 'riesling', 'malbec',
@@ -237,6 +245,71 @@ function safeJsonParse(value: string) {
   }
 }
 
+function extractCandidatesFromCompletion(raw: string) {
+  const completion = safeJsonParse(raw)
+  const message = completion?.choices?.[0]?.message
+  const argsRaw = message?.tool_calls?.[0]?.function?.arguments
+  const parsedArgs = typeof argsRaw === 'string'
+    ? safeJsonParse(argsRaw)
+    : argsRaw && typeof argsRaw === 'object'
+      ? argsRaw
+      : null
+  const rawToolWines = Array.isArray(parsedArgs?.wines)
+    ? parsedArgs.wines.map(normalizeWine).filter(Boolean)
+    : []
+  const contentWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
+  return { candidates: rawToolWines.length ? rawToolWines : contentWines, parsedArgs, message }
+}
+
+async function callVisionModel(apiKey: string, dataUrl: string, prompt: string, signal: AbortSignal, useTools = true) {
+  const body: Record<string, unknown> = {
+    model: 'google/gemini-2.5-pro',
+    stream: false,
+    temperature: 0.1,
+    max_tokens: 8192,
+    messages: [{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: dataUrl } }] }],
+  }
+  if (useTools) {
+    body.tools = [
+      {
+        type: 'function',
+        function: {
+          name: 'extract_wines',
+          description: 'Return only specific wines visible in the image, or an empty result with retake guidance.',
+          parameters: wineExtractionParameters,
+        },
+      },
+    ]
+    body.tool_choice = { type: 'function', function: { name: 'extract_wines' } }
+  }
+  return fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    signal,
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+const wineExtractionParameters = {
+  type: 'object',
+  properties: {
+    wines: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' }, name: { type: 'string' }, vintage: { type: 'string' }, region: { type: 'string' }, grape: { type: 'string' }, price: { type: 'string' }, priceNum: { type: 'number' }, rating: { type: 'number' }, ratingLabel: { type: 'string' }, body: { type: 'number' }, sweetness: { type: 'number' }, tannin: { type: 'number' }, acidity: { type: 'number' }, isValue: { type: 'boolean' }, isCrowd: { type: 'boolean' }, tasting: { type: 'string' }, confidence: { type: 'number' }, color: { type: 'string', enum: ['red', 'white', 'rose', 'sparkling', 'dessert', ''] }, maker: { type: 'string' }, certifications: { type: 'array', items: { type: 'string', enum: ['natural', 'biodynamic', 'organic', 'low_sulfite'] } }, bbox: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' }, w: { type: 'number' }, h: { type: 'number' } }, required: ['x', 'y', 'w', 'h'], additionalProperties: false },
+        },
+        required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence', 'color', 'maker', 'certifications', 'bbox'],
+        additionalProperties: false,
+      },
+    },
+    message: { type: 'string' }, readability: { type: 'string', enum: ['good', 'partial', 'unreadable'] }, retakeReasons: { type: 'array', items: { type: 'string', enum: ['too_blurry', 'too_dark', 'too_far', 'glare', 'angle_skewed', 'label_cut_off', 'not_a_wine_image', 'list_too_dense'] } },
+  },
+  required: ['wines', 'message', 'readability', 'retakeReasons'],
+  additionalProperties: false,
+}
+
 export const Route = createFileRoute('/api/scan')({
   server: {
     handlers: {
@@ -270,101 +343,7 @@ export const Route = createFileRoute('/api/scan')({
         const abort = new AbortController()
         const timeout = setTimeout(() => abort.abort(), 55_000)
         try {
-          const upstream = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            signal: abort.signal,
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              stream: false,
-              temperature: 0.1,
-              messages: [
-                {
-                  role: 'user',
-                  content: [
-                    { type: 'text', text: PROMPT },
-                    { type: 'image_url', image_url: { url: dataUrl } },
-                  ],
-                },
-              ],
-              tools: [
-                {
-                  type: 'function',
-                  function: {
-                    name: 'extract_wines',
-                    description: 'Return only specific wines visible in the image, or an empty result with retake guidance.',
-                    parameters: {
-                      type: 'object',
-                      properties: {
-                        wines: {
-                          type: 'array',
-                          items: {
-                            type: 'object',
-                            properties: {
-                              id: { type: 'number' },
-                              name: { type: 'string' },
-                              vintage: { type: 'string' },
-                              region: { type: 'string' },
-                              grape: { type: 'string' },
-                              price: { type: 'string' },
-                              priceNum: { type: 'number' },
-                              rating: { type: 'number' },
-                              ratingLabel: { type: 'string' },
-                              body: { type: 'number' },
-                              sweetness: { type: 'number' },
-                              tannin: { type: 'number' },
-                              acidity: { type: 'number' },
-                              isValue: { type: 'boolean' },
-                              isCrowd: { type: 'boolean' },
-                              tasting: { type: 'string' },
-                              confidence: { type: 'number' },
-                              color: { type: 'string', enum: ['red', 'white', 'rose', 'sparkling', 'dessert', ''] },
-                              maker: { type: 'string' },
-                              certifications: {
-                                type: 'array',
-                                items: {
-                                  type: 'string',
-                                  enum: ['natural', 'biodynamic', 'organic', 'low_sulfite'],
-                                },
-                              },
-                              bbox: {
-                                type: 'object',
-                                properties: {
-                                  x: { type: 'number' },
-                                  y: { type: 'number' },
-                                  w: { type: 'number' },
-                                  h: { type: 'number' },
-                                },
-                                required: ['x', 'y', 'w', 'h'],
-                                additionalProperties: false,
-                              },
-                            },
-                            required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence', 'color', 'maker', 'certifications', 'bbox'],
-                            additionalProperties: false,
-                          },
-                        },
-                        message: { type: 'string' },
-                        readability: { type: 'string', enum: ['good', 'partial', 'unreadable'] },
-                        retakeReasons: {
-                          type: 'array',
-                          items: {
-                            type: 'string',
-                            enum: ['too_blurry', 'too_dark', 'too_far', 'glare', 'angle_skewed', 'label_cut_off', 'not_a_wine_image', 'list_too_dense'],
-                          },
-                        },
-                      },
-                      required: ['wines', 'message', 'readability', 'retakeReasons'],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-              ],
-              tool_choice: { type: 'function', function: { name: 'extract_wines' } },
-            }),
-          })
+          const upstream = await callVisionModel(apiKey, dataUrl, PROMPT, abort.signal, true)
 
           const raw = await upstream.text().catch(() => '')
           if (!upstream.ok) {
@@ -380,15 +359,17 @@ export const Route = createFileRoute('/api/scan')({
             })
           }
 
-          const completion = safeJsonParse(raw)
-          const message = completion?.choices?.[0]?.message
-          const argsRaw = message?.tool_calls?.[0]?.function?.arguments
-          const parsedArgs = typeof argsRaw === 'string' ? safeJsonParse(argsRaw) : null
-          const rawToolWines = Array.isArray(parsedArgs?.wines)
-            ? parsedArgs.wines.map(normalizeWine).filter(Boolean)
-            : []
-          const fallbackWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
-          const allCandidates = (rawToolWines.length ? rawToolWines : fallbackWines) as Array<ReturnType<typeof normalizeWine> & {}>
+          const { candidates: firstCandidates, parsedArgs, message } = extractCandidatesFromCompletion(raw)
+          let allCandidates = firstCandidates as Array<ReturnType<typeof normalizeWine> & {}>
+          if (!allCandidates.length) {
+            const rescue = await callVisionModel(apiKey, dataUrl, RESCUE_PROMPT, abort.signal, false)
+            const rescueRaw = await rescue.text().catch(() => '')
+            if (rescue.ok) {
+              allCandidates = extractCandidatesFromCompletion(rescueRaw).candidates as Array<ReturnType<typeof normalizeWine> & {}>
+            } else {
+              console.warn('AI gateway rescue scan error', rescue.status, rescueRaw)
+            }
+          }
           const seenCount = allCandidates.length
           // Drop low-confidence wines (post-OCR recognition gate)
           const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
