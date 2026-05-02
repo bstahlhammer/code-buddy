@@ -97,11 +97,11 @@ function fileToBase64(file) {
   })
 }
 
-// Downscale image client-side to keep request bodies small (avoids Cloudflare 502
-// on large iPhone HEIC/JPEG uploads). Targets ~1800px max edge, JPEG q=0.82.
+// Downscale image client-side to keep request bodies small while preserving
+// enough label/list detail for OCR-style wine extraction.
 async function fileToDownscaledBase64(file) {
-  const MAX_EDGE = 1800
-  const QUALITY = 0.82
+  const MAX_EDGE = 2400
+  const QUALITY = 0.88
   const dataUrl = await readAsDataUrl(file)
   const img = await loadImage(dataUrl)
   const { width, height } = img
@@ -138,21 +138,5 @@ function loadImage(src) {
     img.onload = () => { clearTimeout(timeout); resolve(img) }
     img.onerror = () => { clearTimeout(timeout); reject(new Error('image_load_failed')) }
     img.src = src
-  })
-}
-    const reader = new FileReader()
-    const timeout = setTimeout(() => {
-      reader.abort()
-      reject(new Error('file_read_timeout'))
-    }, 8000)
-    reader.onload = () => {
-      clearTimeout(timeout)
-      const result = reader.result || ''
-      const comma = String(result).indexOf(',')
-      resolve(comma >= 0 ? String(result).slice(comma + 1) : '')
-    }
-    reader.onerror = () => { clearTimeout(timeout); reject(reader.error || new Error('Could not read file')) }
-    reader.onabort = () => { clearTimeout(timeout); reject(new Error('file_read_aborted')) }
-    reader.readAsDataURL(file)
   })
 }
