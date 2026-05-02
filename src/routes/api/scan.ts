@@ -245,6 +245,55 @@ function safeJsonParse(value: string) {
   }
 }
 
+async function callVisionModel(apiKey: string, dataUrl: string, prompt: string, signal: AbortSignal, useTools = true) {
+  const body: Record<string, unknown> = {
+    model: 'google/gemini-2.5-pro',
+    stream: false,
+    temperature: 0.1,
+    max_tokens: 8192,
+    messages: [{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: dataUrl } }] }],
+  }
+  if (useTools) {
+    body.tools = [
+      {
+        type: 'function',
+        function: {
+          name: 'extract_wines',
+          description: 'Return only specific wines visible in the image, or an empty result with retake guidance.',
+          parameters: wineExtractionParameters,
+        },
+      },
+    ]
+    body.tool_choice = { type: 'function', function: { name: 'extract_wines' } }
+  }
+  return fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    signal,
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+const wineExtractionParameters = {
+  type: 'object',
+  properties: {
+    wines: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' }, name: { type: 'string' }, vintage: { type: 'string' }, region: { type: 'string' }, grape: { type: 'string' }, price: { type: 'string' }, priceNum: { type: 'number' }, rating: { type: 'number' }, ratingLabel: { type: 'string' }, body: { type: 'number' }, sweetness: { type: 'number' }, tannin: { type: 'number' }, acidity: { type: 'number' }, isValue: { type: 'boolean' }, isCrowd: { type: 'boolean' }, tasting: { type: 'string' }, confidence: { type: 'number' }, color: { type: 'string', enum: ['red', 'white', 'rose', 'sparkling', 'dessert', ''] }, maker: { type: 'string' }, certifications: { type: 'array', items: { type: 'string', enum: ['natural', 'biodynamic', 'organic', 'low_sulfite'] } }, bbox: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' }, w: { type: 'number' }, h: { type: 'number' } }, required: ['x', 'y', 'w', 'h'], additionalProperties: false },
+        },
+        required: ['id', 'name', 'vintage', 'region', 'grape', 'price', 'priceNum', 'rating', 'ratingLabel', 'body', 'sweetness', 'tannin', 'acidity', 'isValue', 'isCrowd', 'tasting', 'confidence', 'color', 'maker', 'certifications', 'bbox'],
+        additionalProperties: false,
+      },
+    },
+    message: { type: 'string' }, readability: { type: 'string', enum: ['good', 'partial', 'unreadable'] }, retakeReasons: { type: 'array', items: { type: 'string', enum: ['too_blurry', 'too_dark', 'too_far', 'glare', 'angle_skewed', 'label_cut_off', 'not_a_wine_image', 'list_too_dense'] } },
+  },
+  required: ['wines', 'message', 'readability', 'retakeReasons'],
+  additionalProperties: false,
+}
+
 export const Route = createFileRoute('/api/scan')({
   server: {
     handlers: {
