@@ -93,6 +93,14 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
     { "x": <left edge 0..1>, "y": <top edge 0..1>, "w": <width 0..1>, "h": <height 0..1> }
   Cover the FULL bottle from the top of the capsule/cork to the base, and include the entire label width — don't crop tightly to the label only. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
 
+const RESCUE_PROMPT = `The previous structured extraction found no wines. Re-check the image as a tolerant OCR pass for a wine app.
+
+Return JSON only in this exact shape: {"wines":[...]}. Include every visible wine candidate you can read, even partial reads, as long as it appears to be from a bottle label, shelf tag, or wine-list line. Do not include store signs, section headers, or unrelated text.
+
+Each wine object must include: id, name, vintage, region, grape, price, priceNum, rating, ratingLabel, body, sweetness, tannin, acidity, isValue, isCrowd, tasting, confidence, color, maker, certifications, bbox.
+
+Use confidence 10-35 for uncertain partial reads. Use empty strings, 0, false, [], and bbox {"x":0,"y":0,"w":0,"h":0} when details are not visible.`
+
 const WINE_MARKERS = [
   'cabernet', 'chardonnay', 'pinot', 'merlot', 'sauvignon', 'syrah', 'shiraz', 'riesling', 'malbec',
   'zinfandel', 'grenache', 'tempranillo', 'sangiovese', 'nebbiolo', 'mourvedre', 'chenin', 'viognier',
