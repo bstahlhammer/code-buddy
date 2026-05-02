@@ -245,6 +245,22 @@ function safeJsonParse(value: string) {
   }
 }
 
+function extractCandidatesFromCompletion(raw: string) {
+  const completion = safeJsonParse(raw)
+  const message = completion?.choices?.[0]?.message
+  const argsRaw = message?.tool_calls?.[0]?.function?.arguments
+  const parsedArgs = typeof argsRaw === 'string'
+    ? safeJsonParse(argsRaw)
+    : argsRaw && typeof argsRaw === 'object'
+      ? argsRaw
+      : null
+  const rawToolWines = Array.isArray(parsedArgs?.wines)
+    ? parsedArgs.wines.map(normalizeWine).filter(Boolean)
+    : []
+  const contentWines = typeof message?.content === 'string' ? parseWinesFromModel(message.content) : []
+  return { candidates: rawToolWines.length ? rawToolWines : contentWines, parsedArgs, message }
+}
+
 async function callVisionModel(apiKey: string, dataUrl: string, prompt: string, signal: AbortSignal, useTools = true) {
   const body: Record<string, unknown> = {
     model: 'google/gemini-2.5-pro',
