@@ -269,7 +269,7 @@ export default function ScanningScreen({
         </div>
         <p style={{
           fontFamily: theme.typography.fontDisplay,
-          fontSize: 15, fontStyle: 'italic',
+          fontSize: 15,
           color: theme.colors.cream, lineHeight: 1.5, margin: 0,
         }}>
           {fact}

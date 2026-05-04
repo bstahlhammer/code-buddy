@@ -100,7 +100,7 @@ export default function AuthScreen({ goBack, onAuthed, authMode = 'full' }) {
         </div>
         <h1 style={{
           fontFamily: theme.typography.fontDisplay,
-          fontSize: 40, fontStyle: 'italic',
+          fontSize: 40,
           color: theme.colors.cream, lineHeight: 1, margin: 0,
           letterSpacing: '0.02em',
         }}>
@@ -198,7 +198,7 @@ export default function AuthScreen({ goBack, onAuthed, authMode = 'full' }) {
         style={{
           background: 'none', border: 'none',
           color: theme.colors.parchment, opacity: 0.8,
-          fontFamily: theme.typography.fontDisplay, fontStyle: 'italic',
+          fontFamily: theme.typography.fontDisplay,
           fontSize: 15, marginTop: theme.spacing.lg, cursor: 'pointer',
         }}
       >

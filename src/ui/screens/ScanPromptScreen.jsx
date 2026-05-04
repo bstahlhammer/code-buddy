@@ -42,7 +42,7 @@ export default function ScanPromptScreen({ navigate, goBack, onScan, tasteProfil
         <p style={{
           textAlign: 'center', maxWidth: 280,
           fontFamily: theme.typography.fontDisplay,
-          fontSize: 16, fontStyle: 'italic',
+          fontSize: 16,
           color: theme.colors.textMuted, lineHeight: 1.5,
         }}>
           A clear, well-lit photo gives the best matches.

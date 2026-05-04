@@ -145,7 +145,7 @@ export default function WineDetailScreen({ goBack, navigate, wine, tasteProfile,
             <p style={{
               fontFamily: theme.typography.fontSerif,
               fontSize: theme.typography.sizes.lg,
-              fontStyle: 'italic',
+
               color: theme.colors.text,
               lineHeight: 1.4,
               margin: `${theme.spacing.xs} 0 ${theme.spacing.sm}`,
@@ -200,7 +200,7 @@ export default function WineDetailScreen({ goBack, navigate, wine, tasteProfile,
               />
             )}
             {shelfOpen && bbox && !bboxLoading && (
-              <p style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 8, fontStyle: 'italic' }}>
+              <p style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 8, }}>
                 Look for the highlighted bottle.
               </p>
             )}
@@ -214,7 +214,7 @@ export default function WineDetailScreen({ goBack, navigate, wine, tasteProfile,
             <p style={{
               fontFamily: theme.typography.fontSerif,
               fontSize: theme.typography.sizes.lg,
-              fontStyle: 'italic',
+
               color: theme.colors.text,
               lineHeight: 1.5,
               marginTop: theme.spacing.xs,
@@ -536,7 +536,7 @@ function AxisRow({ label, lo, hi, wineValue, userValue, descriptor }) {
         <span style={{ fontFamily: theme.typography.fontSans, fontSize: 10, color: theme.colors.textMuted, letterSpacing: '0.04em' }}>{hi}</span>
       </div>
       {uPct !== null && (
-        <div style={{ fontSize: 10, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 2, fontStyle: 'italic' }}>
+        <div style={{ fontSize: 10, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 2, }}>
           {aligned ? '◆ aligns with your palate' : off ? '◆ notably different from your palate' : '◆ small difference from your palate'}
         </div>
       )}

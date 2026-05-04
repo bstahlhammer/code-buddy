@@ -315,7 +315,7 @@ function TopPickCard({ wine, onTap }) {
           <div style={{
             fontFamily: theme.typography.fontSerif,
             fontSize: theme.typography.sizes.xl,
-            fontStyle: 'italic',
+
             color: theme.colors.cream,
             lineHeight: 1.2,
           }}>

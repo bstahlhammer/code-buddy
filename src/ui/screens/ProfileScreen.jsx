@@ -79,7 +79,7 @@ export default function ProfileScreen({
           <TopBar onBack={goBack} onHome={() => navigate('home')} light />
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl, textAlign: 'center', gap: theme.spacing.md }}>
-          <div style={{ fontFamily: theme.typography.fontSerif, fontStyle: 'italic', fontSize: theme.typography.sizes.xxl, color: theme.colors.text }}>
+          <div style={{ fontFamily: theme.typography.fontSerif, fontSize: theme.typography.sizes.xxl, color: theme.colors.text }}>
             No taste profile yet
           </div>
           <div style={{ fontFamily: theme.typography.fontSans, color: theme.colors.textMuted, fontSize: theme.typography.sizes.md, maxWidth: 280 }}>
@@ -111,7 +111,7 @@ export default function ProfileScreen({
           <h1 style={{
             fontFamily: theme.typography.fontSerif,
             fontSize: theme.typography.sizes.xl,
-            fontStyle: 'italic', fontWeight: 400, color: theme.colors.cream, margin: 0,
+ fontWeight: 600, color: theme.colors.cream, margin: 0,
           }}>
             {tasteProfile.name}
           </h1>

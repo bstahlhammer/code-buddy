@@ -30,6 +30,7 @@ import HistoryScreen from './ui/screens/HistoryScreen.jsx'
 import ProfileScreen from './ui/screens/ProfileScreen.jsx'
 import ScanReviewScreen from './ui/screens/ScanReviewScreen.jsx'
 import AddWineSheet from './ui/components/AddWineSheet.jsx'
+import { placeFromPhoto } from './ui/utils/photoGeo.js'
 
 const TAB_FOR_SCREEN = {
   home: 'home',
@@ -319,7 +320,14 @@ export default function App() {
               setScannedWines(payload)
               const wines = Array.isArray(payload?.wines) ? payload.wines : []
               if (wines.length && auth.user) {
-                const { scan } = await saveScan({ wines, photoFile: scanFile, buyingFor })
+                const place = await placeFromPhoto(scanFile).catch(() => null)
+                const { scan } = await saveScan({
+                  wines,
+                  photoFile: scanFile,
+                  buyingFor,
+                  place: place || undefined,
+                  locationLabel: place?.name,
+                })
                 if (scan) {
                   const photoUrl = scan.photo_path ? await getPhotoUrl(scan.photo_path) : null
                   setActiveScan({ scanId: scan.id, photoUrl })

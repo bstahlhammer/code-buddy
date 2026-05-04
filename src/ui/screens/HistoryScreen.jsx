@@ -51,7 +51,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
-      <div style={{ backgroundColor: theme.colors.brandDark }}>
+      <div style={{ backgroundColor: theme.colors.brandDark, flexShrink: 0 }}>
         <TopBar onBack={goBack} onHome={() => navigate('home')} light />
         <div style={{ padding: `${theme.spacing.sm} ${theme.spacing.xl} ${theme.spacing.xl}` }}>
           <div style={{
@@ -68,8 +68,8 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
           <h1 style={{
             fontFamily: theme.typography.fontSerif,
             fontSize: theme.typography.sizes.xxl,
-            fontStyle: 'italic',
-            fontWeight: 400,
+
+            fontWeight: 600,
             color: theme.colors.cream,
             margin: 0,
           }}>
@@ -78,13 +78,13 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
         </div>
       </div>
 
-      <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: theme.spacing.xl }}>
+      <div className="hide-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: theme.spacing.xl, paddingBottom: theme.spacing.xxl }}>
         {loading && <div style={{ color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, fontSize: theme.typography.sizes.sm }}>Loading…</div>}
 
         {!loading && scans.length === 0 && (
           <div style={{ textAlign: 'center', padding: `${theme.spacing.xxl} 0` }}>
             <div style={{ fontSize: 36, marginBottom: theme.spacing.sm }}>🍷</div>
-            <div style={{ fontFamily: theme.typography.fontSerif, fontSize: theme.typography.sizes.xl, fontStyle: 'italic', color: theme.colors.text, marginBottom: theme.spacing.xs }}>
+            <div style={{ fontFamily: theme.typography.fontSerif, fontSize: theme.typography.sizes.xl, color: theme.colors.text, marginBottom: theme.spacing.xs }}>
               No scans yet
             </div>
             <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginBottom: theme.spacing.lg }}>

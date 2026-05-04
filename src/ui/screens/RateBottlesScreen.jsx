@@ -44,7 +44,7 @@ export default function RateBottlesScreen({ navigate, goBack, initialRatings = {
           fontSize: theme.typography.sizes.md,
           color: theme.colors.textMuted,
           fontFamily: theme.typography.fontSans,
-          fontStyle: 'italic',
+
           lineHeight: 1.5,
         }}>
           Search any bottle by maker, grape, or region. Your palate updates live as you rate.

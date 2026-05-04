@@ -104,7 +104,7 @@ export default function TasteBuilderScreen({
           fontSize: theme.typography.sizes.xxl,
           color: theme.colors.text,
           fontWeight: theme.typography.weights.normal,
-          fontStyle: 'italic',
+
           lineHeight: 1.2,
           marginBottom: theme.spacing.sm,
         }}>
@@ -158,9 +158,6 @@ export default function TasteBuilderScreen({
         >
           <ArchetypePicker value={archetypeSeed} onChange={setArchetypeSeed} />
         </Section>
-
-        {/* Live profile preview */}
-        <ProfilePreview preview={preview} />
 
         {/* Refine link */}
         <div style={{ textAlign: 'center', marginTop: theme.spacing.sm }}>
@@ -274,7 +271,7 @@ function Section({ number, title, subtitle, status, open, onToggle, children }) 
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: theme.typography.fontSerif,
-          fontStyle: 'italic',
+
           fontSize: 14,
           flexShrink: 0,
           fontWeight: 600,
@@ -284,7 +281,7 @@ function Section({ number, title, subtitle, status, open, onToggle, children }) 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontFamily: theme.typography.fontSerif,
-            fontStyle: 'italic',
+
             fontSize: theme.typography.sizes.lg,
             color: theme.colors.text,
             lineHeight: 1.2,
@@ -325,103 +322,5 @@ function Section({ number, title, subtitle, status, open, onToggle, children }) 
   )
 }
 
-// ─── Live profile preview ─────────────────────────────────────────────────
+// (Live profile preview removed — show profile only after completion.)
 
-function ProfilePreview({ preview }) {
-  if (!preview) {
-    return (
-      <div style={{
-        padding: theme.spacing.md,
-        border: `1px dashed ${theme.colors.border}`,
-        borderRadius: theme.radius.md,
-        textAlign: 'center',
-        fontSize: theme.typography.sizes.sm,
-        color: theme.colors.textMuted,
-        fontFamily: theme.typography.fontSans,
-        fontStyle: 'italic',
-      }}>
-        Pick a starting archetype, rate a bottle, or describe what you like to see your profile take shape.
-      </div>
-    )
-  }
-  const { palate, archetype } = preview
-  return (
-    <div style={{
-      padding: theme.spacing.md,
-      border: `1px solid ${theme.colors.gold}60`,
-      borderRadius: theme.radius.md,
-      backgroundColor: `${theme.colors.gold}10`,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: theme.spacing.sm,
-    }}>
-      <div style={{
-        fontSize: theme.typography.sizes.xs,
-        color: theme.colors.gold,
-        fontFamily: theme.typography.fontSans,
-        fontWeight: theme.typography.weights.medium,
-        letterSpacing: '0.16em',
-        textTransform: 'uppercase',
-      }}>
-        ✦ Your profile so far
-      </div>
-      <div style={{
-        fontFamily: theme.typography.fontSerif,
-        fontStyle: 'italic',
-        fontSize: theme.typography.sizes.xl,
-        color: theme.colors.text,
-        lineHeight: 1.2,
-      }}>
-        {archetype.name}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-        <Bar label="Body"      value={palate.body} />
-        <Bar label="Tannin"    value={palate.tannin} />
-        <Bar label="Acidity"   value={palate.acidity} />
-        <Bar label="Sweetness" value={palate.sweetness} />
-      </div>
-    </div>
-  )
-}
-
-function Bar({ label, value }) {
-  const safe = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-      <div style={{
-        width: 64,
-        fontSize: '10px',
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase',
-        color: theme.colors.textMuted,
-        fontFamily: theme.typography.fontSans,
-        fontWeight: theme.typography.weights.medium,
-      }}>
-        {label}
-      </div>
-      <div style={{
-        flex: 1,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: theme.colors.barTrack,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          height: '100%',
-          width: `${safe}%`,
-          background: `linear-gradient(90deg, ${theme.colors.gold}, ${theme.colors.goldBright})`,
-          transition: 'width 0.3s ease',
-        }}/>
-      </div>
-      <div style={{
-        width: 28,
-        textAlign: 'right',
-        fontSize: '11px',
-        color: theme.colors.textMuted,
-        fontFamily: theme.typography.fontSans,
-      }}>
-        {safe}
-      </div>
-    </div>
-  )
-}

@@ -143,7 +143,7 @@ export default function WineRatingStep({ value = {}, onChange, aiPalate = null, 
           fontSize: theme.typography.sizes.sm,
           color: theme.colors.textMuted,
           fontFamily: theme.typography.fontSans,
-          fontStyle: 'italic',
+
           textAlign: 'center',
           margin: 0,
         }}>
@@ -294,7 +294,7 @@ function PalatePreview({ inference, archetype, hasAiSignal }) {
       <div style={{
         fontFamily: theme.typography.fontSerif,
         fontSize: theme.typography.sizes.xl,
-        fontStyle: 'italic',
+
         marginBottom: theme.spacing.md,
         color: theme.colors.cream,
       }}>
@@ -494,7 +494,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
         </div>
         <div style={{
           fontFamily: theme.typography.fontSerif,
-          fontStyle: 'italic',
+
           fontSize: theme.typography.sizes.md,
           color: theme.colors.text,
           lineHeight: 1.4,
@@ -514,7 +514,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
           fontSize: theme.typography.sizes.xs,
           color: theme.colors.textMuted,
           fontFamily: theme.typography.fontSans,
-          fontStyle: 'italic',
+
         }}>
           Rate any specific bottles below to sharpen your profile further — your taste can evolve over time.
         </p>
@@ -548,7 +548,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
         fontSize: theme.typography.sizes.sm,
         color: theme.colors.textMuted,
         fontFamily: theme.typography.fontSans,
-        fontStyle: 'italic',
+
         lineHeight: 1.4,
       }}>
         Don't know the names? Describe what you like in your own words, "smooth reds, nothing too dry", and we'll translate it into your taste profile.
@@ -641,7 +641,7 @@ function DescribeStep({ aiPalate, onAiPalateChange }) {
           </div>
           <div style={{
             fontFamily: theme.typography.fontSerif,
-            fontStyle: 'italic',
+
             fontSize: theme.typography.sizes.md,
             color: theme.colors.text,
             lineHeight: 1.4,

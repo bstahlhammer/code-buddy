@@ -17,7 +17,7 @@ export default function UpsellBanner({ onCta }) {
       }}
     >
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '16px', color: theme.colors.cream, fontFamily: theme.typography.fontDisplay, fontStyle: 'italic', lineHeight: 1.3, letterSpacing: '0.01em' }}>
+        <div style={{ fontSize: '16px', color: theme.colors.cream, fontFamily: theme.typography.fontDisplay, lineHeight: 1.3, letterSpacing: '0.01em' }}>
           See which of these matches your taste
         </div>
         <div style={{ fontSize: '10px', color: theme.colors.gold, fontFamily: theme.typography.fontSans, marginTop: 4, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 500 }}>

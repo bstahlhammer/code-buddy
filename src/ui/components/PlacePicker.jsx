@@ -67,7 +67,7 @@ export default function PlacePicker({ initialLabel = '', onPick, onCancel }) {
       const lat = pos.coords.latitude
       const lng = pos.coords.longitude
       userLocRef.current = { lat, lng }
-      const { places, error } = await findNearbyPlaces({ lat, lng, radius: 200 })
+      const { places, error } = await findNearbyPlaces({ lat, lng, radius: 500 })
       setGpsLoading(false)
       if (error) { setError(humanizeError(error)); return }
       if (!places.length) {
@@ -227,6 +227,7 @@ function makeSessionToken() {
 function humanizeError(code) {
   if (code === 'auth_required') return 'Please sign in.'
   if (code === 'missing_api_key') return 'Maps search is not configured.'
-  if (typeof code === 'string' && code.startsWith('http_')) return 'Maps search is unavailable right now.'
+  if (code === 'http_403') return 'Maps search is not authorized for this app yet. Try again later or enter a place by name.'
+  if (typeof code === 'string' && code.startsWith('http_')) return 'Maps search is unavailable right now. Try entering a place by name.'
   return 'Something went wrong.'
 }
