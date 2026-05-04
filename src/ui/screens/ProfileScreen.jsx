@@ -111,7 +111,7 @@ export default function ProfileScreen({
           <h1 style={{
             fontFamily: theme.typography.fontSerif,
             fontSize: theme.typography.sizes.xl,
- fontWeight: 400, color: theme.colors.cream, margin: 0,
+ fontWeight: 600, color: theme.colors.cream, margin: 0,
           }}>
             {tasteProfile.name}
           </h1>

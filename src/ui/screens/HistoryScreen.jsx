@@ -69,7 +69,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
             fontFamily: theme.typography.fontSerif,
             fontSize: theme.typography.sizes.xxl,
 
-            fontWeight: 400,
+            fontWeight: 600,
             color: theme.colors.cream,
             margin: 0,
           }}>
