@@ -61,13 +61,7 @@ function GoogleLogo() {
 
 function TasteProfileCard({ tasteProfile, onTap }) {
   const archetype = tasteProfile?.name || tasteProfile?.archetype?.name || 'Your taste profile'
-  const palate = tasteProfile?.palate || {}
-  const dims = [
-    { key: 'body',      label: 'Body' },
-    { key: 'sweetness', label: 'Sweet' },
-    { key: 'tannin',    label: 'Tannin' },
-    { key: 'acidity',   label: 'Acid' },
-  ]
+  const description = tasteProfile?.description || tasteProfile?.archetype?.description || ''
   return (
     <button
       onClick={onTap}
@@ -91,35 +85,20 @@ function TasteProfileCard({ tasteProfile, onTap }) {
       <div style={{
         fontFamily: theme.typography.fontDisplay,
         fontSize: 22, color: theme.colors.brand, lineHeight: 1.1,
-        marginBottom: 10,
+        marginBottom: description ? 6 : 0,
       }}>
         {archetype}
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        {dims.map(d => {
-          const v = Math.max(0, Math.min(100, palate[d.key] ?? 0))
-          return (
-            <div key={d.key} style={{ flex: 1 }}>
-              <div style={{
-                height: 4, borderRadius: 2,
-                background: `${theme.colors.brand}22`, overflow: 'hidden',
-              }}>
-                <div style={{
-                  width: `${v}%`, height: '100%',
-                  background: `linear-gradient(90deg, ${theme.colors.magenta}, ${theme.colors.berry})`,
-                }} />
-              </div>
-              <div style={{
-                fontSize: 9, marginTop: 4,
-                fontFamily: theme.typography.fontSans, color: theme.colors.brand,
-                letterSpacing: '0.12em', textTransform: 'uppercase',
-              }}>
-                {d.label}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {description && (
+        <div style={{
+          fontFamily: theme.typography.fontSans,
+          fontSize: 13,
+          color: `${theme.colors.brand}cc`,
+          lineHeight: 1.4,
+        }}>
+          {description}
+        </div>
+      )}
     </button>
   )
 }
