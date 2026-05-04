@@ -227,6 +227,7 @@ function makeSessionToken() {
 function humanizeError(code) {
   if (code === 'auth_required') return 'Please sign in.'
   if (code === 'missing_api_key') return 'Maps search is not configured.'
-  if (typeof code === 'string' && code.startsWith('http_')) return 'Maps search is unavailable right now.'
+  if (code === 'http_403') return 'Maps search is not authorized for this app yet. Try again later or enter a place by name.'
+  if (typeof code === 'string' && code.startsWith('http_')) return 'Maps search is unavailable right now. Try entering a place by name.'
   return 'Something went wrong.'
 }
