@@ -58,7 +58,7 @@ export default function ArchetypePicker({ value, onChange }) {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <div style={{
                 fontFamily: theme.typography.fontSerif,
-                fontStyle: 'italic',
+
                 fontSize: theme.typography.sizes.lg,
                 color: theme.colors.text,
                 lineHeight: 1.2,

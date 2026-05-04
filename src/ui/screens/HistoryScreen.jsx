@@ -68,7 +68,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
           <h1 style={{
             fontFamily: theme.typography.fontSerif,
             fontSize: theme.typography.sizes.xxl,
-            fontStyle: 'italic',
+
             fontWeight: 400,
             color: theme.colors.cream,
             margin: 0,
@@ -84,7 +84,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
         {!loading && scans.length === 0 && (
           <div style={{ textAlign: 'center', padding: `${theme.spacing.xxl} 0` }}>
             <div style={{ fontSize: 36, marginBottom: theme.spacing.sm }}>🍷</div>
-            <div style={{ fontFamily: theme.typography.fontSerif, fontSize: theme.typography.sizes.xl, fontStyle: 'italic', color: theme.colors.text, marginBottom: theme.spacing.xs }}>
+            <div style={{ fontFamily: theme.typography.fontSerif, fontSize: theme.typography.sizes.xl, color: theme.colors.text, marginBottom: theme.spacing.xs }}>
               No scans yet
             </div>
             <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginBottom: theme.spacing.lg }}>

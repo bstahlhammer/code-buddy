@@ -37,7 +37,7 @@ export default function SliderStep({ value, onChange, labels }) {
           fontFamily: theme.typography.fontSerif,
           color: theme.colors.brand,
           fontWeight: theme.typography.weights.normal,
-          fontStyle: 'italic',
+
         }}
       >
         {label}

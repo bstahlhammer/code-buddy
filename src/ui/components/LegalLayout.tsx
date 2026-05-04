@@ -47,7 +47,7 @@ export function LegalLayout({ eyebrow, title, updated, children }: {
         <h1 style={{
           fontFamily: theme.typography.fontDisplay,
           fontSize: 44,
-          fontStyle: 'italic',
+
           color: theme.colors.cream,
           margin: 0,
           letterSpacing: '0.02em',

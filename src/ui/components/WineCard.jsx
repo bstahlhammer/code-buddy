@@ -77,14 +77,14 @@ export default function WineCard({ wine, personalized, isBestMatch, tasteProfile
 
       {/* Why it's a match (personalized only) */}
       {personalized && wine.why && (
-        <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, fontStyle: 'italic', lineHeight: 1.5 }}>
+        <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, lineHeight: 1.5 }}>
           {wine.why}
         </div>
       )}
 
       {/* Tasting note preview (anon only) */}
       {!personalized && wine.tasting && (
-        <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, fontStyle: 'italic', lineHeight: 1.5 }}>
+        <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, lineHeight: 1.5 }}>
           {wine.tasting.slice(0, 80)}{wine.tasting.length > 80 ? '…' : ''}
         </div>
       )}

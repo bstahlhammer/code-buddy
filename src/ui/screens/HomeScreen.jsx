@@ -296,7 +296,7 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
             fontFamily: theme.typography.fontDisplay,
             fontSize: '18px',
             color: theme.colors.parchment,
-            fontStyle: 'italic',
+
             marginTop: theme.spacing.md,
             letterSpacing: '0.04em',
             opacity: 0.9,

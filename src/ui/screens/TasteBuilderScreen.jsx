@@ -104,7 +104,7 @@ export default function TasteBuilderScreen({
           fontSize: theme.typography.sizes.xxl,
           color: theme.colors.text,
           fontWeight: theme.typography.weights.normal,
-          fontStyle: 'italic',
+
           lineHeight: 1.2,
           marginBottom: theme.spacing.sm,
         }}>
@@ -274,7 +274,7 @@ function Section({ number, title, subtitle, status, open, onToggle, children }) 
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: theme.typography.fontSerif,
-          fontStyle: 'italic',
+
           fontSize: 14,
           flexShrink: 0,
           fontWeight: 600,
@@ -284,7 +284,7 @@ function Section({ number, title, subtitle, status, open, onToggle, children }) 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontFamily: theme.typography.fontSerif,
-            fontStyle: 'italic',
+
             fontSize: theme.typography.sizes.lg,
             color: theme.colors.text,
             lineHeight: 1.2,
@@ -338,7 +338,7 @@ function ProfilePreview({ preview }) {
         fontSize: theme.typography.sizes.sm,
         color: theme.colors.textMuted,
         fontFamily: theme.typography.fontSans,
-        fontStyle: 'italic',
+
       }}>
         Pick a starting archetype, rate a bottle, or describe what you like to see your profile take shape.
       </div>
@@ -367,7 +367,7 @@ function ProfilePreview({ preview }) {
       </div>
       <div style={{
         fontFamily: theme.typography.fontSerif,
-        fontStyle: 'italic',
+
         fontSize: theme.typography.sizes.xl,
         color: theme.colors.text,
         lineHeight: 1.2,

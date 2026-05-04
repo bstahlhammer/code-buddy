@@ -148,7 +148,7 @@ export default function GuidedQuizScreen({ navigate, goBack, onComplete }) {
               fontSize: theme.typography.sizes.md,
               color: theme.colors.textMuted,
               fontFamily: theme.typography.fontSans,
-              fontStyle: 'italic',
+
               lineHeight: 1.5,
             }}
           >
