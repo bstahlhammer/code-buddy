@@ -61,13 +61,7 @@ function GoogleLogo() {
 
 function TasteProfileCard({ tasteProfile, onTap }) {
   const archetype = tasteProfile?.name || tasteProfile?.archetype?.name || 'Your taste profile'
-  const palate = tasteProfile?.palate || {}
-  const dims = [
-    { key: 'body',      label: 'Body' },
-    { key: 'sweetness', label: 'Sweet' },
-    { key: 'tannin',    label: 'Tannin' },
-    { key: 'acidity',   label: 'Acid' },
-  ]
+  const description = tasteProfile?.description || tasteProfile?.archetype?.description || ''
   return (
     <button
       onClick={onTap}
