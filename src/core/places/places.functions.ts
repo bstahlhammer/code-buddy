@@ -180,7 +180,7 @@ export const placesNearby = createServerFn({ method: 'POST' })
           locationRestriction: {
             circle: {
               center: { latitude: data.lat, longitude: data.lng },
-              radius: data.radius ?? 200,
+              radius: data.radius ?? 500,
             },
           },
         }),

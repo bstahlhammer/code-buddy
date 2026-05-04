@@ -67,7 +67,7 @@ export default function PlacePicker({ initialLabel = '', onPick, onCancel }) {
       const lat = pos.coords.latitude
       const lng = pos.coords.longitude
       userLocRef.current = { lat, lng }
-      const { places, error } = await findNearbyPlaces({ lat, lng, radius: 200 })
+      const { places, error } = await findNearbyPlaces({ lat, lng, radius: 500 })
       setGpsLoading(false)
       if (error) { setError(humanizeError(error)); return }
       if (!places.length) {
