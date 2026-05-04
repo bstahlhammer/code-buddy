@@ -51,7 +51,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
-      <div style={{ backgroundColor: theme.colors.brandDark }}>
+      <div style={{ backgroundColor: theme.colors.brandDark, flexShrink: 0 }}>
         <TopBar onBack={goBack} onHome={() => navigate('home')} light />
         <div style={{ padding: `${theme.spacing.sm} ${theme.spacing.xl} ${theme.spacing.xl}` }}>
           <div style={{
@@ -78,7 +78,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
         </div>
       </div>
 
-      <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: theme.spacing.xl }}>
+      <div className="hide-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: theme.spacing.xl, paddingBottom: theme.spacing.xxl }}>
         {loading && <div style={{ color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, fontSize: theme.typography.sizes.sm }}>Loading…</div>}
 
         {!loading && scans.length === 0 && (
