@@ -3,6 +3,7 @@ import { theme } from '../theme/theme.js'
 import TopBar from '../components/TopBar.jsx'
 import PlacePicker from '../components/PlacePicker.jsx'
 import { useScanHistory } from '../hooks/useScanHistory.js'
+import { formatScanLabel } from '../utils/formatScan.js'
 
 export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
   const { listScans, deleteScan, updateScanLocation, getPhotoUrl } = useScanHistory()
@@ -155,7 +156,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
                     color: theme.colors.text,
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}>
-                    {scan.location_label || 'Unlabeled scan'}
+                    {formatScanLabel(scan)}
                     {scan.place_id && <span title="Linked to Google Maps" style={{ fontSize: 11 }}>📍</span>}
                   </div>
                   {scan.place_address && (
@@ -169,7 +170,7 @@ export default function HistoryScreen({ navigate, goBack, onOpenScan }) {
                     fontFamily: theme.typography.fontSans,
                     marginTop: 2,
                   }}>
-                    {formatDate(scan.created_at)} · {scan.wine_count} wine{scan.wine_count === 1 ? '' : 's'}
+                    {scan.wine_count} wine{scan.wine_count === 1 ? '' : 's'}
                   </div>
                 </div>
                 <div style={{ color: theme.colors.textMuted, fontSize: 18 }}>›</div>
@@ -233,9 +234,3 @@ function mapsUrl(scan) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(scan.location_label || '')}`
 }
 
-function formatDate(iso) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) +
-         ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-}

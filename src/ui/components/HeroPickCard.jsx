@@ -19,7 +19,7 @@ const ROLE_META = {
   },
 }
 
-export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap, matchScore, matchExplanation }) {
+export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap, matchScore, matchExplanation, onNotOnList }) {
   const meta = ROLE_META[role] || ROLE_META.topPick
   const priceStr = wine.price && wine.price !== ',' && String(wine.price).trim() !== ''
     ? (String(wine.price).startsWith('$') ? wine.price : `$${wine.price}`)
@@ -149,6 +149,28 @@ export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, o
           letterSpacing: '0.04em',
         }}>
           Read at {wine.confidence}% confidence — verify the label
+        </div>
+      )}
+
+      {/* False-positive flag */}
+      {onNotOnList && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); onNotOnList(wine) }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onNotOnList(wine) } }}
+          style={{
+            marginTop: theme.spacing.xs,
+            fontSize: theme.typography.sizes.xs,
+            color: theme.colors.textMuted,
+            fontFamily: theme.typography.fontSans,
+            textAlign: 'right',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            letterSpacing: '0.03em',
+          }}
+        >
+          Not on the list
         </div>
       )}
     </button>

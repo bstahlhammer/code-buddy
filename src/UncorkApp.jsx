@@ -348,6 +348,7 @@ export default function App() {
             scannedWines={scannedWines}
             scanIntent={scanIntent}
             buyingFor={buyingFor}
+            scanId={activeScan?.scanId}
             onWineSelect={w => handleWineSelect(w, 'anonResults')}
           />
         )
@@ -403,6 +404,7 @@ export default function App() {
             buyingFor={buyingFor}
             scanIntent={scanIntent}
             scannedWines={scannedWines}
+            scanId={activeScan?.scanId}
             onWineSelect={w => handleWineSelect(w, 'personalizedResults')}
           />
         )

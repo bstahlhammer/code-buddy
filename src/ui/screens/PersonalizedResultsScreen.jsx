@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { theme } from '../theme/theme.js'
 import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
@@ -8,6 +8,7 @@ import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import FilterSheet from '../components/FilterSheet.jsx'
+import { useScanFeedback } from '../hooks/useScanFeedback.js'
 
 const SORT_OPTIONS = [
   { value: 'match',          label: 'My Match' },
@@ -43,12 +44,17 @@ function normalizeScanResult(scannedWines) {
   return null
 }
 
-export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfile, buyingFor, scanIntent, scannedWines, onWineSelect }) {
+export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfile, buyingFor, scanIntent, scannedWines, onWineSelect, scanId }) {
   // Always default to match-first when a profile exists.
   const [sortKey, setSortKey] = useState('match')
   const [showAll, setShowAll] = useState(false)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [filterOpen, setFilterOpen] = useState(false)
+
+  const { reportFeedback } = useScanFeedback()
+  const handleNotOnList = useCallback((wine) => {
+    reportFeedback({ scanId, wineName: wine.name, wineId: wine.id, reason: 'not_on_list' })
+  }, [scanId, reportFeedback])
 
   // If we came from a scan, use those wines; otherwise fall back to the catalogue.
   const scanResult = normalizeScanResult(scannedWines)
@@ -291,6 +297,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
                   matchScore={score}
                   matchExplanation={explanation}
                   onTap={onWineSelect}
+                  onNotOnList={handleNotOnList}
                 />
               )
             })}
@@ -334,6 +341,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
                     personalized
                     tasteProfile={tasteProfile}
                     onTap={onWineSelect}
+                    onNotOnList={handleNotOnList}
                   />
                 ))}
               </div>

@@ -3,7 +3,7 @@ import Badge from './Badge.jsx'
 import MatchScore from './MatchScore.jsx'
 import { explainMatch } from '@/core/api'
 
-export default function WineCard({ wine, personalized, isBestMatch, tasteProfile, onTap }) {
+export default function WineCard({ wine, personalized, isBestMatch, tasteProfile, onTap, onNotOnList }) {
   const matchScore      = wine.computedMatch ?? wine.match ?? 50
   const isImperfect     = personalized && matchScore < 60
   const matchExplanation = personalized && tasteProfile ? explainMatch(wine, tasteProfile) : null
@@ -107,6 +107,28 @@ export default function WineCard({ wine, personalized, isBestMatch, tasteProfile
               ? 'quite different from your usual style'
               : 'outside your typical preference zone'
           }
+        </div>
+      )}
+
+      {/* False-positive flag */}
+      {onNotOnList && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); onNotOnList(wine) }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onNotOnList(wine) } }}
+          style={{
+            marginTop: theme.spacing.xs,
+            fontSize: theme.typography.sizes.xs,
+            color: theme.colors.textMuted,
+            fontFamily: theme.typography.fontSans,
+            textAlign: 'right',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            letterSpacing: '0.03em',
+          }}
+        >
+          Not on the list
         </div>
       )}
     </button>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { theme } from '../theme/theme.js'
 import { chooseHeroPicks, sortWines, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
@@ -9,6 +9,7 @@ import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import FilterSheet from '../components/FilterSheet.jsx'
+import { useScanFeedback } from '../hooks/useScanFeedback.js'
 
 const REASON_COPY = {
   too_blurry:       'The image was a little blurry, try holding steadier.',
@@ -37,12 +38,17 @@ function normalizeScanResult(scannedWines) {
   return null
 }
 
-export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tasteProfile, scannedWines, scanIntent, buyingFor }) {
+export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tasteProfile, scannedWines, scanIntent, buyingFor, scanId }) {
   const hasProfile = !!tasteProfile
   const [showAll, setShowAll] = useState(false)
   const [sortKey, setSortKey] = useState('crowd')
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [filterOpen, setFilterOpen] = useState(false)
+
+  const { reportFeedback } = useScanFeedback()
+  const handleNotOnList = useCallback((wine) => {
+    reportFeedback({ scanId, wineName: wine.name, wineId: wine.id, reason: 'not_on_list' })
+  }, [scanId, reportFeedback])
 
   const scanResult = normalizeScanResult(scannedWines)
   const scanAttempted = scanResult !== null
@@ -230,9 +236,10 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
                 role={role}
                 wine={wine}
                 reasoning={reasoning}
-                ctaLabel={role === 'topPick' && !hasProfile ? 'Help me find wines I’ll love' : undefined}
-                onCta={role === 'topPick' && !hasProfile ? () => navigate('quizIntro') : undefined}
+                ctaLabel={role === ‘topPick’ && !hasProfile ? ‘Help me find wines I’ll love’ : undefined}
+                onCta={role === ‘topPick’ && !hasProfile ? () => navigate(‘quizIntro’) : undefined}
                 onTap={onWineSelect}
+                onNotOnList={handleNotOnList}
               />
             ))}
           </div>
@@ -278,6 +285,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
                         wine={wine}
                         personalized={false}
                         onTap={onWineSelect}
+                        onNotOnList={handleNotOnList}
                       />
                     ))}
                   </div>
