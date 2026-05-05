@@ -55,6 +55,13 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
   const facets = useMemo(() => getFilterFacets(allWines), [allWines])
   const wines = useMemo(() => applyFilters(allWines, filters), [allWines, filters])
 
+  const lowConfidenceCount = useMemo(
+    () => allWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
+    [allWines]
+  )
+  const showLowConfidenceWarning = scanAttempted && allWines.length > 0 &&
+    lowConfidenceCount / allWines.length >= 0.3
+
   const heroPicks = useMemo(() => chooseHeroPicks(wines, hasProfile ? tasteProfile : null), [wines, tasteProfile, hasProfile])
   const heroIds = useMemo(() => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)), [heroPicks])
 
@@ -193,6 +200,23 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
               >
                 Try another photo
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Low-confidence read warning */}
+        {showLowConfidenceWarning && (
+          <div style={{ padding: `${theme.spacing.sm} ${theme.spacing.lg} 0` }}>
+            <div style={{
+              padding: '10px 12px',
+              borderRadius: theme.radius.sm,
+              background: `${theme.colors.gold}1a`,
+              border: `1px solid ${theme.colors.gold}55`,
+              fontFamily: theme.typography.fontSans,
+              fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text,
+            }}>
+              Some labels were hard to read. Try a sharper photo for a more complete shortlist.
             </div>
           </div>
         )}

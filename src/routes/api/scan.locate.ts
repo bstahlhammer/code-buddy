@@ -59,8 +59,8 @@ export const Route = createFileRoute('/api/scan/locate')({
         const userClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
           auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
         })
-        const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token)
-        const userId = claims?.claims?.sub
+        const { data: userData, error: claimsErr } = await userClient.auth.getUser(token)
+        const userId = userData?.user?.id
         if (claimsErr || !userId) return json({ error: 'Invalid session' }, 401)
 
         let body: z.infer<typeof InputSchema>

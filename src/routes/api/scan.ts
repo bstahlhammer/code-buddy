@@ -28,14 +28,14 @@ async function requireAuth(request: Request): Promise<string | Response> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   })
-  const { data, error } = await supabase.auth.getClaims(token)
-  if (error || !data?.claims?.sub) {
+  const { data, error } = await supabase.auth.getUser(token)
+  if (error || !data?.user?.id) {
     return new Response(JSON.stringify({ error: 'Invalid session' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
     })
   }
-  return data.claims.sub as string
+  return data.user.id as string
 }
 
 const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
