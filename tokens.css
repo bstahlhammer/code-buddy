@@ -1,0 +1,188 @@
+/* ============================================================
+   MY SOM — Design Token Foundation v2
+   Revised per spec §15: wine red accent, ink-black primary,
+   off-white parchment, muted gold for value flags.
+   Fonts: Cormorant Garamond (display/wine names) + Outfit (UI)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ── Raw Palette ────────────────────────────────────────────── */
+:root {
+  /* Wine Red — primary accent */
+  --wine-50:   oklch(97%  0.015 12);
+  --wine-100:  oklch(93%  0.04  12);
+  --wine-200:  oklch(84%  0.07  12);
+  --wine-300:  oklch(72%  0.10  12);
+  --wine-400:  oklch(58%  0.12  12);
+  --wine-500:  oklch(44%  0.13  12);
+  --wine-600:  oklch(35%  0.12  12);
+  --wine-700:  oklch(27%  0.10  12);
+  --wine-800:  oklch(20%  0.07  12);
+  --wine-900:  oklch(14%  0.04  12);
+
+  /* Gold — great-value flag only; never scoring */
+  --gold-50:   oklch(97%  0.02  78);
+  --gold-100:  oklch(92%  0.06  78);
+  --gold-200:  oklch(86%  0.10  78);
+  --gold-300:  oklch(80%  0.13  76);
+  --gold-400:  oklch(73%  0.13  75);
+  --gold-500:  oklch(66%  0.13  74);
+  --gold-600:  oklch(54%  0.12  72);
+  --gold-700:  oklch(42%  0.10  70);
+  --gold-800:  oklch(30%  0.07  68);
+  --gold-900:  oklch(20%  0.04  66);
+
+  /* Ink — primary foreground */
+  --ink-0:     oklch(99%  0.006 60);
+  --ink-50:    oklch(96%  0.012 65);
+  --ink-100:   oklch(92%  0.016 62);
+  --ink-150:   oklch(88%  0.018 58);
+  --ink-200:   oklch(82%  0.018 55);
+  --ink-300:   oklch(68%  0.016 50);
+  --ink-400:   oklch(54%  0.015 48);
+  --ink-500:   oklch(40%  0.016 42);
+  --ink-600:   oklch(28%  0.018 38);
+  --ink-700:   oklch(20%  0.020 32);
+  --ink-800:   oklch(14%  0.020 28);
+  --ink-900:   oklch(9%   0.016 25);
+  --ink-950:   oklch(6%   0.012 22);
+
+  /* Terra — warm secondary, used sparingly for CTAs */
+  --terra-100: oklch(92%  0.05  48);
+  --terra-400: oklch(68%  0.14  40);
+  --terra-500: oklch(60%  0.14  38);
+  --terra-600: oklch(50%  0.13  36);
+
+  /* Violet — taste-fit accent (subtle, not traffic-light) */
+  --violet-100: oklch(92%  0.04  290);
+  --violet-400: oklch(60%  0.10  290);
+  --violet-500: oklch(50%  0.11  290);
+}
+
+/* ── Semantic Tokens — Light Mode ───────────────────────────── */
+:root,
+[data-theme="light"] {
+  --bg-base:      var(--ink-50);
+  --bg-surface:   var(--ink-0);
+  --bg-raised:    var(--ink-100);
+  --bg-inset:     var(--ink-150);
+  --bg-overlay:   oklch(8% 0.018 25 / 0.55);
+
+  --fg-1:  var(--ink-900);
+  --fg-2:  var(--ink-600);
+  --fg-3:  var(--ink-400);
+  --fg-inv: var(--ink-0);
+
+  --border:        oklch(78% 0.015 60 / 0.7);
+  --border-strong: oklch(55% 0.016 50 / 0.5);
+
+  /* Primary: wine red */
+  --color-primary:        var(--wine-500);
+  --color-primary-hover:  var(--wine-600);
+  --color-primary-subtle: var(--wine-50);
+
+  /* CTA: terra (warm action energy) */
+  --color-cta:        var(--terra-500);
+  --color-cta-hover:  var(--terra-600);
+  --color-cta-subtle: oklch(97% 0.018 44);
+
+  /* Value: gold only */
+  --color-value:        var(--gold-500);
+  --color-value-subtle: var(--gold-50);
+
+  /* Taste-fit: violet */
+  --color-taste:        var(--violet-500);
+  --color-taste-subtle: var(--violet-100);
+
+  --shadow-sm: 0 1px 3px oklch(12% 0.02 28 / 0.08), 0 1px 2px oklch(12% 0.02 28 / 0.05);
+  --shadow-md: 0 4px 12px oklch(12% 0.02 28 / 0.10), 0 2px 4px oklch(12% 0.02 28 / 0.06);
+  --shadow-lg: 0 12px 32px oklch(12% 0.02 28 / 0.12), 0 4px 8px oklch(12% 0.02 28 / 0.08);
+  --shadow-xl: 0 24px 56px oklch(12% 0.02 28 / 0.16), 0 8px 16px oklch(12% 0.02 28 / 0.10);
+}
+
+/* ── Semantic Tokens — Dark Mode ────────────────────────────── */
+[data-theme="dark"] {
+  --bg-base:      var(--ink-950);
+  --bg-surface:   var(--ink-900);
+  --bg-raised:    var(--ink-800);
+  --bg-inset:     oklch(5% 0.010 22);
+  --bg-overlay:   oklch(4% 0.008 20 / 0.75);
+
+  --fg-1:  oklch(95% 0.012 68);
+  --fg-2:  oklch(72% 0.012 65);
+  --fg-3:  oklch(50% 0.012 58);
+  --fg-inv: var(--ink-950);
+
+  --border:        oklch(30% 0.018 38 / 0.55);
+  --border-strong: oklch(48% 0.018 40 / 0.5);
+
+  --color-primary:        var(--wine-300);
+  --color-primary-hover:  var(--wine-200);
+  --color-primary-subtle: oklch(16% 0.05 12);
+
+  --color-cta:        var(--terra-400);
+  --color-cta-hover:  oklch(74% 0.13 40);
+  --color-cta-subtle: oklch(14% 0.05 38);
+
+  --color-value:        var(--gold-400);
+  --color-value-subtle: oklch(15% 0.05 74);
+
+  --color-taste:        var(--violet-400);
+  --color-taste-subtle: oklch(16% 0.05 290);
+
+  --shadow-sm: 0 1px 3px oklch(4% 0.01 22 / 0.35);
+  --shadow-md: 0 4px 12px oklch(4% 0.01 22 / 0.45);
+  --shadow-lg: 0 12px 32px oklch(4% 0.01 22 / 0.55);
+  --shadow-xl: 0 24px 56px oklch(4% 0.01 22 / 0.65);
+}
+
+/* ── Spacing ────────────────────────────────────────────────── */
+:root {
+  --space-1:  4px;   --space-2:  8px;   --space-3:  12px;
+  --space-4:  16px;  --space-5:  20px;  --space-6:  24px;
+  --space-8:  32px;  --space-10: 40px;  --space-12: 48px;
+  --space-16: 64px;  --space-20: 80px;  --space-24: 96px;
+}
+
+/* ── Radius ─────────────────────────────────────────────────── */
+:root {
+  --radius-sm:   8px;   --radius-md:  16px;  --radius-lg:  24px;
+  --radius-xl:  32px;   --radius-2xl: 40px;  --radius-full: 9999px;
+}
+
+/* ── Typography ─────────────────────────────────────────────── */
+:root {
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'Outfit', system-ui, sans-serif;
+
+  --text-xs:   11px;  --text-sm:   13px;  --text-base: 15px;
+  --text-md:   17px;  --text-lg:   20px;  --text-xl:   24px;
+  --text-2xl:  30px;  --text-3xl:  38px;  --text-4xl:  48px;
+  --text-5xl:  62px;  --text-6xl:  80px;
+
+  --leading-tight:  1.15;  --leading-snug:   1.3;
+  --leading-normal: 1.5;   --leading-loose:  1.7;
+
+  --tracking-tight:   -0.02em;  --tracking-normal:  0em;
+  --tracking-wide:     0.05em;  --tracking-wider:   0.10em;
+  --tracking-widest:   0.15em;
+
+  --ease-out-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out:     cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:   120ms;
+  --duration-base:   220ms;
+  --duration-slow:   380ms;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--fg-1);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-wrap: pretty;
+}
