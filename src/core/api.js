@@ -23,7 +23,7 @@ import {
 import { sortWines as _sortWines } from './engine/sortEngine.js'
 import { chooseHeroPicks as _chooseHeroPicks } from './engine/heroPicksEngine.js'
 import { computeApproachability as _computeApproachability } from './engine/approachabilityEngine.js'
-import { computeMatch as _computeMatch, explainMatch as _explainMatch, explainMismatch as _explainMismatch } from './engine/matchEngine.js'
+import { computeMatch as _computeMatch, explainMatch as _explainMatch, explainMismatch as _explainMismatch, getConfidenceLevel as _getConfidenceLevel } from './engine/matchEngine.js'
 import {
   inferPalateFromRatings as _inferPalateFromRatings,
   nearestTasteProfile as _nearestTasteProfile,
@@ -117,6 +117,14 @@ export function explainMatch(wine, tasteProfile) {
 /** Honest take on where a wine diverges from the user's palate. */
 export function explainMismatch(wine, tasteProfile) {
   return _explainMismatch(wine, tasteProfile)
+}
+
+/**
+ * Classify a wine's confidence tier using taste fit + quality as two signals.
+ * Returns 'confident' | 'closest' | 'stretch'.
+ */
+export function getConfidenceLevel(tasteFit, qualityScore, tasteFitThreshold, qualityThreshold) {
+  return _getConfidenceLevel(tasteFit, qualityScore, tasteFitThreshold, qualityThreshold)
 }
 
 /**

@@ -1,5 +1,7 @@
 import { theme } from '../theme/theme.js'
 import MatchScore from './MatchScore.jsx'
+import TwoSignalBars from './TwoSignalBars.jsx'
+import { getConfidenceLevel } from '@/core/api'
 
 const ROLE_META = {
   topPick: {
@@ -19,7 +21,12 @@ const ROLE_META = {
   },
 }
 
-export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap, matchScore, matchExplanation, onNotOnList }) {
+export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, onTap, matchScore, matchExplanation, onNotOnList,
+  tasteFitThreshold = 82, qualityThreshold = 85 }) {
+  const qualityScore    = wine.qualityScore ?? 50
+  const confidenceLevel = typeof matchScore === 'number'
+    ? getConfidenceLevel(matchScore, qualityScore, tasteFitThreshold, qualityThreshold)
+    : null
   const meta = ROLE_META[role] || ROLE_META.topPick
   const priceStr = wine.price && wine.price !== ',' && String(wine.price).trim() !== ''
     ? (String(wine.price).startsWith('$') ? wine.price : `$${wine.price}`)
@@ -138,6 +145,17 @@ export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, o
         >
           {ctaLabel} →
         </div>
+      )}
+
+      {/* Two-signal bars */}
+      {typeof matchScore === 'number' && (
+        <TwoSignalBars
+          tasteFit={matchScore}
+          qualityScore={qualityScore}
+          confidenceLevel={confidenceLevel}
+          tasteFitThreshold={tasteFitThreshold}
+          qualityThreshold={qualityThreshold}
+        />
       )}
 
       {/* Confidence callout */}

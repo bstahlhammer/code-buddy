@@ -2,6 +2,68 @@ import { createFileRoute } from '@tanstack/react-router'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
+// ─── Catalog enrichment ───────────────────────────────────────────────────────
+// After Claude identifies wines from the image, we look each one up in the
+// wine_catalog table (seeded from Kaggle + HuggingFace) to get:
+//   • quality_score  — honest 0-100 (85+ = confident pick)
+//   • palate axes    — body/sweetness/tannin/acidity from real data
+//
+// Lookups run in parallel using pg_trgm fuzzy matching.
+
+async function enrichWinesFromCatalog<T extends {
+  name:      string
+  vintage?:  string
+  body:      number
+  sweetness: number
+  tannin:    number
+  acidity:   number
+}>(
+  wines: T[],
+  supabaseUrl: string,
+  supabaseKey: string,
+): Promise<(T & { qualityScore: number; catalogConfidence: 'catalog' | 'inferred' | 'unknown' })[]> {
+  const sb = createClient(supabaseUrl, supabaseKey, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  })
+
+  return Promise.all(
+    wines.map(async (wine) => {
+      // Parse vintage year from the string field ("2021", "NV", "")
+      const vintageNum = /^(19|20)\d{2}$/.test(wine.vintage ?? '')
+        ? parseInt(wine.vintage as string, 10)
+        : null
+
+      const { data, error } = await sb.rpc('lookup_wine', {
+        p_name:      wine.name,
+        p_vintage:   vintageNum,
+        p_threshold: 0.35,
+      })
+
+      if (error || !data?.length) {
+        // No catalog match — keep Claude's inferred palate axes, quality unknown
+        return { ...wine, qualityScore: 50, catalogConfidence: 'inferred' as const }
+      }
+
+      const match = data[0]
+      return {
+        ...wine,
+        // Prefer catalog palate axes; fall back to Claude's inference
+        body:      match.body      ?? wine.body,
+        sweetness: match.sweetness ?? wine.sweetness,
+        tannin:    match.tannin    ?? wine.tannin,
+        acidity:   match.acidity   ?? wine.acidity,
+        // Honest quality score from catalog
+        qualityScore:       match.quality_score ?? 50,
+        catalogConfidence:  'catalog' as const,
+        // Enrich metadata when not already present
+        region:  wine['region'] || match.region || '',
+        grape:   wine['grape']  || match.grape  || '',
+        color:   wine['color']  || match.color  || '',
+      }
+    })
+  )
+}
+
 const InputSchema = z.object({
   imageBase64: z.string().min(100).max(10_000_000),
   mode: z.enum(['list', 'shelf', 'bottle']).optional(),
@@ -372,7 +434,16 @@ export const Route = createFileRoute('/api/scan')({
           }
           const seenCount = allCandidates.length
           // Drop low-confidence wines (post-OCR recognition gate)
-          const wines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
+          const rawWines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
+
+          // Enrich each wine with quality_score + corrected palate axes from the catalog.
+          // Runs in parallel; falls back gracefully when no catalog match is found.
+          const SUPABASE_URL = process.env.SUPABASE_URL ?? ''
+          const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY ?? ''
+          const wines = (SUPABASE_URL && SUPABASE_KEY)
+            ? await enrichWinesFromCatalog(rawWines, SUPABASE_URL, SUPABASE_KEY)
+            : rawWines.map((w) => ({ ...w, qualityScore: 50, catalogConfidence: 'unknown' as const }))
+
           const recognitionRate = seenCount > 0 ? wines.length / seenCount : 0
 
           const reportedReadability = typeof parsedArgs?.readability === 'string' ? parsedArgs.readability : ''

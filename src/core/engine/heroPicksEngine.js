@@ -14,11 +14,13 @@ import { computeMatch } from './matchEngine.js'
 function scoreTopPick(wine, profile) {
   const match = profile ? computeMatch(wine, profile) : (wine.match ?? 50)
   const conf  = typeof wine.confidence === 'number' ? wine.confidence : 70
-  const rating = typeof wine.rating === 'number' ? wine.rating : 0
-  // Weight: taste match dominates when we have a profile, else lean on rating.
+  // Prefer the honest catalog quality_score (0-100); fall back to legacy rating or neutral 50.
+  const quality = typeof wine.qualityScore === 'number' ? wine.qualityScore
+    : typeof wine.rating === 'number' ? wine.rating : 50
+  // Weight: taste match dominates when we have a profile, else lean on quality.
   return profile
-    ? match * 0.7 + (rating / 100) * 20 + (conf / 100) * 10
-    : (rating || 60) * 0.6 + (conf / 100) * 40
+    ? match * 0.7 + (quality / 100) * 20 + (conf / 100) * 10
+    : (quality || 60) * 0.6 + (conf / 100) * 40
 }
 
 function scoreValue(wine) {

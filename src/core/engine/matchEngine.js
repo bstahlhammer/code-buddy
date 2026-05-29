@@ -29,7 +29,7 @@ export function computeMatch(wine, tasteProfile) {
     Math.abs(wine.sweetness - p.sweetness) * 1 +
     Math.abs(wine.acidity   - p.acidity)   * 1
 
-  const maxDist = 600
+  const maxDist = 300
   let score = Math.round(100 - (dist / maxDist) * 100)
 
   // Per-bucket deltas
@@ -52,6 +52,39 @@ export function computeMatch(wine, tasteProfile) {
   }
 
   return Math.max(0, Math.min(100, score))
+}
+
+/**
+ * Classify a wine into a confidence tier using two independent signals:
+ *   tasteFit    — palate match score from computeMatch() (0-100)
+ *   qualityScore — honest quality score from the catalog (0-100; 50 = unknown)
+ *
+ * Tiers:
+ *   'confident' — both signals meet or exceed their thresholds.
+ *                 "We'd confidently order this for you."
+ *   'closest'   — tasteFit is the highest available but one or both signals
+ *                 fall short. "Closest available, but not a strong fit."
+ *   'stretch'   — weak on taste AND quality; show last-resort framing.
+ *
+ * @param {number}  tasteFit            computeMatch() result for this wine
+ * @param {number}  qualityScore        catalog quality_score (50 if unknown)
+ * @param {number}  [tasteFitThreshold=82]   min tasteFit for 'confident'
+ * @param {number}  [qualityThreshold=85]    min qualityScore for 'confident'
+ * @returns {'confident' | 'closest' | 'stretch'}
+ */
+export function getConfidenceLevel(
+  tasteFit,
+  qualityScore,
+  tasteFitThreshold = 82,
+  qualityThreshold = 85,
+) {
+  const tasteOk   = tasteFit    >= tasteFitThreshold
+  const qualityOk = qualityScore >= qualityThreshold
+
+  if (tasteOk && qualityOk) return 'confident'
+  // One signal is ok, or both are close but below threshold → closest
+  if (tasteOk || qualityOk)  return 'closest'
+  return 'stretch'
 }
 
 /**

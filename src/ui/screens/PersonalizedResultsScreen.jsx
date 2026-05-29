@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from 'react'
 import { theme } from '../theme/theme.js'
-import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
+import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch, applyFilters, getFilterFacets, EMPTY_FILTERS, getConfidenceLevel } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
 import WineCard from '../components/WineCard.jsx'
 import SortToggle from '../components/SortToggle.jsx'
@@ -84,7 +84,20 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
     if (!tasteProfile || filteredWines.length === 0) return 0
     return Math.max(...filteredWines.map(w => w.computedMatch ?? 0))
   }, [filteredWines, tasteProfile])
-  const noStrongMatches = tasteProfile && filteredWines.length > 0 && topMatch < 80
+
+  // "No strong matches" is now a two-signal gate: taste fit AND quality must both
+  // meet their thresholds for at least one wine to count as a confident pick.
+  const tasteFitThreshold = tasteProfile?.tasteFitThreshold ?? 82
+  const qualityThreshold  = tasteProfile?.qualityThreshold  ?? 85
+  const hasConfidentPick = useMemo(() => {
+    if (!tasteProfile || filteredWines.length === 0) return false
+    return filteredWines.some(w => {
+      const fit = w.computedMatch ?? computeMatch(w, tasteProfile)
+      const quality = w.qualityScore ?? 50
+      return getConfidenceLevel(fit, quality, tasteFitThreshold, qualityThreshold) === 'confident'
+    })
+  }, [filteredWines, tasteProfile, tasteFitThreshold, qualityThreshold])
+  const noStrongMatches = tasteProfile && filteredWines.length > 0 && !hasConfidentPick
 
   const lowConfidenceCount = useMemo(
     () => filteredWines.filter(w => typeof w.confidence === 'number' && w.confidence < 60).length,
@@ -260,7 +273,10 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
               color: theme.colors.text,
               lineHeight: 1.5,
             }}>
-              <strong style={{ fontWeight: 700 }}>No strong matches on this list.</strong> Top match is {topMatch}/100. Here are the closest from what we found.
+              <strong style={{ display: 'block', fontWeight: 700, fontSize: theme.typography.sizes.md, marginBottom: 4 }}>
+                Honest take.
+              </strong>
+              None of these wines match your palate or quality standards. We wouldn't confidently order any of these for you.
             </div>
           </div>
         )}
@@ -296,6 +312,8 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
                   reasoning={reasoning}
                   matchScore={score}
                   matchExplanation={explanation}
+                  tasteFitThreshold={tasteFitThreshold}
+                  qualityThreshold={qualityThreshold}
                   onTap={onWineSelect}
                   onNotOnList={handleNotOnList}
                 />
@@ -340,6 +358,8 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
                     wine={wine}
                     personalized
                     tasteProfile={tasteProfile}
+                    tasteFitThreshold={tasteFitThreshold}
+                    qualityThreshold={qualityThreshold}
                     onTap={onWineSelect}
                     onNotOnList={handleNotOnList}
                   />

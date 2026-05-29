@@ -1,11 +1,17 @@
 import { theme } from '../theme/theme.js'
 import Badge from './Badge.jsx'
 import MatchScore from './MatchScore.jsx'
-import { explainMatch } from '@/core/api'
+import TwoSignalBars from './TwoSignalBars.jsx'
+import { explainMatch, getConfidenceLevel } from '@/core/api'
 
-export default function WineCard({ wine, personalized, isBestMatch, tasteProfile, onTap, onNotOnList }) {
-  const matchScore      = wine.computedMatch ?? wine.match ?? 50
-  const isImperfect     = personalized && matchScore < 60
+export default function WineCard({ wine, personalized, isBestMatch, tasteProfile, onTap, onNotOnList,
+  tasteFitThreshold = 82, qualityThreshold = 85 }) {
+  const matchScore       = wine.computedMatch ?? wine.match ?? 50
+  const qualityScore     = wine.qualityScore ?? 50
+  const confidenceLevel  = personalized
+    ? getConfidenceLevel(matchScore, qualityScore, tasteFitThreshold, qualityThreshold)
+    : null
+  const isImperfect      = personalized && confidenceLevel === 'stretch'
   const matchExplanation = personalized && tasteProfile ? explainMatch(wine, tasteProfile) : null
 
   return (
@@ -89,24 +95,33 @@ export default function WineCard({ wine, personalized, isBestMatch, tasteProfile
         </div>
       )}
 
-      {/* Imperfect match callout */}
+      {/* Two-signal bars (personalized only) */}
+      {personalized && (
+        <TwoSignalBars
+          tasteFit={matchScore}
+          qualityScore={qualityScore}
+          confidenceLevel={confidenceLevel}
+          tasteFitThreshold={tasteFitThreshold}
+          qualityThreshold={qualityThreshold}
+        />
+      )}
+
+      {/* Stretch match callout */}
       {isImperfect && (
         <div style={{
           marginTop: theme.spacing.xs,
           padding: '8px 10px',
-          backgroundColor: '#FFF8EC',
-          border: `1px solid ${theme.colors.gold}50`,
+          backgroundColor: `${theme.colors.peach}18`,
+          border: `1px solid ${theme.colors.peach}50`,
           borderRadius: theme.radius.sm,
           fontSize: theme.typography.sizes.sm,
-          color: theme.colors.warning,
+          color: theme.colors.peachDeep,
           fontFamily: theme.typography.fontSans,
           lineHeight: 1.4,
         }}>
-          Not a perfect match — {
-            matchScore < 30
-              ? 'quite different from your usual style'
-              : 'outside your typical preference zone'
-          }
+          {matchScore < 30
+            ? 'Quite different from your usual style'
+            : 'Outside your typical preference zone'}
         </div>
       )}
 
