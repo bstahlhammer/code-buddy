@@ -123,7 +123,7 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
   const showRetakePanel = fromScan && readability !== 'good'
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: theme.colors.surface, position: 'relative' }}>
       {/* Header */}
       <div style={{ backgroundColor: theme.colors.brandDark, flexShrink: 0 }}>
         <TopBar onBack={goBack} onHome={() => navigate('home')} light />
@@ -325,10 +325,13 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
         {/* Collapsible full list */}
         {sortedRest.length > 0 && (
           <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} ${theme.spacing.lg}` }}>
+            <SortToggle options={SORT_OPTIONS} value={sortKey} onChange={setSortKey} />
+
             <button
               onClick={() => setShowAll(v => !v)}
               style={{
                 width: '100%',
+                marginTop: theme.spacing.sm,
                 background: 'transparent',
                 border: `1px solid ${theme.colors.border}`,
                 borderRadius: theme.radius.sm,
@@ -351,7 +354,6 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
 
             {showAll && (
               <div style={{ marginTop: theme.spacing.md, display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
-                <SortToggle options={SORT_OPTIONS} value={sortKey} onChange={setSortKey} />
                 {sortedRest.map(wine => (
                   <WineCard
                     key={wine.id ?? wine.name}

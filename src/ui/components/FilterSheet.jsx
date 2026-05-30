@@ -63,7 +63,7 @@ export default function FilterSheet({ open, onClose, filters, onApply, facets, t
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 50,
+        position: 'absolute', inset: 0, zIndex: 50,
         background: 'rgba(26, 11, 38, 0.55)',
         backdropFilter: 'blur(2px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',

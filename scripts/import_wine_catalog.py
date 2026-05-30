@@ -43,10 +43,11 @@ from tqdm import tqdm
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rlgsftutrzwnxbzmzgcx.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
-BATCH_SIZE   = 500       # rows per upsert call
+BATCH_SIZE   = 1000      # rows per upsert call
 MIN_QUALITY  = 10        # drop wines whose remapped quality_score is below this
 
 KAGGLE_CSV   = Path("data/winemag-data-130k-v2.csv")   # download separately
+HF_CACHE     = Path("data/winesensed_cache.parquet")    # cached after first download
 
 # ─── Quality score remapping ──────────────────────────────────────────────────
 # Translates inflated critic/community scales to an honest 0-100.
@@ -216,118 +217,124 @@ def load_kaggle(path: Path) -> pd.DataFrame:
     ])
     print(f"[kaggle] {len(df):,} rows loaded")
 
-    rows = []
-    for _, r in tqdm(df.iterrows(), total=len(df), desc="[kaggle] Processing"):
-        name     = clean_str(r.get("title"))
-        if not name:
-            continue
+    # Quality score — vectorized, filter low-quality rows
+    print("[kaggle] Scoring quality …")
+    df["quality_score"] = [we_to_quality(p) for p in df["points"]]
+    df = df[df["quality_score"].notna() & (df["quality_score"] >= MIN_QUALITY)].reset_index(drop=True)
 
-        producer = clean_str(r.get("winery"))
-        vintage  = extract_vintage(name) or extract_vintage(str(r.get("title","")))
-        grape    = clean_str(r.get("variety"))
-        region   = clean_str(r.get("region_1")) or clean_str(r.get("region_2"))
-        country  = clean_str(r.get("country"))
-        points   = r.get("points")
-        price    = r.get("price")
+    # Vintage extraction
+    print("[kaggle] Extracting vintages …")
+    df["vintage"] = [extract_vintage(t) for t in df["title"]]
 
-        critic_score  = int(points) if pd.notna(points) else None
-        quality_score = we_to_quality(critic_score)
+    # Palate inference — list comprehension is ~5x faster than iterrows
+    print("[kaggle] Inferring palate profiles …")
+    palate = [infer_palate(g) for g in df["variety"]]
+    df["body"], df["sweetness"], df["tannin"], df["acidity"] = zip(*palate)
 
-        if quality_score is not None and quality_score < MIN_QUALITY:
-            continue
+    # Color inference
+    print("[kaggle] Inferring colors …")
+    df["color"] = [infer_color(g, t) for g, t in zip(df["variety"], df["title"])]
 
-        body, sweetness, tannin, acidity = infer_palate(grape)
-        color = infer_color(grape, name)
+    region = df["region_1"].combine_first(df["region_2"])
 
-        rows.append({
-            "name":          name,
-            "producer":      producer,
-            "vintage":       vintage,
-            "region":        region,
-            "country":       country,
-            "grape":         grape,
-            "color":         color,
-            "critic_score":  critic_score,
-            "vivino_rating": None,
-            "quality_score": quality_score,
-            "body":          body,
-            "sweetness":     sweetness,
-            "tannin":        tannin,
-            "acidity":       acidity,
-            "price_usd":     float(price) if pd.notna(price) else None,
-            "description":   clean_str(r.get("description")),
-            "source":        "kaggle_wine_enthusiast",
-            "source_id":     str(_["index"] if hasattr(_, "index") else ""),
-        })
-
-    result = pd.DataFrame(rows)
+    result = pd.DataFrame({
+        "name":          [clean_str(v) for v in df["title"]],
+        "producer":      [clean_str(v) for v in df["winery"]],
+        "vintage":       df["vintage"],
+        "region":        [clean_str(v) for v in region],
+        "country":       [clean_str(v) for v in df["country"]],
+        "grape":         [clean_str(v) for v in df["variety"]],
+        "color":         df["color"],
+        "critic_score":  [int(p) if pd.notna(p) else None for p in df["points"]],
+        "vivino_rating": None,
+        "quality_score": df["quality_score"],
+        "body":          df["body"],
+        "sweetness":     df["sweetness"],
+        "tannin":        df["tannin"],
+        "acidity":       df["acidity"],
+        "price_usd":     pd.to_numeric(df["price"], errors="coerce"),
+        "description":   [clean_str(v) for v in df["description"]],
+        "source":        "kaggle_wine_enthusiast",
+        "source_id":     df.index.astype(str),
+    })
+    result = result[result["name"].notna()].reset_index(drop=True)
     print(f"[kaggle] {len(result):,} rows after filtering (quality ≥ {MIN_QUALITY})")
     return result
 
 
 def load_huggingface() -> pd.DataFrame:
-    print("\n[huggingface] Loading Dakhoo/L2T-NeurIPS-2023 vintages split …")
-    try:
-        from datasets import load_dataset  # type: ignore
-    except ImportError:
-        print("[huggingface] ERROR: install with: pip install datasets")
-        return pd.DataFrame()
+    if HF_CACHE.exists():
+        print(f"\n[huggingface] Loading from cache {HF_CACHE} (delete to re-download) …")
+        df = pd.read_parquet(HF_CACHE)
+        print(f"[huggingface] {len(df):,} rows loaded from cache")
+    else:
+        print("\n[huggingface] Downloading Dakhoo/L2T-NeurIPS-2023 vintages (824k rows, may take 10-20 min) …")
+        try:
+            from datasets import load_dataset  # type: ignore
+        except ImportError:
+            print("[huggingface] ERROR: install with: pip install datasets")
+            return pd.DataFrame()
 
-    ds = load_dataset("Dakhoo/L2T-NeurIPS-2023", "vintages", split="train")
-    df = ds.to_pandas()
-    print(f"[huggingface] {len(df):,} rows loaded")
+        ds = load_dataset("Dakhoo/L2T-NeurIPS-2023", "vintages", split="train")
+        df = ds.to_pandas()
+        print(f"[huggingface] {len(df):,} rows downloaded — caching to {HF_CACHE} …")
+        HF_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(HF_CACHE, index=False)
+        print(f"[huggingface] Cached. Future runs will skip the download.")
+
     print(f"[huggingface] Columns: {list(df.columns)}")
 
-    rows = []
-    for _, r in tqdm(df.iterrows(), total=len(df), desc="[huggingface] Processing"):
-        name = clean_str(r.get("wine") or r.get("name"))
-        if not name:
-            continue
+    # Quality score — vectorized
+    print("[huggingface] Scoring quality …")
+    df["vivino_rating"] = pd.to_numeric(df.get("rating"), errors="coerce")
+    df["quality_score"] = [vivino_to_quality(r) for r in df["vivino_rating"]]
+    df = df[df["quality_score"].notna() & (df["quality_score"] >= MIN_QUALITY)].reset_index(drop=True)
 
-        grape    = clean_str(r.get("grape"))
-        region   = clean_str(r.get("region"))
-        country  = clean_str(r.get("country"))
-        year     = r.get("year")
-        price    = r.get("price")
-        rating   = r.get("rating")
-        alcohol  = r.get("alcohol")
+    # Name — try "wine" column first, fall back to "name"
+    name_col = "wine" if "wine" in df.columns else "name"
+    df["_name"] = [clean_str(v) for v in df[name_col]]
+    df = df[df["_name"].notna()].reset_index(drop=True)
 
-        vintage       = int(year) if pd.notna(year) and str(year).isdigit() else None
-        vivino_rating = float(rating) if pd.notna(rating) else None
-        quality_score = vivino_to_quality(vivino_rating)
+    # Vintage
+    print("[huggingface] Extracting vintages …")
+    year_col = df.get("year", pd.Series([None] * len(df)))
+    df["vintage"] = [
+        int(y) if pd.notna(y) and str(y).isdigit() else None
+        for y in year_col
+    ]
 
-        if quality_score is not None and quality_score < MIN_QUALITY:
-            continue
+    # Palate + color — vectorized
+    print("[huggingface] Inferring palate profiles …")
+    grape_col = df.get("grape", pd.Series([None] * len(df)))
+    palate = [infer_palate(g) for g in grape_col]
+    df["body"], df["sweetness"], df["tannin"], df["acidity"] = zip(*palate)
 
-        body, sweetness, tannin, acidity = infer_palate(grape)
-        color = infer_color(grape, name)
+    print("[huggingface] Inferring colors …")
+    df["color"] = [infer_color(g, n) for g, n in zip(grape_col, df["_name"])]
 
-        # Use winery_id as a fallback producer identifier
-        winery_id = clean_str(r.get("winery_id") or r.get("winery"))
+    winery_col = df.get("winery_id", df.get("winery", pd.Series([None] * len(df))))
 
-        rows.append({
-            "name":          name,
-            "producer":      winery_id,
-            "vintage":       vintage,
-            "region":        region,
-            "country":       country,
-            "grape":         grape,
-            "color":         color,
-            "critic_score":  None,
-            "vivino_rating": vivino_rating,
-            "quality_score": quality_score,
-            "body":          body,
-            "sweetness":     sweetness,
-            "tannin":        tannin,
-            "acidity":       acidity,
-            "price_usd":     float(price) if pd.notna(price) else None,
-            "alcohol_pct":   float(alcohol) if pd.notna(alcohol) else None,
-            "description":   clean_str(r.get("review")),
-            "source":        "huggingface_winesensed",
-            "source_id":     str(r.get("vintage_id", "")),
-        })
-
-    result = pd.DataFrame(rows)
+    result = pd.DataFrame({
+        "name":          df["_name"],
+        "producer":      [clean_str(v) for v in winery_col],
+        "vintage":       df["vintage"],
+        "region":        [clean_str(v) for v in df.get("region", [None] * len(df))],
+        "country":       [clean_str(v) for v in df.get("country", [None] * len(df))],
+        "grape":         [clean_str(v) for v in grape_col],
+        "color":         df["color"],
+        "critic_score":  None,
+        "vivino_rating": df["vivino_rating"],
+        "quality_score": df["quality_score"],
+        "body":          df["body"],
+        "sweetness":     df["sweetness"],
+        "tannin":        df["tannin"],
+        "acidity":       df["acidity"],
+        "price_usd":     pd.to_numeric(df.get("price", [None] * len(df)), errors="coerce"),
+        "alcohol_pct":   pd.to_numeric(df.get("alcohol", [None] * len(df)), errors="coerce"),
+        "description":   [clean_str(v) for v in df.get("review", [None] * len(df))],
+        "source":        "huggingface_winesensed",
+        "source_id":     [str(v) for v in df.get("vintage_id", df.index)],
+    })
     print(f"[huggingface] {len(result):,} rows after filtering (quality ≥ {MIN_QUALITY})")
     return result
 
@@ -406,6 +413,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Process but don't upload")
     parser.add_argument("--kaggle-csv", default=str(KAGGLE_CSV),
                         help="Path to winemag-data-130k-v2.csv")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Cap total rows after dedup (useful for testing, e.g. --limit 5000)")
     args = parser.parse_args()
 
     frames = []
@@ -439,6 +448,10 @@ Or download manually from:
 
     combined = pd.concat(frames, ignore_index=True)
     combined = deduplicate(combined)
+
+    if args.limit:
+        combined = combined.head(args.limit)
+        print(f"[limit] Capped to {len(combined):,} rows (--limit {args.limit})")
 
     # Final stats
     print(f"\n[stats] Total wines ready to upload: {len(combined):,}")
