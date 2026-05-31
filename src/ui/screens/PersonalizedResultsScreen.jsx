@@ -3,7 +3,6 @@ import { theme } from '../theme/theme.js'
 import { getWines, sortWines, chooseHeroPicks, computeMatch, explainMatch, applyFilters, getFilterFacets, EMPTY_FILTERS, getConfidenceLevel } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
 import WineCard from '../components/WineCard.jsx'
-import SortToggle from '../components/SortToggle.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
 import FilterBar from '../components/FilterBar.jsx'
@@ -11,10 +10,10 @@ import FilterSheet from '../components/FilterSheet.jsx'
 import { useScanFeedback } from '../hooks/useScanFeedback.js'
 
 const SORT_OPTIONS = [
-  { value: 'match',          label: 'My Match' },
-  { value: 'crowd',          label: 'Crowd Pleasers' },
-  { value: 'value',          label: 'Value for Money' },
-  { value: 'approachability', label: 'For group' },
+  { value: 'match',           label: 'Best for me'   },
+  { value: 'value',           label: 'Best value'    },
+  { value: 'crowd',           label: 'Crowd picks'   },
+  { value: 'approachability', label: 'For the group' },
 ]
 
 const REASON_COPY = {
@@ -166,12 +165,16 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
 
       {/* Scrollable content */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
-        {/* Filter bar */}
+        {/* Filter + sort bar */}
         {scoredWines.length > 0 && (
           <FilterBar
+            sortKey={sortKey}
+            onSortChange={setSortKey}
+            sortOptions={SORT_OPTIONS}
             filters={filters}
             onOpen={() => setFilterOpen(true)}
             onChange={setFilters}
+            facets={facets}
             resultCount={filteredWines.length}
             totalCount={scoredWines.length}
           />
@@ -325,8 +328,6 @@ export default function PersonalizedResultsScreen({ navigate, goBack, tasteProfi
         {/* Collapsible full list */}
         {sortedRest.length > 0 && (
           <div style={{ padding: `${theme.spacing.lg} ${theme.spacing.lg} ${theme.spacing.lg}` }}>
-            <SortToggle options={SORT_OPTIONS} value={sortKey} onChange={setSortKey} />
-
             <button
               onClick={() => setShowAll(v => !v)}
               style={{

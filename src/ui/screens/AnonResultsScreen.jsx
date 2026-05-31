@@ -3,7 +3,6 @@ import { theme } from '../theme/theme.js'
 import { chooseHeroPicks, sortWines, applyFilters, getFilterFacets, EMPTY_FILTERS } from '@/core/api'
 import HeroPickCard from '../components/HeroPickCard.jsx'
 import WineCard from '../components/WineCard.jsx'
-import SortToggle from '../components/SortToggle.jsx'
 import UpsellBanner from '../components/UpsellBanner.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import TopBar from '../components/TopBar.jsx'
@@ -72,10 +71,10 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
   const heroIds = useMemo(() => new Set(heroPicks.map(p => p.wine.id ?? p.wine.name)), [heroPicks])
 
   const sortOptions = useMemo(() => [
-    { value: 'crowd',  label: 'Crowd Pleasers' },
-    { value: 'rating', label: 'Highest Rated' },
-    { value: 'value',  label: 'Value for Money' },
-    { value: 'match',  label: 'My Taste Profile', highlight: !hasProfile },
+    { value: 'match',  label: 'Best for me',    highlight: !hasProfile },
+    { value: 'value',  label: 'Best value'  },
+    { value: 'rating', label: 'Highest rated' },
+    { value: 'crowd',  label: 'Crowd picks'  },
   ], [hasProfile])
 
   const handleSortChange = (next) => {
@@ -114,12 +113,16 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
 
       {/* Scrollable content */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
-        {/* Filter bar */}
+        {/* Filter + sort bar */}
         {allWines.length > 0 && (
           <FilterBar
+            sortKey={sortKey}
+            onSortChange={handleSortChange}
+            sortOptions={sortOptions}
             filters={filters}
             onOpen={() => setFilterOpen(true)}
             onChange={setFilters}
+            facets={facets}
             resultCount={wines.length}
             totalCount={allWines.length}
           />
@@ -252,8 +255,6 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
 
             {sortedRest.length > 0 && (
               <div style={{ padding: `0 ${theme.spacing.lg} ${theme.spacing.lg}` }}>
-                <SortToggle options={sortOptions} value={sortKey} onChange={handleSortChange} />
-
                 <button
                   onClick={() => setShowAll(v => !v)}
                   style={{
