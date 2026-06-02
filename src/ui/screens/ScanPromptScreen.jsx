@@ -85,7 +85,6 @@ export default function ScanPromptScreen({ navigate, goBack, onScan, tasteProfil
         ref={fileRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleFile}
         style={{ display: 'none' }}
       />

@@ -129,15 +129,6 @@ GROUNDING RULES:
 - Only return an empty wines array when absolutely no wine producer, cuvée, varietal, region, vintage, shelf tag, or list line can be read.
 - For each wine, include a "confidence" score (0-100) reflecting how clearly you could read it. Use lower scores (20-40) for partial reads — they will be kept and shown to the user with a "we may have read this wrong" warning.
 
-SHELF AND DISTANCE PHOTOS — CRITICAL:
-When the image shows wine bottles on a store shelf, restaurant rack, or cellar display:
-- Return EVERY bottle where you can read ANY text on the label, even a partial producer name or varietal.
-- Include bottles you confidently recognize by label design, bottle shape, or color (e.g. a distinctive brand you know from visual cues) even if text is not fully legible. Use confidence 10-25 for these visual-only reads and set tasting to "label partially visible at this distance".
-- A partial read at confidence 15 is FAR better than returning nothing. Err toward inclusion.
-- If a shelf tag or price tag is visible near a bottle, use it to identify the wine even if the bottle label is blurry.
-- For the "maker" field: use whatever partial brand text you can see even if only 3-4 characters are visible.
-- Do NOT require perfect clarity before including a shelf wine. Return partial reads aggressively.
-
 OUTPUT RULES:
 - Use the extract_wines tool only.
 - Return every wine you can confidently read — no upper limit. Err on the side of completeness for wines that ARE visible, but never invent ones that aren't.
@@ -420,9 +411,13 @@ export const Route = createFileRoute('/api/scan')({
 
         // Mode-specific suffix appended to the base prompt.
         const MODE_SUFFIX: Record<string, string> = {
-          shelf: '\n\nMODE: STORE SHELF — This image was intentionally taken of a wine store or restaurant shelf. Apply maximum leniency. Return every bottle you can partially identify. Do not return an empty wines array if any bottles are visible.',
+          shelf: `\n\nMODE: STORE SHELF — The user deliberately pointed their camera at a wine shelf. Apply maximum leniency beyond the default rules:
+- Return EVERY bottle where you can read ANY text, even a partial producer name or varietal.
+- Include bottles you recognize by label design, bottle shape, or color even if text is not fully legible — use confidence 10-25 and set tasting to "label partially visible".
+- A partial read at confidence 15 is far better than nothing. Do NOT return an empty wines array if any bottles are visible.
+- If a shelf tag or price tag is near a bottle, use it to identify the wine even if the label is blurry.`,
           list:  '\n\nMODE: WINE LIST — Focus on reading printed menu text. Extract every line that names a wine.',
-          bottle: '\n\nMODE: SINGLE BOTTLE — Focus on the front label of one bottle. Return every detail you can read.',
+          bottle: '\n\nMODE: SINGLE BOTTLE — Focus on the front label of one bottle. Return every readable detail.',
         }
         const prompt = PROMPT + (payload.mode ? (MODE_SUFFIX[payload.mode] ?? '') : '')
 
