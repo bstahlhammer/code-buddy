@@ -409,17 +409,13 @@ export const Route = createFileRoute('/api/scan')({
           ? payload.imageBase64
           : `data:image/jpeg;base64,${payload.imageBase64}`
 
-        // Mode-specific suffix appended to the base prompt.
-        const MODE_SUFFIX: Record<string, string> = {
-          shelf: `\n\nMODE: STORE SHELF — The user deliberately pointed their camera at a wine shelf. Apply maximum leniency beyond the default rules:
+        // Only shelf mode gets an extra prompt suffix — list and bottle work fine with the base prompt.
+        const SHELF_SUFFIX = `\n\nMODE: STORE SHELF — The user deliberately pointed their camera at a wine shelf. Apply maximum leniency beyond the default rules:
 - Return EVERY bottle where you can read ANY text, even a partial producer name or varietal.
 - Include bottles you recognize by label design, bottle shape, or color even if text is not fully legible — use confidence 10-25 and set tasting to "label partially visible".
 - A partial read at confidence 15 is far better than nothing. Do NOT return an empty wines array if any bottles are visible.
-- If a shelf tag or price tag is near a bottle, use it to identify the wine even if the label is blurry.`,
-          list:  '\n\nMODE: WINE LIST — Focus on reading printed menu text. Extract every line that names a wine.',
-          bottle: '\n\nMODE: SINGLE BOTTLE — Focus on the front label of one bottle. Return every readable detail.',
-        }
-        const prompt = PROMPT + (payload.mode ? (MODE_SUFFIX[payload.mode] ?? '') : '')
+- If a shelf tag or price tag is near a bottle, use it to identify the wine even if the label is blurry.`
+        const prompt = payload.mode === 'shelf' ? PROMPT + SHELF_SUFFIX : PROMPT
 
         const abort = new AbortController()
         const timeout = setTimeout(() => abort.abort(), 55_000)
