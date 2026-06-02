@@ -6,7 +6,7 @@ Scan a restaurant wine list, bottle label, or store shelf and get personalized w
 ## Tech stack
 - **Framework**: React + TanStack Router (file-based routes), Vite, TypeScript/JSX
 - **Hosted on**: Lovable (Cloudflare Workers serverless; `wrangler.jsonc` config)
-- **Database**: Supabase (`rlgsftutrzwnxbzmzgcx.supabase.co`) — RLS on user tables; `wine_catalog` is public read-only
+- **Database**: Supabase (`bromlnbihmfknqcdbieq.supabase.co`) — RLS on user tables; `wine_catalog` is public read-only
 - **Vision AI**: Gemini 2.5 Pro via `ai.gateway.lovable.dev` (proxied through Lovable's AI gateway)
 - **Package manager**: Bun (use `bun install`, `bun run dev`, etc.)
 

@@ -83,6 +83,12 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
       return
     }
     setSortKey(next)
+    setShowAll(true)
+  }
+
+  const handleFilterChange = (next) => {
+    setFilters(next)
+    setShowAll(true)
   }
 
   const sortedRest = useMemo(() => {
@@ -121,7 +127,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
             sortOptions={sortOptions}
             filters={filters}
             onOpen={() => setFilterOpen(true)}
-            onChange={setFilters}
+            onChange={handleFilterChange}
             facets={facets}
             resultCount={wines.length}
             totalCount={allWines.length}
@@ -312,7 +318,7 @@ export default function AnonResultsScreen({ navigate, goBack, onWineSelect, tast
         open={filterOpen}
         onClose={() => setFilterOpen(false)}
         filters={filters}
-        onApply={(next) => { setFilters(next); setFilterOpen(false) }}
+        onApply={(next) => { setFilters(next); setFilterOpen(false); setShowAll(true) }}
         facets={facets}
         totalWines={allWines.length}
       />

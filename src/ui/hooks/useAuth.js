@@ -40,6 +40,15 @@ export function useAuth() {
   }, [session?.user?.id])
 
   const signInWithGoogle = useCallback(async () => {
+    // Lovable's OAuth broker (/~oauth/initiate) only exists on the Cloudflare
+    // Worker in production. In local dev (Vite), use Supabase OAuth directly.
+    if (import.meta.env.DEV) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
+      })
+      return error ? { error } : {}
+    }
     const result = await lovable.auth.signInWithOAuth('google', {
       redirect_uri: window.location.origin,
     })

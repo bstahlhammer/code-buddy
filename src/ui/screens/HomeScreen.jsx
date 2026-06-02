@@ -4,46 +4,27 @@ import { useScanHistory } from '../hooks/useScanHistory.js'
 import { formatScanDate } from '../utils/formatScan.js'
 import logoWatercolor from '@/assets/logo-watercolor.png'
 
-function Monogram() {
+function LogoRing() {
   return (
-    <div
-      style={{
-        width: 168,
-        height: 168,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '0 auto',
-        position: 'relative',
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 36 }}>
+      <div style={{
+        width: 180, height: 180,
         borderRadius: '50%',
-        // Cream "paper" disc so the watercolor mark reads on dark plum.
-        background: `radial-gradient(circle at 50% 45%, ${theme.colors.cream} 0%, ${theme.colors.parchment} 75%, ${theme.colors.parchment} 100%)`,
-        boxShadow: `0 0 0 1px ${theme.colors.magenta}55, 0 0 0 8px ${theme.colors.brandDark}, 0 0 0 9px ${theme.colors.magenta}33, 0 12px 36px ${theme.colors.brandDark}aa`,
+        background: `radial-gradient(circle at 50% 45%, ${theme.colors.cream} 0%, ${theme.colors.parchment} 100%)`,
+        border: `2.5px solid ${theme.colors.peach}bb`,
+        boxShadow: `0 0 0 5px ${theme.colors.surface}, ${theme.shadows.card}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
-      }}
-    >
-      <img
-        src={logoWatercolor}
-        alt="Wine Flight — watercolor wine glass with wing"
-        width={150}
-        height={150}
-        style={{
-          width: 150,
-          height: 150,
-          objectFit: 'contain',
-          mixBlendMode: 'multiply',
-        }}
-      />
-    </div>
-  )
-}
-
-function BrassDivider({ width = 48 }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '0 auto' }}>
-      <span style={{ width, height: 1, background: `linear-gradient(to right, transparent, ${theme.colors.gold}, transparent)` }} />
-      <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: theme.colors.gold }} />
-      <span style={{ width, height: 1, background: `linear-gradient(to right, transparent, ${theme.colors.gold}, transparent)` }} />
+        flexShrink: 0,
+      }}>
+        <img
+          src={logoWatercolor}
+          alt="Uncork"
+          width={155}
+          height={155}
+          style={{ width: 155, height: 155, objectFit: 'contain', mixBlendMode: 'multiply' }}
+        />
+      </div>
     </div>
   )
 }
@@ -59,6 +40,20 @@ function GoogleLogo() {
   )
 }
 
+function SectionLabel({ label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: theme.spacing.md }}>
+      <span style={{ flex: 1, height: 1, background: theme.colors.border }} />
+      <span style={{
+        fontSize: 10, fontFamily: theme.typography.fontSans, fontWeight: 700,
+        letterSpacing: '0.22em', textTransform: 'uppercase',
+        color: theme.colors.textMuted,
+      }}>{label}</span>
+      <span style={{ flex: 1, height: 1, background: theme.colors.border }} />
+    </div>
+  )
+}
+
 function TasteProfileCard({ tasteProfile, onTap }) {
   const archetype = tasteProfile?.name || tasteProfile?.archetype?.name || 'Your taste profile'
   const description = tasteProfile?.description || tasteProfile?.archetype?.description || ''
@@ -68,23 +63,23 @@ function TasteProfileCard({ tasteProfile, onTap }) {
       style={{
         width: '100%', textAlign: 'left',
         padding: theme.spacing.md,
-        background: `linear-gradient(135deg, ${theme.colors.parchment}f5 0%, ${theme.colors.cream}f0 100%)`,
-        border: `1px solid ${theme.colors.magenta}55`,
-        borderRadius: theme.radius.md,
+        background: theme.colors.surface,
+        border: `1px solid ${theme.colors.tide}`,
+        borderRadius: theme.radius.lg,
         cursor: 'pointer',
-        boxShadow: `0 8px 24px ${theme.colors.brandDark}66`,
+        boxShadow: theme.shadows.card,
       }}
     >
       <div style={{
         fontSize: 10, fontFamily: theme.typography.fontSans, fontWeight: 700,
-        letterSpacing: '0.2em', textTransform: 'uppercase',
-        color: theme.colors.magenta, marginBottom: 4,
+        letterSpacing: '0.22em', textTransform: 'uppercase',
+        color: theme.colors.tideDeep, marginBottom: 4,
       }}>
         Your taste profile
       </div>
       <div style={{
         fontFamily: theme.typography.fontDisplay,
-        fontSize: 22, color: theme.colors.brand, lineHeight: 1.1,
+        fontSize: 22, color: theme.colors.text, lineHeight: 1.1,
         marginBottom: description ? 6 : 0,
       }}>
         {archetype}
@@ -92,9 +87,7 @@ function TasteProfileCard({ tasteProfile, onTap }) {
       {description && (
         <div style={{
           fontFamily: theme.typography.fontSans,
-          fontSize: 13,
-          color: `${theme.colors.brand}cc`,
-          lineHeight: 1.4,
+          fontSize: 13, color: theme.colors.textMuted, lineHeight: 1.4,
         }}>
           {description}
         </div>
@@ -105,67 +98,35 @@ function TasteProfileCard({ tasteProfile, onTap }) {
 
 function RecentScansStrip({ scans, onOpen, onAddWine }) {
   return (
-    <div>
-      <div style={{
-        fontSize: 10, fontFamily: theme.typography.fontSans, fontWeight: 700,
-        letterSpacing: '0.2em', textTransform: 'uppercase',
-        color: `${theme.colors.cream}aa`, marginBottom: 8,
-      }}>
-        What did you enjoy from your recent scans?
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {scans.map(s => {
-          const date = formatScanDate(s.created_at)
-          const place = (s.location_label || '').trim()
-          const primary = date ? `Scan from ${date}` : `${s.wine_count} wine${s.wine_count === 1 ? '' : 's'} scanned`
-          return (
-            <button
-              key={s.id}
-              onClick={() => onOpen?.(s)}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                width: '100%', textAlign: 'left',
-                padding: '10px 14px',
-                background: 'rgba(255,255,255,0.06)',
-                border: `1px solid ${theme.colors.cream}22`,
-                borderRadius: theme.radius.sm,
-                color: theme.colors.cream,
-                fontFamily: theme.typography.fontSans,
-                fontSize: 13,
-                cursor: 'pointer',
-                gap: 10,
-              }}
-            >
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                {primary}
-                {place && (
-                  <span style={{ opacity: 0.7 }}> · {place}</span>
-                )}
-              </span>
-              <span style={{ opacity: 0.7, fontSize: 11, flexShrink: 0 }}>Tell us →</span>
-            </button>
-          )
-        })}
-
-        <button
-          onClick={onAddWine}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            width: '100%', textAlign: 'left',
-            padding: '10px 14px',
-            background: 'rgba(255,255,255,0.03)',
-            border: `1px dashed ${theme.colors.cream}44`,
-            borderRadius: theme.radius.sm,
-            color: theme.colors.cream,
-            fontFamily: theme.typography.fontSans,
-            fontSize: 13,
-            cursor: 'pointer',
-          }}
-        >
-          <span>+ Add a wine I drank</span>
-          <span style={{ opacity: 0.7, fontSize: 11 }}>Log it →</span>
-        </button>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {scans.map(s => {
+        const date = formatScanDate(s.created_at)
+        const place = (s.location_label || '').trim()
+        const primary = date ? `Scan from ${date}` : `${s.wine_count} wine${s.wine_count === 1 ? '' : 's'} scanned`
+        return (
+          <button
+            key={s.id}
+            onClick={() => onOpen?.(s)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              width: '100%', textAlign: 'left',
+              padding: '10px 14px',
+              background: theme.colors.surfaceAlt,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radius.sm,
+              color: theme.colors.text,
+              fontFamily: theme.typography.fontSans,
+              fontSize: 13, cursor: 'pointer', gap: 10,
+            }}
+          >
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+              {primary}
+              {place && <span style={{ color: theme.colors.textMuted }}> · {place}</span>}
+            </span>
+            <span style={{ color: theme.colors.textMuted, fontSize: 11, flexShrink: 0 }}>Tell us →</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -198,26 +159,32 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
   }
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        background: `
-          radial-gradient(ellipse 70% 50% at 18% 12%, ${theme.colors.magentaBright}55 0%, transparent 60%),
-          radial-gradient(ellipse 60% 45% at 88% 22%, ${theme.colors.peach}40 0%, transparent 55%),
-          radial-gradient(ellipse 80% 55% at 12% 95%, ${theme.colors.teal}50 0%, transparent 60%),
-          radial-gradient(ellipse 65% 50% at 95% 88%, ${theme.colors.berry}66 0%, transparent 60%),
-          radial-gradient(ellipse 90% 70% at 50% 50%, ${theme.colors.brandDeep}cc 0%, transparent 70%),
-          linear-gradient(168deg, ${theme.colors.brand} 0%, ${theme.colors.brandDark} 55%, #0F0617 100%)
-        `,
-        padding: `${theme.spacing.xxl} ${theme.spacing.xl}`,
-        justifyContent: 'space-between',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Auth chip — initial only, no "Account" label */}
+    <div style={{
+      flex: 1, display: 'flex', flexDirection: 'column',
+      backgroundColor: theme.colors.surface,
+      position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Watercolor wash — sage/mint at top, warm cream at bottom */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', top: '-20%', left: '-10%', width: '80%', height: '65%',
+          background: theme.colors.tideLight, opacity: 0.28, filter: 'blur(80px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', top: '-10%', right: '-20%', width: '65%', height: '55%',
+          background: theme.colors.tide, opacity: 0.18, filter: 'blur(70px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-5%', right: '-10%', width: '60%', height: '50%',
+          background: theme.colors.peach, opacity: 0.15, filter: 'blur(90px)', borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '15%', left: '-15%', width: '55%', height: '45%',
+          background: theme.colors.magenta, opacity: 0.06, filter: 'blur(75px)', borderRadius: '50%',
+        }} />
+      </div>
+
+      {/* Account chip */}
       {user && (
         <div style={{ position: 'absolute', top: theme.spacing.lg, right: theme.spacing.lg, zIndex: 2 }}>
           <a
@@ -226,13 +193,13 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
             aria-label="Account"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 36, height: 36, borderRadius: '50%',
+              width: 34, height: 34, borderRadius: '50%',
               background: `linear-gradient(180deg, ${theme.colors.goldBright}, ${theme.colors.gold})`,
               color: theme.colors.brandDark,
               fontFamily: theme.typography.fontSans,
-              fontWeight: 700, fontSize: 14,
+              fontWeight: 700, fontSize: 13,
               textDecoration: 'none',
-              boxShadow: `0 4px 14px ${theme.colors.brandDark}99`,
+              boxShadow: theme.shadows.card,
             }}
           >
             {initial}
@@ -240,229 +207,173 @@ export default function HomeScreen({ navigate, auth, tasteProfile, onEmailSignIn
         </div>
       )}
 
-      {/* Watercolor pigment pools — soft, blurred blobs that bleed like paint on wet paper */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute', top: '-8%', left: '-10%', width: '60%', height: '55%',
-          background: theme.colors.magenta, opacity: 0.28, filter: 'blur(70px)', borderRadius: '50%',
-        }} />
-        <div style={{
-          position: 'absolute', top: '8%', right: '-12%', width: '55%', height: '50%',
-          background: theme.colors.peach, opacity: 0.18, filter: 'blur(80px)', borderRadius: '50%',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-10%', left: '-8%', width: '65%', height: '55%',
-          background: theme.colors.tealDeep, opacity: 0.32, filter: 'blur(75px)', borderRadius: '50%',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-5%', right: '-10%', width: '55%', height: '50%',
-          background: theme.colors.berry, opacity: 0.35, filter: 'blur(70px)', borderRadius: '50%',
-        }} />
-      </div>
+      {/* Scrollable content */}
+      <div
+        className="hide-scrollbar"
+        style={{
+          flex: 1, overflowY: 'auto',
+          padding: `48px ${theme.spacing.xl} ${theme.spacing.xl}`,
+          display: 'flex', flexDirection: 'column',
+          position: 'relative',
+        }}
+      >
+        <LogoRing />
 
-      {/* Paper grain texture overlay */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.05,
-        backgroundImage: 'radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px), radial-gradient(circle at 70% 80%, #fff 1px, transparent 1px), radial-gradient(circle at 45% 65%, #fff 0.5px, transparent 1px)',
-        backgroundSize: '40px 40px, 60px 60px, 25px 25px',
-        mixBlendMode: 'overlay',
-      }} />
+        {user ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
 
-      <div style={{ position: 'relative', textAlign: 'center', marginTop: theme.spacing.xxl }}>
-        <Monogram />
+            {/* Primary CTA */}
+            <button
+              onClick={() => navigate('scanPrompt')}
+              style={{
+                width: '100%', padding: '16px',
+                background: theme.colors.tideDeep,
+                color: theme.colors.cream,
+                border: 'none', borderRadius: theme.radius.pill,
+                fontSize: 15, fontWeight: 600,
+                fontFamily: theme.typography.fontSans,
+                cursor: 'pointer',
+                boxShadow: `0 4px 16px ${theme.colors.tideDeep}44`,
+              }}
+            >
+              {hasProfile ? "Scan to find a wine I'll love" : 'Scan a wine list, shelf or bottle'}
+            </button>
 
-        <h1
-          style={{
-            fontFamily: theme.typography.fontLogo,
-            fontSize: '56px',
-            fontWeight: 300,
-            color: theme.colors.cream,
-            letterSpacing: '0.04em',
-            marginTop: theme.spacing.xl,
-            lineHeight: 1,
-          }}
-        >
-          Wine Flight
-        </h1>
+            {/* Secondary CTA */}
+            <button
+              onClick={onAddWine}
+              style={{
+                width: '100%', padding: '15px',
+                background: 'transparent',
+                color: theme.colors.tideDeep,
+                border: `1.5px solid ${theme.colors.tide}`,
+                borderRadius: theme.radius.pill,
+                fontSize: 15, fontWeight: 500,
+                fontFamily: theme.typography.fontSans,
+                cursor: 'pointer',
+              }}
+            >
+              Rate a wine I tried
+            </button>
 
-        <div style={{ marginTop: theme.spacing.md }}>
-          <BrassDivider />
-        </div>
-
-        <p
-          style={{
-            fontFamily: theme.typography.fontDisplay,
-            fontSize: '18px',
-            color: theme.colors.parchment,
-
-            marginTop: theme.spacing.md,
-            letterSpacing: '0.04em',
-            opacity: 0.9,
-          }}
-        >
-          Uncork the world of wine
-        </p>
-      </div>
-
-      {/* Bottom CTAs */}
-      {user ? (
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
-          <button
-            onClick={() => navigate('scanPrompt')}
-            style={{
-              width: '100%', padding: '18px',
-              background: `linear-gradient(180deg, ${theme.colors.goldBright} 0%, ${theme.colors.gold} 100%)`,
-              color: theme.colors.brandDark,
-              border: 'none', borderRadius: theme.radius.sm,
-              fontSize: '15px', fontWeight: 600,
-              fontFamily: theme.typography.fontSans,
-              cursor: 'pointer',
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-              boxShadow: theme.shadows.brass,
-            }}
-          >
-            {hasProfile ? 'Scan to find a wine I’ll love' : 'Scan a wine list, shelf or bottle'}
-          </button>
-
-          {hasProfile ? (
-            <>
-              {/* Visual break: separates the "do something now" CTA from the taste-profile section */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                marginTop: theme.spacing.sm,
-              }}>
-                <span style={{
-                  flex: 1, height: 1,
-                  background: `linear-gradient(to right, transparent, ${theme.colors.cream}33, transparent)`,
-                }} />
-                <span style={{
-                  fontSize: 9, fontFamily: theme.typography.fontSans, fontWeight: 700,
-                  letterSpacing: '0.24em', textTransform: 'uppercase',
-                  color: `${theme.colors.cream}99`,
-                }}>
-                  Your taste
-                </span>
-                <span style={{
-                  flex: 1, height: 1,
-                  background: `linear-gradient(to right, transparent, ${theme.colors.cream}33, transparent)`,
-                }} />
-              </div>
-
-              <TasteProfileCard tasteProfile={tasteProfile} onTap={() => navigate('profile')} />
+            {/* Build profile prompt (no profile yet) */}
+            {!hasProfile && (
               <button
                 onClick={() => navigate('quizIntro')}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: `${theme.colors.cream}cc`,
-                  fontSize: 12,
+                  width: '100%', padding: '15px',
+                  background: 'transparent',
+                  color: theme.colors.text,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.radius.pill,
+                  fontSize: 14, fontWeight: 500,
                   fontFamily: theme.typography.fontSans,
                   cursor: 'pointer',
-                  textDecoration: 'underline',
-                  textUnderlineOffset: '3px',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  alignSelf: 'center',
-                  padding: 4,
                 }}
               >
-                Update my taste profile
+                Build my taste profile
               </button>
-            </>
-          ) : (
+            )}
+
+            {/* Taste profile section */}
+            {hasProfile && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
+                <SectionLabel label="Your taste" />
+                <TasteProfileCard tasteProfile={tasteProfile} onTap={() => navigate('profile')} />
+                <button
+                  onClick={() => navigate('quizIntro')}
+                  style={{
+                    background: 'none', border: 'none',
+                    color: theme.colors.tideDeep,
+                    fontSize: 12, fontFamily: theme.typography.fontSans,
+                    cursor: 'pointer', textDecoration: 'underline',
+                    textUnderlineOffset: '3px',
+                    letterSpacing: '0.12em', textTransform: 'uppercase',
+                    alignSelf: 'center', padding: 4,
+                  }}
+                >
+                  Update my taste profile
+                </button>
+              </div>
+            )}
+
+            {/* Recent scans */}
+            {hasProfile && recentScans.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
+                <SectionLabel label="Recent scans" />
+                <RecentScansStrip scans={recentScans} onOpen={onOpenScan} onAddWine={onAddWine} />
+              </div>
+            )}
+
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+
             <button
-              onClick={() => navigate('quizIntro')}
+              onClick={handleGoogle}
+              disabled={busy}
               style={{
-                width: '100%', padding: '17px',
-                backgroundColor: 'transparent',
-                color: theme.colors.cream,
-                border: `1px solid ${theme.colors.gold}80`,
-                borderRadius: theme.radius.sm,
-                fontSize: '15px', fontWeight: 500,
+                width: '100%', padding: '16px',
+                background: theme.colors.cream,
+                color: theme.colors.text,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radius.pill,
                 fontFamily: theme.typography.fontSans,
-                cursor: 'pointer',
-                letterSpacing: '0.06em', textTransform: 'uppercase',
+                fontSize: 14, fontWeight: 600,
+                cursor: busy ? 'wait' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: theme.shadows.card,
               }}
             >
-              Build my taste profile
+              <GoogleLogo />
+              Continue with Google
             </button>
-          )}
 
-          {hasProfile && (
-            <RecentScansStrip
-              scans={recentScans}
-              onOpen={onOpenScan}
-              onAddWine={onAddWine}
-            />
-          )}
-        </div>
-      ) : (
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.sm }}>
-          <button
-            onClick={handleGoogle}
-            disabled={busy}
-            style={{
-              width: '100%', padding: '16px',
-              background: theme.colors.cream,
-              color: theme.colors.text,
-              border: 'none', borderRadius: theme.radius.sm,
-              fontFamily: theme.typography.fontSans,
-              fontSize: 14, fontWeight: 600,
-              cursor: busy ? 'wait' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              boxShadow: '0 6px 18px rgba(0,0,0,0.25)',
-            }}
-          >
-            <GoogleLogo />
-            Continue with Google
-          </button>
+            <button
+              onClick={() => onEmailSignIn?.()}
+              disabled={busy}
+              style={{
+                width: '100%', padding: '15px',
+                backgroundColor: 'transparent',
+                color: theme.colors.tideDeep,
+                border: `1.5px solid ${theme.colors.tide}`,
+                borderRadius: theme.radius.pill,
+                fontSize: 14, fontWeight: 500,
+                fontFamily: theme.typography.fontSans,
+                cursor: busy ? 'wait' : 'pointer',
+                letterSpacing: '0.04em', textTransform: 'uppercase',
+              }}
+            >
+              Sign in with email
+            </button>
 
-          <button
-            onClick={() => onEmailSignIn?.()}
-            disabled={busy}
-            style={{
-              width: '100%', padding: '15px',
-              backgroundColor: 'transparent',
-              color: theme.colors.cream,
-              border: `1px solid ${theme.colors.gold}80`,
-              borderRadius: theme.radius.sm,
-              fontSize: 14, fontWeight: 500,
-              fontFamily: theme.typography.fontSans,
-              cursor: busy ? 'wait' : 'pointer',
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-            }}
-          >
-            Sign in with email
-          </button>
+            {error && (
+              <div style={{
+                color: theme.colors.crimson, fontFamily: theme.typography.fontSans,
+                fontSize: 12, textAlign: 'center', marginTop: 4,
+              }}>{error}</div>
+            )}
 
-          {error && (
             <div style={{
-              color: '#E8B4B4', fontFamily: theme.typography.fontSans,
-              fontSize: 12, textAlign: 'center', marginTop: 4,
-            }}>{error}</div>
-          )}
+              marginTop: theme.spacing.md,
+              display: 'flex', justifyContent: 'center', gap: 18,
+              fontFamily: theme.typography.fontSans,
+              fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+            }}>
+              <a href="/privacy" style={{ color: theme.colors.tide, textDecoration: 'none' }}>Privacy</a>
+              <a href="/terms" style={{ color: theme.colors.tide, textDecoration: 'none' }}>Terms</a>
+            </div>
 
-          <div style={{
-            marginTop: theme.spacing.md,
-            display: 'flex', justifyContent: 'center', gap: 18,
-            fontFamily: theme.typography.fontSans,
-            fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
-          }}>
-            <a href="/privacy" style={{ color: theme.colors.gold, textDecoration: 'none', opacity: 0.8 }}>Privacy</a>
-            <a href="/terms" style={{ color: theme.colors.gold, textDecoration: 'none', opacity: 0.8 }}>Terms</a>
+            <p style={{
+              marginTop: 4, textAlign: 'center', maxWidth: 280, margin: '4px auto 0',
+              fontFamily: theme.typography.fontSans,
+              fontSize: 11, color: theme.colors.textMuted, lineHeight: 1.5,
+            }}>
+              By continuing you confirm you&rsquo;re of legal drinking age and agree to our Terms.
+            </p>
           </div>
-
-          <p style={{
-            marginTop: 4, textAlign: 'center', maxWidth: 280,
-            fontFamily: theme.typography.fontSans,
-            fontSize: 11, color: `${theme.colors.parchment}80`, lineHeight: 1.5,
-          }}>
-            By continuing you confirm you&rsquo;re of legal drinking age and agree to our Terms.
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
