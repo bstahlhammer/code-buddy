@@ -46,7 +46,7 @@ export const Route = createFileRoute('/api/scan/locate')({
         const SUPABASE_URL = process.env.SUPABASE_URL
         const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY
         const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY
-        const apiKey = process.env.LOVABLE_API_KEY
+        const apiKey = process.env.GOOGLE_AI_API_KEY
         if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !SERVICE_ROLE || !apiKey) {
           return json({ error: 'Server not configured' }, 500)
         }
@@ -99,7 +99,7 @@ export const Route = createFileRoute('/api/scan/locate')({
         const abort = new AbortController()
         const timeout = setTimeout(() => abort.abort(), 30_000)
         try {
-          const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
             method: 'POST',
             signal: abort.signal,
             headers: {
@@ -107,7 +107,7 @@ export const Route = createFileRoute('/api/scan/locate')({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
+              model: 'gemini-2.5-flash',
               temperature: 0,
               messages: [
                 {

@@ -40,7 +40,7 @@ export const describePalate = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }): Promise<DescribePalateResult> => {
-    const apiKey = process.env.LOVABLE_API_KEY
+    const apiKey = process.env.GOOGLE_AI_API_KEY
     if (!apiKey) {
       return {
         palate: { body: 50, tannin: 40, sweetness: 30, acidity: 55 },
@@ -52,14 +52,14 @@ export const describePalate = createServerFn({ method: 'POST' })
     }
 
     try {
-      const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-3-flash-preview',
+          model: 'gemini-2.5-flash',
           messages: [
             { role: 'system', content: SYSTEM },
             { role: 'user', content: data.description },
@@ -112,7 +112,7 @@ export const describePalate = createServerFn({ method: 'POST' })
           return {
             palate: { body: 50, tannin: 40, sweetness: 30, acidity: 55 },
             confidence: 0,
-            coachingNote: 'AI credits exhausted. Add credits in Settings → Workspace → Usage.',
+            coachingNote: 'AI quota exceeded — check your Google AI API account.',
             vocabulary: [],
             error: 'payment_required',
           }

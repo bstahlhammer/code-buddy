@@ -7,7 +7,7 @@ Scan a restaurant wine list, bottle label, or store shelf and get personalized w
 - **Framework**: React + TanStack Router (file-based routes), Vite, TypeScript/JSX
 - **Hosted on**: Lovable (Cloudflare Workers serverless; `wrangler.jsonc` config)
 - **Database**: Supabase (`bromlnbihmfknqcdbieq.supabase.co`) — RLS on user tables; `wine_catalog` is public read-only
-- **Vision AI**: Gemini 2.5 Pro via `ai.gateway.lovable.dev` (proxied through Lovable's AI gateway)
+- **Vision AI**: Gemini 2.5 Pro via Google AI API (direct, no proxy)
 - **Package manager**: Bun (use `bun install`, `bun run dev`, etc.)
 
 ## Key architectural rules
@@ -98,7 +98,7 @@ supabase db push  # or apply via Supabase dashboard SQL editor
 pip install pandas requests datasets kaggle --break-system-packages
 
 # 4. Set your Supabase SERVICE key (NOT the anon/publishable key — needs write access)
-export SUPABASE_URL="https://rlgsftutrzwnxbzmzgcx.supabase.co"
+export SUPABASE_URL="https://bromlnbihmfknqcdbieq.supabase.co"
 export SUPABASE_SERVICE_KEY="<your service role key from Supabase dashboard>"
 
 # 5. Run the import
@@ -117,6 +117,11 @@ The service key is in: Supabase dashboard → Project Settings → API → `serv
 - `SUPABASE_PUBLISHABLE_KEY` (anon key — safe for client)
 - `VITE_SUPABASE_*` variants for client-side
 
+`GOOGLE_AI_API_KEY` — Gemini API key from [aistudio.google.com](https://aistudio.google.com). Set as a Cloudflare Workers secret:
+```bash
+npx wrangler secret put GOOGLE_AI_API_KEY
+```
+
 The import script needs `SUPABASE_SERVICE_KEY` (write-access) set separately in your shell — don't put it in `.env`.
 
 ## Pending work / next priorities
@@ -127,6 +132,6 @@ The import script needs `SUPABASE_SERVICE_KEY` (write-access) set separately in 
 5. **`WineDetailScreen.jsx`** — surface `qualityLabel()` and `catalogMatch` metadata (region, grape, critic score)
 
 ## Supabase project
-- URL: `https://rlgsftutrzwnxbzmzgcx.supabase.co`
+- URL: `https://bromlnbihmfknqcdbieq.supabase.co`
 - `lookup_wine(p_name, p_vintage, p_threshold)` — pg_trgm fuzzy match RPC, returns up to 3 candidates
 - `wine_catalog` — public, no RLS, read-only reference table

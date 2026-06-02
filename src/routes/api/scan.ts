@@ -332,7 +332,7 @@ function extractCandidatesFromCompletion(raw: string) {
 
 async function callVisionModel(apiKey: string, dataUrl: string, prompt: string, signal: AbortSignal, useTools = true) {
   const body: Record<string, unknown> = {
-    model: 'google/gemini-2.5-pro',
+    model: 'gemini-2.5-pro',
     stream: false,
     temperature: 0.1,
     max_tokens: 8192,
@@ -351,7 +351,7 @@ async function callVisionModel(apiKey: string, dataUrl: string, prompt: string, 
     ]
     body.tool_choice = { type: 'function', function: { name: 'extract_wines' } }
   }
-  return fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  return fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
     method: 'POST',
     signal,
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -386,7 +386,7 @@ export const Route = createFileRoute('/api/scan')({
         const authResult = await requireAuth(request)
         if (authResult instanceof Response) return authResult
 
-        const apiKey = process.env.LOVABLE_API_KEY
+        const apiKey = process.env.GOOGLE_AI_API_KEY
         if (!apiKey) {
           return new Response(JSON.stringify({ error: 'AI not configured' }), {
             status: 500,
@@ -428,7 +428,7 @@ export const Route = createFileRoute('/api/scan')({
             const userError = upstream.status === 429
               ? 'AI is busy right now — please try again in a moment.'
               : upstream.status === 402
-                ? 'AI credits are exhausted. Add credits in Settings → Workspace → Usage.'
+                ? 'AI quota exceeded — check your Google AI API account.'
                 : 'Vision analysis failed'
             return new Response(JSON.stringify({ error: userError }), {
               status: upstream.status === 429 || upstream.status === 402 ? upstream.status : 502,
