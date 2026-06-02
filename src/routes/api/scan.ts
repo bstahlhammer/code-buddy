@@ -103,7 +103,7 @@ async function requireAuth(request: Request): Promise<string | Response> {
 const EMPTY_SCAN_MESSAGE = 'I could not identify a specific wine from this image. Try a closer, sharper photo where the full bottle label, shelf tag, or wine-list line is readable.'
 
 // Min confidence (0-100) for a wine to make it into the response.
-const MIN_WINE_CONFIDENCE = 10
+const MIN_WINE_CONFIDENCE = 5
 // If overall recognition rate (kept / total seen) falls below this, mark partial.
 const MIN_RECOGNITION_RATE = 0.3
 
@@ -128,6 +128,15 @@ GROUNDING RULES:
 - A producer/brand alone is okay if there's any other supporting detail (vintage, grape, region, price, cuvée). If only an isolated brand word is visible with nothing else, leave it out.
 - Only return an empty wines array when absolutely no wine producer, cuvée, varietal, region, vintage, shelf tag, or list line can be read.
 - For each wine, include a "confidence" score (0-100) reflecting how clearly you could read it. Use lower scores (20-40) for partial reads — they will be kept and shown to the user with a "we may have read this wrong" warning.
+
+SHELF AND DISTANCE PHOTOS — CRITICAL:
+When the image shows wine bottles on a store shelf, restaurant rack, or cellar display:
+- Return EVERY bottle where you can read ANY text on the label, even a partial producer name or varietal.
+- Include bottles you confidently recognize by label design, bottle shape, or color (e.g. a distinctive brand you know from visual cues) even if text is not fully legible. Use confidence 10-25 for these visual-only reads and set tasting to "label partially visible at this distance".
+- A partial read at confidence 15 is FAR better than returning nothing. Err toward inclusion.
+- If a shelf tag or price tag is visible near a bottle, use it to identify the wine even if the bottle label is blurry.
+- For the "maker" field: use whatever partial brand text you can see even if only 3-4 characters are visible.
+- Do NOT require perfect clarity before including a shelf wine. Return partial reads aggressively.
 
 OUTPUT RULES:
 - Use the extract_wines tool only.
@@ -155,13 +164,20 @@ Field rules — use what you can SEE for factual fields; use sensible defaults f
     { "x": <left edge 0..1>, "y": <top edge 0..1>, "w": <width 0..1>, "h": <height 0..1> }
   Cover the FULL bottle from the top of the capsule/cork to the base, and include the entire label width — don't crop tightly to the label only. If you genuinely cannot localize it, return { "x": 0, "y": 0, "w": 0, "h": 0 }.`
 
-const RESCUE_PROMPT = `The previous structured extraction found no wines. Re-check the image as a tolerant OCR pass for a wine app.
+const RESCUE_PROMPT = `The previous structured extraction found no wines. This is a MAXIMUM-LENIENCY rescue pass for a wine app.
 
-Return JSON only in this exact shape: {"wines":[...]}. Include every visible wine candidate you can read, even partial reads, as long as it appears to be from a bottle label, shelf tag, or wine-list line. Do not include store signs, section headers, or unrelated text.
+Return JSON only in this exact shape: {"wines":[...]}. Include EVERY possible wine candidate:
+- Any partial producer name, even 2-3 characters of a brand
+- Any bottle you recognize visually by label design, bottle shape, or color — even if text is unclear
+- Any shelf tag, price tag, or signage near a bottle that includes a wine name
+- Any word combination that looks like it could be a wine producer or cuvée name
+- Do NOT return empty if you can see ANY wine bottles at all
+
+Return at confidence 5-25 for very uncertain reads. It is better to return 10 uncertain wines than 0 certain wines.
 
 Each wine object must include: id, name, vintage, region, grape, price, priceNum, rating, ratingLabel, body, sweetness, tannin, acidity, isValue, isCrowd, tasting, confidence, color, maker, certifications, bbox.
 
-Use confidence 10-35 for uncertain partial reads. Use empty strings, 0, false, [], and bbox {"x":0,"y":0,"w":0,"h":0} when details are not visible.`
+Use confidence 5-25 for partial/uncertain reads. For bottles recognized visually, set tasting to "label partially visible". Use empty strings, 0, false, [], and bbox {"x":0,"y":0,"w":0,"h":0} when details are not visible.`
 
 const WINE_MARKERS = [
   'cabernet', 'chardonnay', 'pinot', 'merlot', 'sauvignon', 'syrah', 'shiraz', 'riesling', 'malbec',
@@ -402,10 +418,18 @@ export const Route = createFileRoute('/api/scan')({
           ? payload.imageBase64
           : `data:image/jpeg;base64,${payload.imageBase64}`
 
+        // Mode-specific suffix appended to the base prompt.
+        const MODE_SUFFIX: Record<string, string> = {
+          shelf: '\n\nMODE: STORE SHELF — This image was intentionally taken of a wine store or restaurant shelf. Apply maximum leniency. Return every bottle you can partially identify. Do not return an empty wines array if any bottles are visible.',
+          list:  '\n\nMODE: WINE LIST — Focus on reading printed menu text. Extract every line that names a wine.',
+          bottle: '\n\nMODE: SINGLE BOTTLE — Focus on the front label of one bottle. Return every detail you can read.',
+        }
+        const prompt = PROMPT + (payload.mode ? (MODE_SUFFIX[payload.mode] ?? '') : '')
+
         const abort = new AbortController()
         const timeout = setTimeout(() => abort.abort(), 55_000)
         try {
-          const upstream = await callVisionModel(apiKey, dataUrl, PROMPT, abort.signal, true)
+          const upstream = await callVisionModel(apiKey, dataUrl, prompt, abort.signal, true)
 
           const raw = await upstream.text().catch(() => '')
           if (!upstream.ok) {

@@ -32,6 +32,7 @@ const INTENT_TAGS = [
 export default function ScanningScreen({
   navigate,
   file,
+  mode,
   buyingFor,
   onBuyingForChange,
   scanIntent,
@@ -99,6 +100,7 @@ export default function ScanningScreen({
         if (cancelled || !progress?.message) return
         setStatus(progress.message)
       },
+      mode,
     )
       .then((result) => {
         if (cancelled) return
@@ -133,7 +135,7 @@ export default function ScanningScreen({
       cancelled = true
       clearInterval(progressTimer)
     }
-  }, [file, scanImage])
+  }, [file, mode, scanImage])
 
   // After scan finishes AND user picked a buying-for, advance.
   useEffect(() => {

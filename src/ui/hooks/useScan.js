@@ -5,7 +5,7 @@ export function useScan() {
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState(null)
 
-  const scanImage = useCallback(async function scanImage(file, onWine, onProgress) {
+  const scanImage = useCallback(async function scanImage(file, onWine, onProgress, mode) {
     setScanning(true)
     setError(null)
     const controller = new AbortController()
@@ -28,7 +28,7 @@ export function useScan() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ imageBase64: base64 }),
+        body: JSON.stringify({ imageBase64: base64, ...(mode ? { mode } : {}) }),
         signal: controller.signal,
       })
 

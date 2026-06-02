@@ -146,6 +146,7 @@ export default function App() {
 
   const [hasScanned, setHasScanned] = useState(false)
   const [scanFile, setScanFile] = useState(null)
+  const [scanMode, setScanMode] = useState(null)
   const [scannedWines, setScannedWines] = useState(null)
   // Active scan context for the shelf-spotlight feature on wine detail
   const [activeScan, setActiveScan] = useState(null) // { scanId, photoUrl }
@@ -303,7 +304,7 @@ export default function App() {
           <ScanPromptScreen
             {...nav}
             tasteProfile={tasteProfile}
-            onScan={(file) => { setScanFile(file); setScannedWines(null); setBuyingFor(null); setScanIntent(null) }}
+            onScan={(file, mode) => { setScanFile(file); setScanMode(mode ?? 'list'); setScannedWines(null); setBuyingFor(null); setScanIntent(null) }}
           />
         )
       case 'scanning':
@@ -311,6 +312,7 @@ export default function App() {
           <ScanningScreen
             {...nav}
             file={scanFile}
+            mode={scanMode}
             buyingFor={buyingFor}
             onBuyingForChange={setBuyingFor}
             scanIntent={scanIntent}
