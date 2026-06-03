@@ -1,7 +1,7 @@
 import { theme } from '../theme/theme.js'
 import MatchScore from './MatchScore.jsx'
 import TwoSignalBars from './TwoSignalBars.jsx'
-import { getConfidenceLevel } from '@/core/api'
+import { getConfidenceLevel, qualityLabel } from '@/core/api'
 
 const ROLE_META = {
   topPick: {
@@ -95,6 +95,18 @@ export default function HeroPickCard({ role, wine, reasoning, ctaLabel, onCta, o
         }}>
           {subline}
         </div>
+      )}
+
+      {/* Quality label */}
+      {wine.catalogConfidence === 'catalog' && (
+        <span style={{
+          display: 'inline-block', alignSelf: 'flex-start',
+          fontSize: 11, fontFamily: theme.typography.fontSans, fontWeight: 500,
+          color: theme.colors.brand, background: `${theme.colors.brand}18`,
+          borderRadius: 100, padding: '2px 10px',
+        }}>
+          {qualityLabel(wine.qualityScore)}
+        </span>
       )}
 
       {/* Why this wine — rational note */}
