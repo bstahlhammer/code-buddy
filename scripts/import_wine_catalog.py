@@ -15,7 +15,7 @@ Seeds the Supabase wine_catalog table from two datasets:
 Usage
 ─────
   pip install pandas requests tqdm datasets kaggle
-  export SUPABASE_URL="https://rlgsftutrzwnxbzmzgcx.supabase.co"
+  export SUPABASE_URL="https://bromlnbihmfknqcdbieq.supabase.co"
   export SUPABASE_SERVICE_KEY="<your service role key>"   # NOT the anon key
   python scripts/import_wine_catalog.py
 
@@ -41,7 +41,7 @@ from tqdm import tqdm
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rlgsftutrzwnxbzmzgcx.supabase.co")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://bromlnbihmfknqcdbieq.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 BATCH_SIZE   = 1000      # rows per upsert call
 MIN_QUALITY  = 10        # drop wines whose remapped quality_score is below this
@@ -275,7 +275,7 @@ def load_huggingface() -> pd.DataFrame:
             print("[huggingface] ERROR: install with: pip install datasets")
             return pd.DataFrame()
 
-        ds = load_dataset("Dakhoo/L2T-NeurIPS-2023", "vintages", split="train")
+        ds = load_dataset("Dakhoo/L2T-NeurIPS-2023", "vintages", split="train", trust_remote_code=True)
         df = ds.to_pandas()
         print(f"[huggingface] {len(df):,} rows downloaded — caching to {HF_CACHE} …")
         HF_CACHE.parent.mkdir(parents=True, exist_ok=True)
@@ -307,7 +307,10 @@ def load_huggingface() -> pd.DataFrame:
     print("[huggingface] Inferring palate profiles …")
     grape_col = df.get("grape", pd.Series([None] * len(df)))
     palate = [infer_palate(g) for g in grape_col]
-    df["body"], df["sweetness"], df["tannin"], df["acidity"] = zip(*palate)
+    if palate:
+        df["body"], df["sweetness"], df["tannin"], df["acidity"] = zip(*palate)
+    else:
+        df["body"] = df["sweetness"] = df["tannin"] = df["acidity"] = None
 
     print("[huggingface] Inferring colors …")
     df["color"] = [infer_color(g, n) for g, n in zip(grape_col, df["_name"])]
@@ -380,7 +383,16 @@ def upload(df: pd.DataFrame, dry_run: bool = False) -> None:
         "Prefer":        "resolution=merge-duplicates",  # upsert
     }
 
-    records = df.where(pd.notna(df), None).to_dict(orient="records")
+    import math
+    def sanitize(v):
+        if isinstance(v, float):
+            if math.isnan(v):
+                return None
+            if v == int(v):   # e.g. 66.0 → 66 for SMALLINT columns
+                return int(v)
+        return v
+    records = [{k: sanitize(v) for k, v in row.items()}
+               for row in df.where(pd.notna(df), None).to_dict(orient="records")]
     total   = len(records)
     batches = (total + BATCH_SIZE - 1) // BATCH_SIZE
 

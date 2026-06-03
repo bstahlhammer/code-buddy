@@ -332,7 +332,7 @@ function extractCandidatesFromCompletion(raw: string) {
 
 async function callVisionModel(apiKey: string, dataUrl: string, prompt: string, signal: AbortSignal, useTools = true) {
   const body: Record<string, unknown> = {
-    model: 'gemini-2.5-pro',
+    model: 'gemini-2.5-flash',
     stream: false,
     temperature: 0.1,
     max_tokens: 8192,
@@ -425,24 +425,30 @@ export const Route = createFileRoute('/api/scan')({
           const raw = await upstream.text().catch(() => '')
           if (!upstream.ok) {
             console.error('AI gateway scan error', upstream.status, raw)
-            const userError = upstream.status === 429
+            const userError = upstream.status === 429 || upstream.status === 503
               ? 'AI is busy right now — please try again in a moment.'
               : upstream.status === 402
                 ? 'AI quota exceeded — check your Google AI API account.'
                 : 'Vision analysis failed'
             return new Response(JSON.stringify({ error: userError }), {
-              status: upstream.status === 429 || upstream.status === 402 ? upstream.status : 502,
+              status: upstream.status === 429 || upstream.status === 503 || upstream.status === 402 ? upstream.status : 502,
               headers: { 'Content-Type': 'application/json' },
             })
           }
 
           const { candidates: firstCandidates, parsedArgs, message } = extractCandidatesFromCompletion(raw)
+          console.log('[scan] first pass: raw length', raw.length, '| candidates', firstCandidates.length, '| readability', parsedArgs?.readability)
+          console.log('[scan] first pass names+conf:', JSON.stringify(firstCandidates.slice(0, 5).map((w: any) => ({ n: w?.name, c: w?.confidence }))))
+          if (!firstCandidates.length) {
+            console.log('[scan] first pass tool_calls raw:', JSON.stringify(safeJsonParse(raw)?.choices?.[0]?.message).slice(0, 400))
+          }
           let allCandidates = firstCandidates as Array<ReturnType<typeof normalizeWine> & {}>
           if (!allCandidates.length) {
             const rescue = await callVisionModel(apiKey, dataUrl, RESCUE_PROMPT, abort.signal, false)
             const rescueRaw = await rescue.text().catch(() => '')
             if (rescue.ok) {
               allCandidates = extractCandidatesFromCompletion(rescueRaw).candidates as Array<ReturnType<typeof normalizeWine> & {}>
+              console.log('[scan] rescue pass: candidates', allCandidates.length)
             } else {
               console.warn('AI gateway rescue scan error', rescue.status, rescueRaw)
             }
@@ -450,6 +456,7 @@ export const Route = createFileRoute('/api/scan')({
           const seenCount = allCandidates.length
           // Drop low-confidence wines (post-OCR recognition gate)
           const rawWines = allCandidates.filter((w) => (w?.confidence ?? 0) >= MIN_WINE_CONFIDENCE)
+          console.log('[scan] after confidence filter:', rawWines.length, '/', seenCount, 'mode:', payload.mode)
 
           // Enrich each wine with quality_score + corrected palate axes from the catalog.
           // Runs in parallel; falls back gracefully when no catalog match is found.
