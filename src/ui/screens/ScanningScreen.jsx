@@ -137,16 +137,14 @@ export default function ScanningScreen({
     }
   }, [file, mode, scanImage])
 
-  // After scan finishes AND user picked a buying-for, advance.
+  // Navigate as soon as scan finishes; buyingFor is captured if selected but doesn't gate results.
   useEffect(() => {
     if (!scanDone) return
-    if (!buyingFor) return
     const t = setTimeout(() => {
-      const dest = pendingNavRef.current || 'anonResults'
-      callbacksRef.current.navigate(dest)
+      callbacksRef.current.navigate(pendingNavRef.current || 'anonResults')
     }, 350)
     return () => clearTimeout(t)
-  }, [scanDone, buyingFor])
+  }, [scanDone])
 
   const fact = useMemo(() => WINE_FACTS[factIdx], [factIdx])
 
@@ -312,15 +310,6 @@ export default function ScanningScreen({
             )
           })}
         </div>
-        {scanDone && !buyingFor && (
-          <p style={{
-            marginTop: 8, textAlign: 'center',
-            fontFamily: theme.typography.fontSans, fontSize: 11,
-            color: `${theme.colors.peach}dd`,
-          }}>
-            Pick one to see your shortlist →
-          </p>
-        )}
       </div>
 
       {/* Intent question, only when buying for group or gift */}

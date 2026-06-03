@@ -2,7 +2,7 @@ import { theme } from '../theme/theme.js'
 import Badge from './Badge.jsx'
 import MatchScore from './MatchScore.jsx'
 import TwoSignalBars from './TwoSignalBars.jsx'
-import { explainMatch, getConfidenceLevel } from '@/core/api'
+import { explainMatch, getConfidenceLevel, qualityLabel } from '@/core/api'
 
 export default function WineCard({ wine, personalized, isBestMatch, tasteProfile, onTap, onNotOnList,
   tasteFitThreshold = 82, qualityThreshold = 85 }) {
@@ -92,6 +92,13 @@ export default function WineCard({ wine, personalized, isBestMatch, tasteProfile
       {!personalized && wine.tasting && (
         <div style={{ fontSize: theme.typography.sizes.sm, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, lineHeight: 1.5 }}>
           {wine.tasting.slice(0, 80)}{wine.tasting.length > 80 ? '…' : ''}
+        </div>
+      )}
+
+      {/* Quality label (anon, catalog-matched wines only) */}
+      {!personalized && wine.catalogConfidence === 'catalog' && (
+        <div style={{ fontSize: 11, color: theme.colors.brand, fontFamily: theme.typography.fontSans, fontWeight: 500 }}>
+          {qualityLabel(wine.qualityScore)}
         </div>
       )}
 

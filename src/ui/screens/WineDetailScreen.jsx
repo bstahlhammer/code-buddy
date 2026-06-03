@@ -121,9 +121,16 @@ export default function WineDetailScreen({ goBack, navigate, wine, tasteProfile,
             {[wine.vintage, wine.region, wine.grape, wine.price].filter(Boolean).join(' · ')}
           </p>
           {wine.catalogConfidence === 'catalog' && (
-            <p style={{ fontSize: theme.typography.sizes.xs, color: `${theme.colors.cream}70`, fontFamily: theme.typography.fontSans, marginBottom: theme.spacing.md, fontStyle: 'italic' }}>
+            <span style={{
+              display: 'inline-block',
+              fontSize: 11, fontFamily: theme.typography.fontSans,
+              color: theme.colors.brand, fontWeight: 500,
+              background: `${theme.colors.brand}22`,
+              borderRadius: 100, padding: '2px 10px',
+              marginBottom: theme.spacing.md,
+            }}>
               {qualityLabel(wine.qualityScore)}
-            </p>
+            </span>
           )}
 
           <div style={{ display: 'flex', gap: theme.spacing.xs, flexWrap: 'wrap', alignItems: 'center' }}>
