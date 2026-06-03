@@ -110,7 +110,7 @@ export default function ScanningScreen({
           ? result
           : { wines: wines, readability: wines.length ? 'good' : 'unreadable', retakeReasons: [], message: '' }
         callbacksRef.current.onScanComplete?.(payload)
-        pendingNavRef.current = 'anonResults'
+        pendingNavRef.current = hasProfile ? 'personalizedResults' : 'anonResults'
         setScanDone(true)
       })
       .catch((err) => {
@@ -120,7 +120,7 @@ export default function ScanningScreen({
         if (wines.length) {
           setStatus('Pouring what we found…')
           callbacksRef.current.onScanComplete?.({ wines, readability: 'partial', retakeReasons: err?.retakeReasons || [], message: err?.message || '' })
-          pendingNavRef.current = 'anonResults'
+          pendingNavRef.current = hasProfile ? 'personalizedResults' : 'anonResults'
           setScanDone(true)
           return
         }

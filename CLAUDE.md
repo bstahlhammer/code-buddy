@@ -5,10 +5,10 @@ Scan a restaurant wine list, bottle label, or store shelf and get personalized w
 
 ## Tech stack
 - **Framework**: React + TanStack Router (file-based routes), Vite, TypeScript/JSX
-- **Hosted on**: Lovable (Cloudflare Workers serverless; `wrangler.jsonc` config)
+- **Hosted on**: Cloudflare Workers serverless; `wrangler.jsonc` config (Lovable SDK fully removed)
 - **Database**: Supabase (`bromlnbihmfknqcdbieq.supabase.co`) — RLS on user tables; `wine_catalog` is public read-only
-- **Vision AI**: Gemini 2.5 Pro via Google AI API (direct, no proxy)
-- **Package manager**: Bun (use `bun install`, `bun run dev`, etc.)
+- **Vision AI**: Gemini 2.5 Flash via Google AI API (direct, no proxy) — 500 RPD free tier
+- **Package manager**: npm (bun not installed in Claude shell; use `npm run dev`, `npm run build`)
 
 ## Key architectural rules
 1. **UI imports from `src/core/api.js` only** — never import engines or data directly in UI components.
@@ -83,7 +83,13 @@ Display labels: ≥94 "Extraordinary", ≥88 "Outstanding", ≥84 "Highly rated"
 ## Wine catalog (Supabase)
 
 ### Current state
-⚠️ **The `wine_catalog` table is empty** — the migration (`20260528000001_wine_catalog.sql`) has been written but **not yet applied**, and the import script has not been run. Every wine currently falls back to `qualityScore: 50`.
+⚠️ **The `wine_catalog` table is empty** — the migration has been applied but the import script has not been run. Every wine falls back to `qualityScore: 50`.
+
+**Quick seed** (~130 curated restaurant wines, run first):
+```bash
+export SUPABASE_SERVICE_KEY="<service_role key>"
+node scripts/seed-common-wines.mjs
+```
 
 ### To seed the catalog (run locally)
 ```bash
@@ -125,11 +131,9 @@ npx wrangler secret put GOOGLE_AI_API_KEY
 The import script needs `SUPABASE_SERVICE_KEY` (write-access) set separately in your shell — don't put it in `.env`.
 
 ## Pending work / next priorities
-1. **Apply `wine_catalog` migration** to Supabase (SQL in `supabase/migrations/20260528000001_wine_catalog.sql`)
-2. **Run `scripts/import_wine_catalog.py`** to seed ~130k+ wines
-3. **Two-signal card UI** — `WineCard.jsx` and `HeroPickCard.jsx` need separate "Taste fit" + "Wine quality" bars (green/amber/red by tier), plus "Closest Available" pill
-4. **Quality threshold slider** in `ProfileScreen.jsx` — user-adjustable `qualityThreshold` (default 85) stored in taste profile
-5. **`WineDetailScreen.jsx`** — surface `qualityLabel()` and `catalogMatch` metadata (region, grape, critic score)
+1. **Seed `wine_catalog`** — run `seed-common-wines.mjs` for quick wins, then `import_wine_catalog.py` for full 130k import
+2. **Build MyWinesScreen** — screen file does not exist yet; needs to be designed and wired into the router
+3. **Port screens to Painted Bunting** — WineDetailScreen, ProfileScreen still use old `theme.*` system
 
 ## Supabase project
 - URL: `https://bromlnbihmfknqcdbieq.supabase.co`

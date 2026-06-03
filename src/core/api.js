@@ -212,3 +212,7 @@ export function applyFilters(wineList, filters) { return _applyFilters(wineList,
 export function getFilterFacets(wineList)       { return _getFilterFacets(wineList) }
 export function countActiveFilters(filters)     { return _countActiveFilters(filters) }
 export { EMPTY_FILTERS, CERTIFICATION_LABELS, COLOR_LABELS }
+
+// ---------- Wine catalog quality helpers ----------
+
+export { qualityLabel, qualityTier } from './wineCatalog'

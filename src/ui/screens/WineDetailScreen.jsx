@@ -12,6 +12,7 @@ import {
   explainMatch,
   explainMismatch,
   locateBottleInScan,
+  qualityLabel,
 } from '@/core/api'
 
 const RATINGS = [
@@ -116,9 +117,14 @@ export default function WineDetailScreen({ goBack, navigate, wine, tasteProfile,
           >
             {wine.name}
           </h1>
-          <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginBottom: theme.spacing.md }}>
+          <p style={{ fontSize: theme.typography.sizes.sm, color: `${theme.colors.cream}80`, fontFamily: theme.typography.fontSans, marginBottom: wine.catalogConfidence === 'catalog' ? theme.spacing.xs : theme.spacing.md }}>
             {[wine.vintage, wine.region, wine.grape, wine.price].filter(Boolean).join(' · ')}
           </p>
+          {wine.catalogConfidence === 'catalog' && (
+            <p style={{ fontSize: theme.typography.sizes.xs, color: `${theme.colors.cream}70`, fontFamily: theme.typography.fontSans, marginBottom: theme.spacing.md, fontStyle: 'italic' }}>
+              {qualityLabel(wine.qualityScore)}
+            </p>
+          )}
 
           <div style={{ display: 'flex', gap: theme.spacing.xs, flexWrap: 'wrap', alignItems: 'center' }}>
             {wine.rating > 0 && <Badge variant="critic" label={`${wine.rating}${wine.ratingLabel ? ' · ' + wine.ratingLabel : ''}`} />}

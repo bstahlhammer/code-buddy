@@ -18,6 +18,7 @@ export default function ProfileScreen({
 }) {
   const { saveProfile } = useTasteProfileSync()
   const [palate, setPalate] = useState(tasteProfile?.palate || { body: 50, sweetness: 30, tannin: 50, acidity: 55 })
+  const [qualityThreshold, setQualityThreshold] = useState(tasteProfile?.qualityThreshold ?? 85)
   const [displayName, setDisplayName] = useState(auth?.profile?.display_name || '')
   const [savingTune, setSavingTune] = useState(false)
   const [savingName, setSavingName] = useState(false)
@@ -35,7 +36,7 @@ export default function ProfileScreen({
     if (!tasteProfile) return
     setSavingTune(true)
     const archetype = nearestTasteProfile(palate)
-    const updated = { ...tasteProfile, ...archetype, palate }
+    const updated = { ...tasteProfile, ...archetype, palate, qualityThreshold }
     await saveProfile(updated, { refined: true })
     onProfileUpdate?.(updated)
     setSavingTune(false)
@@ -156,6 +157,20 @@ export default function ProfileScreen({
               />
             </div>
           ))}
+          <div style={{ marginTop: theme.spacing.lg, marginBottom: theme.spacing.md }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: theme.typography.fontSans, fontSize: theme.typography.sizes.sm, marginBottom: 4, color: theme.colors.text }}>
+              <span>Quality bar</span>
+              <span style={{ color: theme.colors.textMuted }}>{qualityThreshold < 70 ? 'Relaxed' : qualityThreshold < 82 ? 'Moderate' : qualityThreshold < 90 ? 'Selective' : 'Very selective'}</span>
+            </div>
+            <input
+              type="range" min="50" max="95" step="5" value={qualityThreshold}
+              onChange={e => setQualityThreshold(Number(e.target.value))}
+              style={{ width: '100%', accentColor: theme.colors.ember }}
+            />
+            <div style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.textMuted, fontFamily: theme.typography.fontSans, marginTop: 4 }}>
+              Raise this to require higher-rated wines before we call a match confident.
+            </div>
+          </div>
           <button
             onClick={handleSaveTune}
             disabled={savingTune}
