@@ -89,11 +89,14 @@ function tasteFitDescriptor(score, threshold) {
 }
 
 function qualityDescriptor(score) {
-  if (score === 50) return 'Unknown'   // default when no catalog match
-  if (score >= 74) return 'Well above average'   // ~95+ WE points
-  if (score >= 48) return 'Above average'         // ~90-94 WE points
-  if (score >= 23) return 'Below average'         // ~85-89 WE points
-  return 'Well below average'                     // ~80-84 WE points
+  if (score === 50) return 'Unknown'
+  if (score >= 94) return 'Extraordinary'
+  if (score >= 88) return 'Outstanding'
+  if (score >= 84) return 'Highly rated'
+  if (score >= 74) return 'Solid everyday wine'
+  if (score >= 60) return 'Decent, not a standout'
+  if (score >= 45) return 'Below average'
+  return 'Poor quality'
 }
 
 // ─── Main export ─────────────────────────────────────────────────────────────

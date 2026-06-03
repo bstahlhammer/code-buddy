@@ -185,11 +185,15 @@ export function qualityTier(
 
 /**
  * Human-readable label for a quality score, shown in the UI.
+ * Thresholds mirror the honest 0-100 remap (WE 90 → 74, WE 92 → 84, WE 95 → 94).
  */
 export function qualityLabel(score: number | null | undefined): string {
   if (score == null) return 'Quality unknown'
-  if (score >= 74)   return 'Well above average'   // ~95+ WE points
-  if (score >= 48)   return 'Above average'         // ~90-94 WE points
-  if (score >= 23)   return 'Below average'         // ~85-89 WE points
-  return 'Well below average'                       // ~80-84 WE points
+  if (score >= 94)   return 'Extraordinary'
+  if (score >= 88)   return 'Outstanding'
+  if (score >= 84)   return 'Highly rated'
+  if (score >= 74)   return 'Solid everyday wine'
+  if (score >= 60)   return 'Decent, not a standout'
+  if (score >= 45)   return 'Below average'
+  return 'Poor quality'
 }

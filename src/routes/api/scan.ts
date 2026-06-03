@@ -36,13 +36,18 @@ async function enrichWinesFromCatalog<T extends {
       const { data, error } = await sb.rpc('lookup_wine', {
         p_name:      wine.name,
         p_vintage:   vintageNum,
-        p_threshold: 0.35,
+        p_threshold: 0.25,
       })
 
+      if (error) {
+        console.error('[catalog] lookup_wine error for', JSON.stringify(wine.name), ':', error.message || JSON.stringify(error))
+      }
       if (error || !data?.length) {
+        if (!error) console.log('[catalog] no match for', JSON.stringify(wine.name), 'vintage', vintageNum)
         // No catalog match — keep Claude's inferred palate axes, quality unknown
         return { ...wine, qualityScore: 50, catalogConfidence: 'inferred' as const }
       }
+      console.log('[catalog] matched', JSON.stringify(wine.name), '→', JSON.stringify(data[0]?.name), 'sim', data[0]?.similarity?.toFixed(3), 'quality', data[0]?.quality_score)
 
       const match = data[0]
       return {
