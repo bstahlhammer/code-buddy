@@ -3,12 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
 // ─── Catalog enrichment ───────────────────────────────────────────────────────
-// After Claude identifies wines from the image, we look each one up in the
-// wine_catalog table (seeded from Kaggle + HuggingFace) to get:
-//   • quality_score  — honest 0-100 (85+ = confident pick)
-//   • palate axes    — body/sweetness/tannin/acidity from real data
-//
-// Lookups run in parallel using pg_trgm fuzzy matching.
+// After Gemini identifies wines, one batch RPC call looks up all of them at
+// once using lookup_wines_batch() — a single DB round-trip instead of N.
 
 async function enrichWinesFromCatalog<T extends {
   name:      string
@@ -22,51 +18,57 @@ async function enrichWinesFromCatalog<T extends {
   supabaseUrl: string,
   supabaseKey: string,
 ): Promise<(T & { qualityScore: number; catalogConfidence: 'catalog' | 'inferred' | 'unknown' })[]> {
+  if (wines.length === 0) return []
+
   const sb = createClient(supabaseUrl, supabaseKey, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   })
 
-  return Promise.all(
-    wines.map(async (wine) => {
-      // Parse vintage year from the string field ("2021", "NV", "")
-      const vintageNum = /^(19|20)\d{2}$/.test(wine.vintage ?? '')
-        ? parseInt(wine.vintage as string, 10)
-        : null
+  const names    = wines.map(w => w.name)
+  const vintages = wines.map(w => {
+    const s = w.vintage ?? ''
+    return /^(19|20)\d{2}$/.test(s) ? parseInt(s, 10) : null
+  })
 
-      const { data, error } = await sb.rpc('lookup_wine', {
-        p_name:      wine.name,
-        p_vintage:   vintageNum,
-        p_threshold: 0.25,
-      })
+  const t0 = Date.now()
+  const { data, error } = await sb.rpc('lookup_wines_batch', {
+    p_names:     names,
+    p_vintages:  vintages,
+    p_threshold: 0.25,
+  })
+  const elapsed = Date.now() - t0
+  const matched  = data?.length ?? 0
+  console.log(`[catalog] batch: ${wines.length} wines → ${matched} matches in ${elapsed}ms`)
 
-      if (error) {
-        console.error('[catalog] lookup_wine error for', JSON.stringify(wine.name), ':', error.message || JSON.stringify(error))
-      }
-      if (error || !data?.length) {
-        if (!error) console.log('[catalog] no match for', JSON.stringify(wine.name), 'vintage', vintageNum)
-        // No catalog match — keep Claude's inferred palate axes, quality unknown
-        return { ...wine, qualityScore: 50, catalogConfidence: 'inferred' as const }
-      }
-      console.log('[catalog] matched', JSON.stringify(wine.name), '→', JSON.stringify(data[0]?.name), 'sim', data[0]?.similarity?.toFixed(3), 'quality', data[0]?.quality_score)
+  if (error) {
+    console.error('[catalog] lookup_wines_batch error:', error.message || JSON.stringify(error))
+    return wines.map(w => ({ ...w, qualityScore: 50, catalogConfidence: 'inferred' as const }))
+  }
 
-      const match = data[0]
+  // Index results by 1-based input_index returned by the SQL function
+  const byIndex = new Map<number, typeof data[0]>()
+  for (const row of (data ?? [])) byIndex.set(row.input_index, row)
+
+  return wines.map((wine, i) => {
+    const match = byIndex.get(i + 1)
+    if (match && match.quality_score != null) {
+      console.log(`[catalog] ✓ "${wine.name}" → "${match.name}" sim=${match.similarity?.toFixed(3)} q=${match.quality_score}`)
       return {
         ...wine,
-        // Prefer catalog palate axes; fall back to Claude's inference
         body:      match.body      ?? wine.body,
         sweetness: match.sweetness ?? wine.sweetness,
         tannin:    match.tannin    ?? wine.tannin,
         acidity:   match.acidity   ?? wine.acidity,
-        // Honest quality score from catalog
-        qualityScore:       match.quality_score ?? 50,
-        catalogConfidence:  'catalog' as const,
-        // Enrich metadata when not already present
-        region:  wine['region'] || match.region || '',
-        grape:   wine['grape']  || match.grape  || '',
-        color:   wine['color']  || match.color  || '',
+        qualityScore:      match.quality_score,
+        catalogConfidence: 'catalog' as const,
+        region: wine['region'] || match.region || '',
+        grape:  wine['grape']  || match.grape  || '',
+        color:  wine['color']  || match.color  || '',
       }
-    })
-  )
+    }
+    console.log(`[catalog] ✗ no match for "${wine.name}"`)
+    return { ...wine, qualityScore: 50, catalogConfidence: 'inferred' as const }
+  })
 }
 
 const InputSchema = z.object({
@@ -425,9 +427,11 @@ export const Route = createFileRoute('/api/scan')({
         const abort = new AbortController()
         const timeout = setTimeout(() => abort.abort(), 55_000)
         try {
+          const tGemini = Date.now()
           const upstream = await callVisionModel(apiKey, dataUrl, prompt, abort.signal, true)
 
           const raw = await upstream.text().catch(() => '')
+          console.log(`[scan] gemini: ${Date.now() - tGemini}ms, status=${upstream.status}, body=${raw.length}b`)
           if (!upstream.ok) {
             console.error('AI gateway scan error', upstream.status, raw)
             const userError = upstream.status === 429 || upstream.status === 503
